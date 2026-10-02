@@ -229,7 +229,7 @@ class ModerationRuntime:
                 AdvisoryStatus.DISABLED,
                 self._settings.pending_stale_after_ms,
             )
-        except (EventConflict, EventInProgress):
+        except EventConflict:
             raise
         except Exception:
             return self._fail_open(None, started, "storage_reserve_error")
