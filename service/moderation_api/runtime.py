@@ -32,7 +32,7 @@ from .models import (
     StrikeRecommendation,
     SupportFlow,
 )
-from .storage import EventConflict, EventNotFound, ModerationStore, Reservation
+from .storage import DecisionConflict, EventConflict, EventNotFound, ModerationStore, Reservation
 
 
 class RequestQueueFull(RuntimeError):
@@ -353,15 +353,21 @@ class ModerationRuntime:
         response = prepared.response.model_copy(
             update={"advisory_status": advisory_status, "latency_ms": _elapsed_ms(started)}
         )
-        saved = await self._save_decision(
+        save_status = await self._save_decision(
             response,
             prepared,
             advisory_status,
             lease_token,
         )
-        if not saved:
-            await self._remove_context_safely(current.event_id)
-            return self._fail_open(None, started, "storage_finalize_error")
+        if save_status != "saved":
+            if save_status == "failed":
+                await self._remove_context_safely(current.event_id)
+            reason = (
+                "reservation_ownership_lost"
+                if save_status == "ownership_lost"
+                else "storage_finalize_error"
+            )
+            return self._fail_open(None, started, reason)
         if advisory_status is AdvisoryStatus.QUEUED:
             self._advisory.commit(response.event_id or "", request.text)
         return response
@@ -372,7 +378,7 @@ class ModerationRuntime:
         prepared: _PreparedDecision,
         advisory_status: AdvisoryStatus,
         lease_token: str,
-    ) -> bool:
+    ) -> str:
         try:
             await self._store.finalize_event(
                 response,
@@ -381,11 +387,15 @@ class ModerationRuntime:
                 prepared.incident_signal,
                 lease_token,
             )
-            return True
+            return "saved"
+        except DecisionConflict:
+            if advisory_status is AdvisoryStatus.QUEUED:
+                self._advisory.release()
+            return "ownership_lost"
         except Exception:
             if advisory_status is AdvisoryStatus.QUEUED:
                 self._advisory.release()
-            return False
+            return "failed"
 
     async def _remove_context_safely(self, event_id: str) -> None:
         try:
