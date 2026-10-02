@@ -7,7 +7,9 @@
 - Text-only exact groups: **83**
 - Near candidates (>= 0.75): **2722**
 - Cross-source near candidates: **27**
-- Decision-contrast candidates requiring review: **578**
+- Decision-contrast lexical candidates: **578**
+- High-similarity cross-worker contrasts reviewed: **2**
+- Unresolved cross-worker contradictions: **0**
 - Golden near/exact candidates: **1**
 - Golden-sensitive (>= 0.88): **0**
 
@@ -30,8 +32,11 @@
 ## Decision contrasts
 
 The machine-readable audit records exact and >=0.88 near pairs whose Policy-v1
-outcome dimensions differ. These are candidates for intentional minimal pairs or
-data defects; W11 does not silently relabel them.
+outcome dimensions differ. These are lexical candidates, not automatically defects.
+The only cross-worker differing-outcome pairs at the >=0.90 family-link threshold
+are G06-0152↔G09-0382 and G06-0256↔G09-0388. Both are intentional public-vs-private
+flirting contrasts supported by Policy v1 §11, so they are family-linked rather than
+relabeled. No unresolved cross-worker policy contradiction remains from this audit.
 
 ## Known limitation
 
