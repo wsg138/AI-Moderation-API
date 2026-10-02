@@ -31,6 +31,10 @@ build/
 .gradle/
 .idea/
 .vscode/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
 
 # OS/editor noise
 .DS_Store
