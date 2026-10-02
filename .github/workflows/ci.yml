@@ -10,6 +10,8 @@ on:
       - "tests/**"
       - "tools/**"
       - "data/synthetic/**"
+      - "data/integration/**"
+      - "docs/W11-DATASET-INTEGRATION-REPORT.md"
       - "docs/API-CONTRACT.md"
       - "docs/DEPLOYMENT.md"
       - "docs/DATASET-QA.md"
@@ -24,6 +26,8 @@ on:
       - "tests/**"
       - "tools/**"
       - "data/synthetic/**"
+      - "data/integration/**"
+      - "docs/W11-DATASET-INTEGRATION-REPORT.md"
       - "docs/API-CONTRACT.md"
       - "docs/DEPLOYMENT.md"
       - "docs/DATASET-QA.md"
@@ -62,6 +66,8 @@ jobs:
           for file in "${files[@]}"; do
             python -m tools.dataset_qa validate "$file"
           done
+      - name: W11 integration reproducibility
+        run: python -m tools.dataset_integration --check
       - name: Tests
         run: pytest
       - name: Build wheel
