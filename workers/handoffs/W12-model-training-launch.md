@@ -121,6 +121,8 @@ Do not:
 
 Run it only as final acceptance evidence after the candidate is frozen. Report it separately from synthetic test metrics.
 
+If observing the golden result causes a model/config/threshold/preprocessing change, record that the observed golden set has become development evidence. Do not keep iterating on the same golden set and still describe the later result as unbiased final acceptance; a new/versioned unseen acceptance set is required for that claim.
+
 Family/group leakage must remain impossible. Never reconstruct a new random split.
 
 ## Current W11 integration facts
@@ -198,14 +200,22 @@ It must preserve the information Policy v1 depends on:
 - relative timing/offset information where present;
 - enough context to distinguish split-message continuations.
 
-Do not train on:
+Do not train on or serialize as model input:
+- semantic labels or any other outcome target;
+- action / review priority / strike / containment / duration / support-flow values;
+- reason codes or rule-hit labels;
+- domain;
+- difficulty;
 - example IDs;
 - source file/prefix;
 - split name;
 - family ID;
-- notes that reveal the answer;
+- synthetic `notes` or report prose;
+- owner interview IDs / policy-section annotations;
 - raw runtime UUIDs/player IDs;
 - arbitrary absolute timestamps.
+
+These fields are answer/editorial metadata. In particular, `notes`, `reason_codes`, `domain`, and `difficulty` can directly reveal why a synthetic example was labeled. Using them as encoder input would invalidate the evaluation.
 
 Use stable structural markers/tokens rather than accidental source formatting.
 
@@ -215,9 +225,39 @@ If structured memory is not represented in the synthetic corpus well enough for 
 
 The dataset contains Policy-v1 outcome dimensions separately. Model/evaluate them separately.
 
+### Dataset action vs runtime visibility action
+
+The source dataset intentionally contains a three-value `action` field:
+- `ALLOW`;
+- `BLOCK`;
+- `REVIEW`.
+
+In the dataset schema, `REVIEW` means the message remains visible while review work is created.
+
+The runtime API intentionally does **not** have an overloaded REVIEW message action. Runtime `MessageAction` is only:
+- `ALLOW`;
+- `BLOCK`;
+
+and `review_priority` is a separate dimension.
+
+Therefore W12 must:
+- report the issue-required **three-way ALLOW/BLOCK/REVIEW dataset-action metrics**;
+- also report derived **runtime binary visibility metrics**, where source BLOCK is runtime BLOCK and source ALLOW/REVIEW are runtime ALLOW;
+- preserve/predict review behavior through the separate `review_priority` target;
+- never add REVIEW back into the runtime `MessageAction` enum merely to match the training file.
+
+This is a schema/API compatibility rule. It does not authorize relabeling any W11 example.
+
+### Strike target vs runtime enum
+
+W11 supplies a boolean `strike` target. Runtime exposes `StrikeRecommendation.NONE | EVIDENCE | STRIKE`.
+
+Do not invent a supervised EVIDENCE class that the accepted synthetic labels do not provide. Evaluate the boolean target directly. A runtime adapter may map supervised false/true to NONE/STRIKE; any future EVIDENCE-only behavior needs an explicit policy/data source.
+
 At minimum, measure:
 - semantic label;
-- message action;
+- three-way dataset action;
+- derived binary runtime visibility action;
 - review priority;
 - strike;
 - containment;
@@ -243,7 +283,8 @@ Required final evaluation:
 
 ### Policy dimensions
 Separate metrics for:
-- ALLOW/BLOCK action;
+- three-way source action: ALLOW / BLOCK / REVIEW;
+- derived runtime visibility action: ALLOW / BLOCK;
 - review priority;
 - strike;
 - containment;
