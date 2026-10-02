@@ -227,6 +227,9 @@ def _reserve_event(
     now = datetime.now(UTC)
     now_text = now.isoformat()
     with _connect(path) as connection:
+        # Serialize the short reservation transaction so two first-arrival mirrors
+        # cannot both observe an empty canonical key before either insert commits.
+        connection.execute("BEGIN IMMEDIATE")
         existing = _find_existing(connection, request)
         if existing is not None:
             return _resolve_existing(
