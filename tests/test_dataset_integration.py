@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from tools.dataset_integration import build_outputs, check_outputs
+from tools import dataset_integration
 
 
 ROOT = Path(".")
@@ -12,8 +12,8 @@ AUDIT = ROOT / "data/integration/W11-audit.json"
 
 
 def test_w11_generated_outputs_are_reproducible() -> None:
-    outputs = build_outputs(ROOT)
-    assert check_outputs(ROOT, outputs) == []
+    outputs = dataset_integration.build_outputs(ROOT)
+    assert dataset_integration.check_outputs(ROOT, outputs) == []
 
 
 def test_w11_split_manifest_preserves_family_and_partition_isolation() -> None:
