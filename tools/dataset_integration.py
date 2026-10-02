@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import re
 import unicodedata
@@ -332,9 +331,16 @@ def integration_groups(
     }
 
 
+def _stable_hash(value: str) -> int:
+    result = 2_166_136_261
+    for byte in value.encode("utf-8"):
+        result ^= byte
+        result = (result * 16_777_619) & 0xFFFF_FFFF
+    return result
+
+
 def _hash_percent(key: str, salt: str) -> int:
-    digest = hashlib.sha256(f"{ALGORITHM_VERSION}:{salt}:{key}".encode()).digest()
-    return int.from_bytes(digest[:4], "big") % 100
+    return _stable_hash(f"{ALGORITHM_VERSION}:{salt}:{key}") % 100
 
 
 def _is_adversarial_group(items: list[Example]) -> bool:
@@ -412,7 +418,7 @@ def group_manifest(
 
 def _group_id(ids: list[str]) -> str:
     joined = "\n".join(sorted(ids))
-    return "IF-" + hashlib.sha256(joined.encode()).hexdigest()[:16]
+    return f"IF-{_stable_hash(joined):08x}-{len(ids):04d}"
 
 
 def contradiction_rows(
