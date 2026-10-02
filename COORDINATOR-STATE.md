@@ -1,0 +1,67 @@
+# Coordinator state
+
+Last updated: 2026-10-01
+
+## Current phase
+
+**Phase 0 — owner policy interview + API foundation**
+
+The repository has been initialized and the worker system is live.
+
+## Canonical decisions
+
+- Central standalone moderation API/service hosted in the existing Discord Ticket Bot Pterodactyl server.
+- RoseChat, Discord, and EnthusiaStaff call the same service.
+- Local semantic classifier is the intended live decision path.
+- OpenAI Moderation remains optional/advisory and must not add chat latency.
+- AI failure must fail open for normal Minecraft/Discord chat.
+- AI does not directly own bans/mutes.
+- EnthusiaStaff owns eventual evidence/strike/punishment policy.
+- Raw production moderation events stay in private runtime storage, not this public repository.
+- Human-reviewed/redacted training examples may be promoted into GitHub.
+- Structured reason codes/scores/context are stored; hidden chain-of-thought is not.
+
+## Open work packages
+
+- #1 W00 — Owner moderation-policy interview
+- #2 W01 — Central API/runtime foundation
+- #3 W02 — Gameplay dataset (500)
+- #4 W03 — Real-world threats dataset (500)
+- #5 W04 — Harassment dataset (500)
+- #6 W05 — Self-harm dataset (500)
+- #7 W06 — Hate/identity dataset (500)
+- #8 W07 — Sexual/minor dataset (500)
+- #9 W08 — Dangerous instructions dataset (500)
+- #10 W09 — Evasion/context dataset (500)
+- #11 W10 — Benign/hard-negative dataset (500)
+- #12 W11 — Dataset integration/QA
+- #13 W12 — Model training/evaluation
+- #14 W13 — RoseChat integration
+- #15 W14 — Discord integration
+- #16 W15 — EnthusiaStaff review GUI/workflow
+- #17 W16 — Deployment/supervisor/operations
+
+## Gates
+
+1. W00 must finish and Policy v1 must be merged before W02–W10 generate labeled data.
+2. W01 may proceed in parallel because it can build contracts/storage/context against stub classifiers.
+3. W11 starts after approved G01–G09 datasets are merged.
+4. W12 starts after W11 produces accepted leakage-safe splits.
+5. W13–W15 may start once the API/review contracts from W01 stabilize.
+6. W16 starts after W01 runtime shape is accepted.
+7. No production deployment without explicit authorization.
+8. Automatic punishments remain disabled until a separate acceptance decision.
+
+## Dataset strategy
+
+Do not split by first letter. The generator work is partitioned by semantic domain because that produces more even useful coverage and avoids strong letter-distribution bias.
+
+Nine generator workers × 500 examples = **4,500 synthetic examples** before curated production-derived samples.
+
+## Next coordinator actions
+
+1. Start W00 with the owner.
+2. Start W01 independently.
+3. Review/merge Policy v1.
+4. Release W02–W10 simultaneously.
+5. Review dataset PRs for scope, quality, duplication, and policy consistency.
