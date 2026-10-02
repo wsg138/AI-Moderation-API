@@ -4,7 +4,7 @@ Last updated: 2026-10-01
 
 ## Current phase
 
-**Phase 0 — owner policy interview + API foundation**
+**Phase 0 — owner policy interview; API foundation merged**
 
 The repository has been initialized and the worker system is live.
 
@@ -24,7 +24,7 @@ The repository has been initialized and the worker system is live.
 ## Open work packages
 
 - #1 W00 — Owner moderation-policy interview
-- #2 W01 — Central API/runtime foundation
+- #2 W01 — Central API/runtime foundation — **complete/merged via PR #18**
 - #3 W02 — Gameplay dataset (500)
 - #4 W03 — Real-world threats dataset (500)
 - #5 W04 — Harassment dataset (500)
@@ -40,11 +40,12 @@ The repository has been initialized and the worker system is live.
 - #15 W14 — Discord integration
 - #16 W15 — EnthusiaStaff review GUI/workflow
 - #17 W16 — Deployment/supervisor/operations
+- #19 W01 follow-up — Reconcile runtime contract after Policy v1
 
 ## Gates
 
 1. W00 must finish and Policy v1 must be merged before W02–W10 generate labeled data.
-2. W01 may proceed in parallel because it can build contracts/storage/context against stub classifiers.
+2. W01 foundation is merged. Issue #19 is blocked on Policy v1 and will reconcile the provisional API/context contract with final owner policy.
 3. W11 starts after approved G01–G09 datasets are merged.
 4. W12 starts after W11 produces accepted leakage-safe splits.
 5. W13–W15 may start once the API/review contracts from W01 stabilize.
@@ -60,10 +61,10 @@ Nine generator workers × 500 examples = **4,500 synthetic examples** before cur
 
 ## Next coordinator actions
 
-1. Start W00 with the owner.
-2. Start W01 independently.
-3. Review/merge Policy v1.
-4. Release W02–W10 simultaneously.
+1. Continue W00 until Policy v1 is complete and reviewed.
+2. Review/merge Policy v1.
+3. Run #19 to reconcile the runtime contract with Policy v1.
+4. Release W02–W10 simultaneously once policy/schema are stable.
 5. Review dataset PRs for scope, quality, duplication, and policy consistency.
 
 
@@ -74,3 +75,24 @@ Future worker launch packets must follow `docs/WORKER-LAUNCH-STANDARD.md`: eithe
 W00/W01 received corrective issue comments after launch. Policy work must review `policy/SOURCE-BASELINE.md`, including the current public website rules and current RoseChat/EnthusiaStaff behavior.
 
 Interview/data work must emphasize minimal contrasting pairs, split-message cases, false-positive traps, false-negative traps, and source-policy conflicts rather than isolated obvious examples.
+
+
+## W01 merge checkpoint
+
+PR #18 was coordinator-reviewed and merged on 2026-10-01.
+
+- Final PR head: `6ba61295c41e231f03693cbb22f5cd2739a727a6`
+- Merge commit on `main`: `11f3eaa7b43a830ade0255a375edcce6fc85b13f`
+- Exact-head PR CI: success
+- Post-merge `main` CI run #7: success
+- W01 issue #2: closed/completed
+- No production deployment was authorized or performed.
+
+The merged runtime is a foundation, not the frozen Policy-v1 API contract. Follow-up issue #19 tracks post-policy reconciliation for:
+- action vs review/containment separation;
+- richer final labels/reason metadata;
+- cross-scope/incident context;
+- restart context continuity;
+- exempt-scope handling;
+- schema migrations;
+- final retroactive/related-message contract.
