@@ -271,3 +271,46 @@ Fresh-runtime continuation packets:
 - `workers/handoffs/W09-G08-leakage-cleanup-launch.md`
 
 W11 remains blocked until corrected G03 and G08 are accepted and integrated. Runtime client integration remains blocked until W19 is accepted.
+
+
+## Dataset-wave completion + W11/W19 checkpoint — 2026-10-02
+
+This section supersedes the earlier G03/G08/W11 gate text above.
+
+Synthetic dataset completion:
+- G03 / issue #5 / PR #32 accepted at final head `2b96f95850c2a339656c0c330fe5ba2b440075de`.
+- G03 merge commit: `07cb2af21459983be036134a17a14b590fe8c56b`.
+- G03 exact-head service-ci #59: success.
+- G03 post-merge main service-ci #61: success.
+- G03 final cleanup rewrote 53 redundant same-profile/same-outcome exact-sequence copies; 39 / 82 exact-wording contrast groups remain, all family-grouped; exact accepted-corpus and golden collisions were 0.
+- G08 / issue #10 / PR #37 accepted at final head `638761d46bb8ada03f6023815743e7c35bdc8fdb`.
+- G08 merge commit: `49dc7fb0e443351f346fb846c55fcaf6aea5c947`.
+- G08 exact-head service-ci #60: success.
+- G08 post-merge main service-ci #62: success.
+- G08 final cleanup removed all 5 redundant exact groups and the two accepted-G01 collisions; 23 / 53 exact-wording contrast groups remain, all family-grouped; exact accepted-corpus and golden collisions were 0.
+- Issues #5 and #10 are closed/completed.
+- All G01–G09 datasets are now accepted and merged: exactly 4,500 synthetic records are available for W11.
+
+W11:
+- issue #12 is now unblocked.
+- fresh self-contained packet: `workers/handoffs/W11-dataset-integration-launch.md`.
+- packet commit on main: `d3b39682b090221a9f4b2c037c7f553a755fa19f`.
+- W11 must still create `w11/dataset-integration` from live main, protect the owner golden set from training leakage, reconcile cross-worker families/near duplicates/contradictions, and produce deterministic family-safe train/validation/test plus frozen adversarial manifests.
+- W12 / issue #13 remains downstream of accepted W11 integration artifacts.
+
+W19 runtime recovery:
+- issue #39 remains the authoritative pre-deployment runtime gate.
+- branch `w19/pending-recovery` was created from the clean post-dataset main.
+- PR #40 is open: `W19: recover stale PENDING moderation events safely`.
+- last observed PR #40 head at this checkpoint: `05013eb4033f6202d1c5ede5187ea5ec83dd0cb0`.
+- implementation direction is schema-v2 durable reservation token + lease timestamp, CAS stale takeover, token-guarded finalization, alias-first PENDING mirrors, bounded pending replay wait, and original-canonical-request recovery.
+- focused recovery/mirror/migration tests are included.
+- exact-head service-ci #63 was still in progress when this checkpoint was written; do not treat W19 as accepted until current-head CI and coordinator review are green.
+- W13/W14/W15 remain blocked on accepted W19.
+
+Production status is unchanged:
+- no AI moderation service deployment;
+- no Pterodactyl restart;
+- no live package/config mutation;
+- no production moderation-data mutation;
+- no punishment enablement.
