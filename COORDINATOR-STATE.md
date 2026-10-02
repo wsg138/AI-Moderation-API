@@ -200,3 +200,24 @@ Dataset generation gate is now open for W02–W10. Generator workers must:
 - submit 500-record domain PRs for later W11 cross-corpus dedupe/leakage integration.
 
 Issue #19 runtime/API reconciliation remains independent and may continue in parallel.
+
+
+## Synthetic generator wave released
+
+W02–W10 are now authorized to start from live `main`.
+
+Complete self-contained launch packets were added in commit `c0dbbb817a020ec86bbf08bde1bed0f099d7cde2`:
+
+- W02 / G01: `workers/handoffs/W02-G01-synthetic-dataset-launch.md`
+- W03 / G02: `workers/handoffs/W03-G02-synthetic-dataset-launch.md`
+- W04 / G03: `workers/handoffs/W04-G03-synthetic-dataset-launch.md`
+- W05 / G04: `workers/handoffs/W05-G04-synthetic-dataset-launch.md`
+- W06 / G05: `workers/handoffs/W06-G05-synthetic-dataset-launch.md`
+- W07 / G06: `workers/handoffs/W07-G06-synthetic-dataset-launch.md`
+- W08 / G07: `workers/handoffs/W08-G07-synthetic-dataset-launch.md`
+- W09 / G08: `workers/handoffs/W09-G08-synthetic-dataset-launch.md`
+- W10 / G09: `workers/handoffs/W10-G09-synthetic-dataset-launch.md`
+
+Each worker owns exactly 500 IDs, must use merged Policy-v1 QA, must avoid exact/trivial golden-set leakage, must not invent unresolved policy, and must open (not merge) one PR for coordinator/W11 review.
+
+Issue #19 runtime/API reconciliation continues independently in parallel.
