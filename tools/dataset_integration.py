@@ -227,11 +227,15 @@ def text_similarity(left: str, right: str) -> float:
     return 2 * shared / (len(left_grams) + len(right_grams))
 
 
+def _round_similarity(value: float) -> float:
+    return int(value * 1_000_000 + 0.5) / 1_000_000
+
+
 def _near_row(left: Example, right: Example, ratio: float) -> dict[str, object]:
     return {
         "left": left.example_id,
         "right": right.example_id,
-        "similarity": round(ratio, 6),
+        "similarity": _round_similarity(ratio),
         "same_outcome": left.outcome_key == right.outcome_key,
         "same_source_family": left.source_family == right.source_family,
         "cross_source": left.source_prefix != right.source_prefix,
@@ -302,7 +306,7 @@ def _best_golden_match(
     return {
         "synthetic_id": example.example_id,
         "golden_id": best_id,
-        "similarity": round(best_ratio, 6),
+        "similarity": _round_similarity(best_ratio),
         "exact": exact,
         "training_sensitive": best_ratio >= GOLDEN_SENSITIVE_THRESHOLD,
     }
@@ -521,7 +525,12 @@ def distributions(examples: list[Example]) -> dict[str, object]:
         else str(item.data.get("containment_duration_seconds"))
         for item in examples
     )
-    result["containment_duration_seconds"] = dict(sorted(duration_counts.items()))
+    result["containment_duration_seconds"] = dict(
+        sorted(
+            duration_counts.items(),
+            key=lambda item: (item[0] == "null", int(item[0]) if item[0] != "null" else 0),
+        )
+    )
     multi_count = sum(len(item.data.get("messages", [])) > 1 for item in examples)
     result["multi_message"] = {
         "single_message": len(examples) - multi_count,
