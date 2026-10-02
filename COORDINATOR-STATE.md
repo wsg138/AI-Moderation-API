@@ -363,3 +363,64 @@ Canonical W11 artifacts:
 - `docs/W11-DATASET-INTEGRATION-REPORT.md`
 
 W12 / issue #13 is now unblocked. It must consume these accepted manifests without reshuffling families or tuning on test/frozen/golden acceptance evidence.
+
+## W12-W15 next-wave release checkpoint — 2026-10-02
+
+This section supersedes earlier text that described W12 or client integrations as blocked.
+
+Accepted upstream gates:
+- W19 PENDING/mirror recovery is merged and post-merge green (`917aef4e97c539fea89d558f9e1be9d0d506b4a4`, main service-ci #69).
+- W11 dataset integration is merged and post-merge green (`5c337488d3014aefda7ba29fc0883b2beaa5dc0d`, main service-ci #84).
+- W11 frozen split algorithm is `w11-v2`: 3,269 train / 385 validation / 410 test / 436 frozen adversarial; owner golden remains separate.
+
+W12 / issue #13:
+- unblocked and released;
+- fresh packet: `workers/handoffs/W12-model-training-launch.md`;
+- packet added at `a1dae9849bf622b3f4c8502168bce27f6d90fddb` and clarified on main at `5f25155bd9ef34ac75a527736876dbf56afd9bc8`;
+- target branch: `w12/model-training` in this repository from live main;
+- train may use only W11 train; validation is the only tuning/calibration partition; test/frozen/golden remain acceptance-only;
+- requires baseline + at least two small pretrained CPU/ONNX candidates, critical Policy-v1 slice metrics, calibration, quantized CPU benchmarks, artifact checksums, and a fail-open runtime adapter;
+- no production deployment is authorized.
+
+W13 / issue #14:
+- unblocked and released;
+- target repository: `wsg138/Enthusia-RoseChat`;
+- fresh packet: `workers/handoffs/W13-rosechat-client-launch.md`;
+- packet commit: `e7be369a62f4421f85f7b22a3ce423b75ca72804`;
+- target branch: `w13/rosechat-client` from live RoseChat `master`;
+- preserve bounded hold, late-delete, circuit, generation-fence, and fail-open lifecycle while replacing/bypassing legacy local OpenAI threshold/strike authority with the central service;
+- do not remove DiscordSRV/chat transport or deploy.
+
+W14 / issue #15:
+- unblocked and released;
+- target repository: `wsg138/enthusia-support-bot`;
+- fresh packet: `workers/handoffs/W14-discord-client-launch.md`;
+- packet commit: `c961655655d229cea92f1417e1a2b976c9806f36`;
+- target branch: `w14/discord-client` from live support-bot main;
+- use the existing Discord gateway only; ticket/staff/configured-exempt surfaces remain outside semantic moderation; Ticket Bot readiness remains independent of AI health;
+- mirror canonical IDs must come from authoritative transport metadata, never text matching;
+- no deployment or automatic punishment.
+
+W15 / issue #16:
+- unblocked and released;
+- target repository: `wsg138/EnthusiaStaff`;
+- fresh packet: `workers/handoffs/W15-staff-review-gui-launch.md`;
+- packet commit: `d68cd57153e6bd645214a7724bf8712d8d89cc8c`;
+- target branch: `w15/staff-review-gui` from live Staff main;
+- reconcile live parallel moderation/reopening PRs, especially #302/#214 if still open, before editing;
+- reuse Staff async report-GUI safety patterns, but central review/correction state remains authoritative;
+- AI review/correction must not automatically create a punishment or revive the legacy RoseChat AI mute path.
+
+Observed target heads when packets were prepared:
+- RoseChat `master`: `0425b7d2c2252f8287af93c12d13e1e4c5e686f4`;
+- support-bot `main`: `61e635f9147c11f0262ae157acb8b521582cc2c8`;
+- EnthusiaStaff `main`: `24d2ab5f60c097ee303f5c9342a9503f44e8b821`.
+
+Those observations are not branch locks; every worker must re-read live GitHub immediately before branching.
+
+Production status remains unchanged:
+- no AI moderation service deployment;
+- no Paper/Ticket Bot/Staff restart;
+- no live package/config/firewall mutation;
+- no production moderation-data mutation;
+- no automatic punishment enablement.
