@@ -14,7 +14,7 @@ SYNTHETIC_GLOB = "data/synthetic/G??-*.jsonl"
 GOLDEN_PATH = Path("data/eval/owner-policy-v1.jsonl")
 OUTPUT_DIR = Path("data/integration")
 REPORT_PATH = Path("docs/W11-DATASET-INTEGRATION-REPORT.md")
-ALGORITHM_VERSION = "w11-v1"
+ALGORITHM_VERSION = "w11-v2"
 NEAR_THRESHOLD = 0.75
 FAMILY_NEAR_THRESHOLD = 0.90
 GOLDEN_SENSITIVE_THRESHOLD = 0.88
@@ -23,7 +23,6 @@ ADVERSARIAL_HASH_PERCENT = 45
 EXTRA_ADVERSARIAL_HASH_PERCENT = 8
 
 OUTCOME_FIELDS = (
-    "channel_profile",
     "label",
     "action",
     "review_priority",
@@ -31,6 +30,11 @@ OUTCOME_FIELDS = (
     "containment",
     "containment_duration_seconds",
     "support_flow",
+)
+DUPLICATE_CONTEXT_FIELDS = (
+    "platform_hint",
+    "channel_profile",
+    "target_index",
 )
 ADVERSARIAL_REASON_CODES = frozenset(
     {
@@ -243,14 +247,26 @@ def exact_groups(examples: list[Example]) -> list[dict[str, object]]:
         if not items[0].sequence_key or len(items) < 2:
             continue
         outcomes = {item.outcome_key for item in items}
+        contexts = {_duplicate_context_key(item) for item in items}
         rows.append(
             {
                 "ids": sorted(item.example_id for item in items),
                 "same_outcome": len(outcomes) == 1,
+                "same_context": len(contexts) == 1,
+                "redundant": len(outcomes) == 1 and len(contexts) == 1,
                 "cross_source": len({item.source_prefix for item in items}) > 1,
             }
         )
     return sorted(rows, key=lambda row: row["ids"])
+
+
+def _duplicate_context_key(item: Example) -> tuple[object, ...]:
+    offsets = tuple(
+        message.get("offset_ms")
+        for message in item.data.get("messages", [])
+        if isinstance(message, dict)
+    )
+    return tuple(item.data.get(field) for field in DUPLICATE_CONTEXT_FIELDS) + (offsets,)
 
 
 def golden_leakage(
@@ -306,7 +322,8 @@ def build_union(
     for row in exact:
         _union_group(union, list(row["ids"]))
     for row in near:
-        if float(row["similarity"]) >= FAMILY_NEAR_THRESHOLD:
+        cross_source = bool(row["cross_source"])
+        if cross_source or float(row["similarity"]) >= FAMILY_NEAR_THRESHOLD:
             union.union(str(row["left"]), str(row["right"]))
     return union
 
@@ -428,8 +445,6 @@ def cross_source_review(
     for row in near:
         if not bool(row["cross_source"]) or bool(row["same_outcome"]):
             continue
-        if float(row["similarity"]) < FAMILY_NEAR_THRESHOLD:
-            continue
         left = by_id[str(row["left"])]
         right = by_id[str(row["right"])]
         rows.append(_cross_source_disposition(left, right, row))
@@ -443,8 +458,24 @@ def _cross_source_disposition(
 ) -> dict[str, object]:
     reasons = set(left.data.get("reason_codes", [])) | set(right.data.get("reason_codes", []))
     flirting = bool({"public_flirting", "private_flirting"} & reasons)
-    disposition = "intentional_policy_contrast" if flirting else "requires_policy_review"
-    policy_source = "policy/POLICY-v1.md §11" if flirting else None
+    threat_context = bool(
+        {
+            "minecraft_gameplay_explicit",
+            "discord_gameplay_explicit",
+            "discord_general_no_game_context",
+            "insufficient_context",
+            "targeted_violence",
+        }
+        & reasons
+    )
+    intentional = flirting or threat_context
+    disposition = "intentional_policy_contrast" if intentional else "requires_policy_review"
+    if flirting:
+        policy_source = "policy/POLICY-v1.md §11"
+    elif threat_context:
+        policy_source = "policy/POLICY-v1.md §6"
+    else:
+        policy_source = None
     return {
         **row,
         "disposition": disposition,
@@ -496,7 +527,7 @@ def audit_payload(
     leakage: list[dict[str, object]],
     groups: dict[str, list[Example]],
 ) -> dict[str, object]:
-    redundant_exact = [row for row in exact if bool(row["same_outcome"])]
+    redundant_exact = [row for row in exact if bool(row["redundant"])]
     cross_near = [row for row in near if bool(row["cross_source"])]
     return {
         "algorithm_version": ALGORITHM_VERSION,
@@ -566,8 +597,9 @@ def _report_sections(
         "## Leakage and family safety",
         "",
         f"- Redundant same-outcome text-only exact groups: **{len(redundant)}**.",
-        "- Every source `family_id`, text-only exact group, and >=0.90 near group is kept",
-        "  in one integration family before splitting.",
+        "- Every source `family_id`, text-only exact group, >=0.90 same-worker near group,",
+        "  and every >=0.75 cross-worker near pair is kept in one integration family before",
+        "  splitting.",
         "- Owner golden fixtures are never copied into these manifests. Synthetic records",
         f"  with >={GOLDEN_SENSITIVE_THRESHOLD:.2f} similarity to a golden fixture are forced",
         "  into frozen evaluation.",
