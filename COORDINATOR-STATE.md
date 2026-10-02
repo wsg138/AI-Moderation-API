@@ -65,3 +65,12 @@ Nine generator workers × 500 examples = **4,500 synthetic examples** before cur
 3. Review/merge Policy v1.
 4. Release W02–W10 simultaneously.
 5. Review dataset PRs for scope, quality, duplication, and policy consistency.
+
+
+## Worker handoff correction
+
+Future worker launch packets must follow `docs/WORKER-LAUNCH-STANDARD.md`: either one downloadable file or one self-contained copy/paste message containing the complete project/task context. Do not rely on workers inferring missing information from the coordinator chat.
+
+W00/W01 received corrective issue comments after launch. Policy work must review `policy/SOURCE-BASELINE.md`, including the current public website rules and current RoseChat/EnthusiaStaff behavior.
+
+Interview/data work must emphasize minimal contrasting pairs, split-message cases, false-positive traps, false-negative traps, and source-policy conflicts rather than isolated obvious examples.
