@@ -47,6 +47,10 @@ It refuses a non-loopback bind unless `AI_MOD_ALLOW_NONLOCAL_BIND=true` is expli
 
 The Ticket Bot supervisor may restart the AI child after repeated liveness failures. Readiness failure alone is a degraded state and must not restart or stop the Ticket Bot.
 
+## Runtime environment
+
+`.env.example` is a variable-name/reference file only. The Python service and `deployment/run-service.sh` do **not** auto-load a dotenv file. Configure production values through Pterodactyl/runtime environment injection so credentials never need to live in the checked-out source tree or appear on the command line.
+
 ## Runtime secrets
 
 Secret names only:
