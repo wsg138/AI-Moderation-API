@@ -514,10 +514,37 @@ def distributions(examples: list[Example]) -> dict[str, object]:
     for field in fields:
         counts = Counter(str(item.data.get(field)) for item in examples)
         result[field] = dict(sorted(counts.items()))
-    result["message_count"] = dict(
-        sorted(Counter(str(len(item.data.get("messages", []))) for item in examples).items())
+    message_counts = Counter(str(len(item.data.get("messages", []))) for item in examples)
+    result["message_count"] = dict(sorted(message_counts.items()))
+    duration_counts = Counter(
+        "null" if item.data.get("containment_duration_seconds") is None
+        else str(item.data.get("containment_duration_seconds"))
+        for item in examples
     )
+    result["containment_duration_seconds"] = dict(sorted(duration_counts.items()))
+    multi_count = sum(len(item.data.get("messages", [])) > 1 for item in examples)
+    result["multi_message"] = {
+        "single_message": len(examples) - multi_count,
+        "multi_message": multi_count,
+        "multi_message_proportion": round(multi_count / len(examples), 6),
+    }
     return result
+
+
+def cross_tab(
+    examples: list[Example],
+    row_field: str,
+    column_field: str,
+) -> dict[str, dict[str, int]]:
+    rows: dict[str, Counter[str]] = defaultdict(Counter)
+    for item in examples:
+        row = str(item.data.get(row_field))
+        column = str(item.data.get(column_field))
+        rows[row][column] += 1
+    return {
+        row: dict(sorted(counts.items()))
+        for row, counts in sorted(rows.items())
+    }
 
 
 def audit_payload(
@@ -542,7 +569,19 @@ def audit_payload(
         "golden_leakage_candidates": leakage,
         "integration_group_count": len(groups),
         "largest_group_size": max((len(items) for items in groups.values()), default=0),
+        "group_size_distribution": dict(
+            sorted(
+                Counter(str(len(items)) for items in groups.values()).items(),
+                key=lambda item: int(item[0]),
+            )
+        ),
         "distributions": distributions(examples),
+        "cross_tabs": {
+            "label_x_channel_profile": cross_tab(
+                examples, "label", "channel_profile"
+            ),
+            "action_x_domain": cross_tab(examples, "domain", "action"),
+        },
     }
 
 
@@ -584,8 +623,97 @@ def render_report(
     ]
     for name in ("train", "validation", "test", "frozen_adversarial"):
         lines.append(f"- {name}: **{len(parts[name])}**")
+    lines.extend(_distribution_sections(audit))
     lines.extend(_report_sections(audit, sensitive))
     return "\n".join(lines) + "\n"
+
+
+def _distribution_sections(audit: dict[str, object]) -> list[str]:
+    distributions_map = audit["distributions"]
+    cross_tabs = audit["cross_tabs"]
+    if not isinstance(distributions_map, dict) or not isinstance(cross_tabs, dict):
+        raise ValueError("audit distributions are malformed")
+    lines = ["", "## Whole-corpus distributions", ""]
+    fields = (
+        ("Domain", "domain"),
+        ("Semantic label", "label"),
+        ("Action", "action"),
+        ("Review priority", "review_priority"),
+        ("Strike", "strike"),
+        ("Containment", "containment"),
+        ("Containment duration seconds", "containment_duration_seconds"),
+        ("Support flow", "support_flow"),
+        ("Channel profile", "channel_profile"),
+        ("Platform hint", "platform_hint"),
+        ("Difficulty", "difficulty"),
+        ("Message count", "message_count"),
+    )
+    for title, key in fields:
+        values = distributions_map[key]
+        if not isinstance(values, dict):
+            raise ValueError(f"distribution {key} is malformed")
+        lines.extend(_count_table(title, values))
+    multi = distributions_map["multi_message"]
+    if not isinstance(multi, dict):
+        raise ValueError("multi-message summary is malformed")
+    lines.extend(
+        [
+            "### Multi-message coverage",
+            "",
+            f"- Single-message: **{multi['single_message']}**",
+            f"- Multi-message: **{multi['multi_message']}**",
+            f"- Multi-message proportion: **{multi['multi_message_proportion']}**",
+            "",
+            "### Integration family sizes",
+            "",
+        ]
+    )
+    sizes = audit["group_size_distribution"]
+    if not isinstance(sizes, dict):
+        raise ValueError("group-size distribution is malformed")
+    lines.extend(_count_table_lines(sizes))
+    lines.extend(_cross_tab_section(
+        "Label × channel profile", cross_tabs["label_x_channel_profile"]
+    ))
+    lines.extend(_cross_tab_section(
+        "Action × domain", cross_tabs["action_x_domain"]
+    ))
+    return lines
+
+
+def _count_table(title: str, values: dict[str, object]) -> list[str]:
+    return [f"### {title}", "", *_count_table_lines(values)]
+
+
+def _count_table_lines(values: dict[str, object]) -> list[str]:
+    lines = ["| Value | Count |", "|---|---:|"]
+    for value, count in values.items():
+        lines.append(f"| `{value}` | {count} |")
+    lines.append("")
+    return lines
+
+
+def _cross_tab_section(title: str, raw_rows: object) -> list[str]:
+    if not isinstance(raw_rows, dict):
+        raise ValueError(f"cross-tab {title} is malformed")
+    rows = {
+        str(row): value
+        for row, value in raw_rows.items()
+        if isinstance(value, dict)
+    }
+    columns = sorted({
+        str(column)
+        for values in rows.values()
+        for column in values
+    })
+    lines = [f"### {title}", ""]
+    lines.append("| Value | " + " | ".join(f"`{column}`" for column in columns) + " |")
+    lines.append("|---|" + "|".join("---:" for _ in columns) + "|")
+    for row, values in rows.items():
+        counts = [str(values.get(column, 0)) for column in columns]
+        lines.append(f"| `{row}` | " + " | ".join(counts) + " |")
+    lines.append("")
+    return lines
 
 
 def _report_sections(
