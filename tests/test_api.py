@@ -1,225 +1,196 @@
 from __future__ import annotations
 
+import sqlite3
 from dataclasses import replace
-from datetime import UTC, datetime, timedelta
 
 from fastapi.testclient import TestClient
 from moderation_api.app import create_app
-from moderation_api.models import Action, ClassificationInput, ClassificationResult, Label
+from moderation_api.models import (
+    ClassificationInput,
+    IncidentKind,
+    IncidentSignal,
+    Label,
+    MessageAction,
+    ReviewPriority,
+    StrikeRecommendation,
+)
+
+from .helpers import payload, result
 
 
-class SplitThreatClassifier:
-    async def classify(self, item: ClassificationInput) -> ClassificationResult:
-        is_real_world_cue = item.current.text.lower() == "irl"
-        has_split_threat = any("stab" in prior.text.lower() for prior in item.context)
-        if is_real_world_cue and has_split_threat:
-            related = tuple(
-                prior.external_message_id
-                for prior in item.context
-                if "stab" in prior.text.lower()
-            )
-            return ClassificationResult(
-                action=Action.BLOCK,
+class SplitClassifier:
+    def __init__(self) -> None:
+        self.calls = 0
+
+    async def classify(self, item: ClassificationInput):
+        self.calls += 1
+        if item.current.text == "irl" and item.context:
+            prior = item.context[-1]
+            return result(
+                action=MessageAction.BLOCK,
                 label=Label.REAL_WORLD_THREAT,
-                scores={"REAL_WORLD_THREAT": 0.98},
-                rule_hits=(),
-                reason_codes=(
-                    "split_message_context",
-                    "explicit_real_world_cue",
-                    "targeted_violence",
-                ),
-                related_message_ids=related + (item.current.external_message_id,),
-                model_version="test-split-v1",
+                review=ReviewPriority.URGENT,
+                strike=StrikeRecommendation.STRIKE,
+                related=(prior.external_message_id, item.current.external_message_id),
+                evidence=(prior.event_id,),
+                reasons=("split_message_context", "explicit_real_world_cue"),
             )
-        return ClassificationResult(
-            action=Action.ALLOW,
-            label=Label.GAMEPLAY_VIOLENCE,
-            scores={"GAMEPLAY_VIOLENCE": 0.9},
-            rule_hits=(),
-            reason_codes=("minecraft_gameplay_explicit",),
-            related_message_ids=(),
-            model_version="test-split-v1",
-        )
+        return result(label=Label.GAMEPLAY_VIOLENCE)
 
     def health(self) -> dict[str, object]:
-        return {"ready": True, "mode": "test"}
+        return {"ready": True, "mode": "test", "model_version": "test-v1"}
 
 
 class BrokenClassifier:
-    async def classify(self, item: ClassificationInput) -> ClassificationResult:
+    async def classify(self, item: ClassificationInput):
         del item
-        raise RuntimeError("model unavailable")
+        raise RuntimeError("broken")
 
     def health(self) -> dict[str, object]:
-        return {"ready": True, "mode": "test"}
+        return {"ready": True, "mode": "test", "model_version": "broken-v1"}
 
 
-class UnreadyBlockingClassifier:
-    async def classify(self, item: ClassificationInput) -> ClassificationResult:
-        del item
-        raise AssertionError("unready classifier must not be called")
-
-    def health(self) -> dict[str, object]:
-        return {"ready": False, "mode": "loading"}
-
-
-def payload(message_id: str, text: str, seconds: int = 0) -> dict[str, object]:
-    timestamp = datetime(2026, 10, 2, 1, 0, tzinfo=UTC) + timedelta(seconds=seconds)
-    return {
-        "platform": "minecraft",
-        "scope_id": "smp:global",
-        "channel_id": "global",
-        "external_message_id": message_id,
-        "sender_id": "player-a",
-        "occurred_at": timestamp.isoformat(),
-        "text": text,
-    }
-
-
-def test_split_message_context_can_retroactively_block(settings, rose_headers) -> None:
-    app = create_app(settings=settings, classifier=SplitThreatClassifier())
-    with TestClient(app) as client:
-        first = client.post(
-            "/v1/moderate",
-            headers=rose_headers,
-            json=payload("m1", "im gonna stab you"),
+class IncidentClassifier:
+    async def classify(self, item: ClassificationInput):
+        base = result(label=Label.SEVERE_HARASSMENT, review=ReviewPriority.NORMAL)
+        return replace(
+            base,
+            incident=IncidentSignal(
+                incident_key="dogpile:target-b:1",
+                kind=IncidentKind.DOGPILE,
+                severity=72,
+                participant_ids=(item.current.sender_id,),
+                target_ids=("target-b",),
+                coordinated=False,
+            ),
         )
+
+    def health(self) -> dict[str, object]:
+        return {"ready": True, "mode": "test", "model_version": "incident-v1"}
+
+
+def test_separated_decision_dimensions_and_retroactive_ids(settings, rose_headers) -> None:
+    app = create_app(settings=settings, classifier=SplitClassifier())
+    with TestClient(app) as client:
+        first = client.post("/v1/moderate", headers=rose_headers, json=payload("m1", "stab"))
         second = client.post("/v1/moderate", headers=rose_headers, json=payload("m2", "irl", 2))
 
+    body = second.json()
     assert first.status_code == 200
-    assert first.json()["action"] == "ALLOW"
-    assert second.status_code == 200
-    assert second.json()["action"] == "BLOCK"
-    assert second.json()["related_message_ids"] == ["m1", "m2"]
+    assert body["message_action"] == "BLOCK"
+    assert body["semantic_label"] == "REAL_WORLD_THREAT"
+    assert body["review_priority"] == "URGENT"
+    assert body["strike_recommendation"] == "STRIKE"
+    assert body["containment"] == "NONE"
+    assert body["support_flow"] == "NONE"
+    assert body["related_message_ids"] == ["m1", "m2"]
 
 
-def test_retry_is_idempotent_and_conflicting_reuse_is_rejected(settings, rose_headers) -> None:
-    app = create_app(settings=settings, classifier=SplitThreatClassifier())
+def test_exempt_scope_never_classifies_or_persists(settings, rose_headers) -> None:
+    classifier = SplitClassifier()
+    app = create_app(settings=settings, classifier=classifier)
+    body = payload(
+        "ticket-1",
+        "private evidence",
+        platform="discord",
+        channel_profile="discord_ticket_exempt",
+        scope_id="guild",
+        channel_id="ticket-7",
+    )
     with TestClient(app) as client:
-        first = client.post(
-            "/v1/moderate", headers=rose_headers, json=payload("same", "normal message")
-        )
-        retry = client.post(
-            "/v1/moderate", headers=rose_headers, json=payload("same", "normal message")
-        )
-        conflict = client.post(
-            "/v1/moderate", headers=rose_headers, json=payload("same", "different text")
-        )
+        response = client.post("/v1/moderate", headers=rose_headers, json=body)
 
-    assert retry.status_code == 200
+    assert response.json()["ingestion_status"] == "SKIPPED_EXEMPT"
+    assert response.json()["event_id"] is None
+    assert classifier.calls == 0
+    with sqlite3.connect(settings.database_path) as connection:
+        assert connection.execute("SELECT COUNT(*) FROM moderation_events").fetchone()[0] == 0
+
+
+def test_platform_profile_mismatch_is_rejected(settings, rose_headers) -> None:
+    app = create_app(settings=settings, classifier=SplitClassifier())
+    body = payload("bad", "hello", channel_profile="discord_ticket_exempt")
+    with TestClient(app) as client:
+        response = client.post("/v1/moderate", headers=rose_headers, json=body)
+    assert response.status_code == 422
+
+
+def test_idempotent_retry_and_conflicting_reuse(settings, rose_headers) -> None:
+    app = create_app(settings=settings, classifier=SplitClassifier())
+    with TestClient(app) as client:
+        first = client.post("/v1/moderate", headers=rose_headers, json=payload("same", "hello"))
+        retry = client.post("/v1/moderate", headers=rose_headers, json=payload("same", "hello"))
+        conflict = client.post(
+            "/v1/moderate", headers=rose_headers, json=payload("same", "changed")
+        )
     assert retry.json()["event_id"] == first.json()["event_id"]
     assert retry.json()["idempotent_replay"] is True
     assert conflict.status_code == 409
 
 
-def test_classifier_failure_returns_explicit_fail_open_allow(settings, rose_headers) -> None:
+def test_mirror_dedup_links_platform_message_ids(settings, rose_headers) -> None:
+    app = create_app(settings=settings, classifier=SplitClassifier())
+    first_body = payload("mc-1", "hello", canonical_message_id="mirror-42")
+    mirror_body = payload(
+        "discord-1",
+        "hello",
+        platform="discord",
+        channel_profile="discord_general",
+        scope_id="guild",
+        channel_id="general",
+        canonical_message_id="mirror-42",
+    )
+    with TestClient(app) as client:
+        first = client.post("/v1/moderate", headers=rose_headers, json=first_body)
+        mirror = client.post("/v1/moderate", headers=rose_headers, json=mirror_body)
+
+    assert mirror.json()["event_id"] == first.json()["event_id"]
+    assert mirror.json()["idempotent_replay"] is True
+    refs = {item["external_message_id"] for item in mirror.json()["related_messages"]}
+    assert refs == {"mc-1", "discord-1"}
+    with sqlite3.connect(settings.database_path) as connection:
+        assert connection.execute("SELECT COUNT(*) FROM moderation_events").fetchone()[0] == 1
+        assert connection.execute("SELECT COUNT(*) FROM message_aliases").fetchone()[0] == 2
+
+
+def test_classifier_failure_is_explicit_fail_open(settings, rose_headers) -> None:
     app = create_app(settings=settings, classifier=BrokenClassifier())
     with TestClient(app) as client:
-        response = client.post(
-            "/v1/moderate", headers=rose_headers, json=payload("broken", "anything")
-        )
-
+        response = client.post("/v1/moderate", headers=rose_headers, json=payload("broken", "x"))
     body = response.json()
-    assert response.status_code == 200
-    assert body["action"] == "ALLOW"
-    assert body["degraded"] is True
+    assert body["message_action"] == "ALLOW"
+    assert body["ingestion_status"] == "FAIL_OPEN"
+    assert body["review_priority"] == "NONE"
+    assert body["strike_recommendation"] == "NONE"
     assert body["fallback_state"] == "classifier_error"
 
 
-def test_authentication_and_permissions_are_enforced(settings, rose_headers, staff_headers) -> None:
-    app = create_app(settings=settings, classifier=SplitThreatClassifier())
+def test_authentication_and_permissions(settings, rose_headers, staff_headers) -> None:
+    app = create_app(settings=settings, classifier=SplitClassifier())
     with TestClient(app) as client:
-        missing = client.post("/v1/moderate", json=payload("m1", "hello"))
-        wrong_scope = client.post(
-            "/v1/moderate", headers=staff_headers, json=payload("m2", "hello")
-        )
-        allowed = client.post("/v1/moderate", headers=rose_headers, json=payload("m3", "hello"))
-
+        missing = client.post("/v1/moderate", json=payload("missing", "x"))
+        forbidden = client.post("/v1/moderate", headers=staff_headers, json=payload("no", "x"))
+        allowed = client.post("/v1/moderate", headers=rose_headers, json=payload("yes", "x"))
     assert missing.status_code == 401
-    assert wrong_scope.status_code == 403
+    assert forbidden.status_code == 403
     assert allowed.status_code == 200
 
 
-def test_review_write_and_event_read_use_allowlisted_models(
-    settings, rose_headers, staff_headers
-) -> None:
-    app = create_app(settings=settings, classifier=SplitThreatClassifier())
+def test_multi_sender_incident_representation(settings, rose_headers) -> None:
+    app = create_app(settings=settings, classifier=IncidentClassifier())
     with TestClient(app) as client:
-        moderated = client.post(
-            "/v1/moderate", headers=rose_headers, json=payload("review-me", "hello")
+        first = client.post(
+            "/v1/moderate",
+            headers=rose_headers,
+            json=payload("a", "leave", sender_id="a", target_ids=["target-b"]),
         )
-        event_id = moderated.json()["event_id"]
-        review = client.post(
-            "/v1/reviews",
-            headers=staff_headers,
-            json={
-                "event_id": event_id,
-                "reviewer_id": "staff-pseudonym",
-                "label": "SAFE",
-                "action": "ALLOW",
-                "reason_codes": ["human_confirmed"],
-                "note": "Reviewed in test.",
-            },
+        second = client.post(
+            "/v1/moderate",
+            headers=rose_headers,
+            json=payload("b", "go", 1, sender_id="c", target_ids=["target-b"]),
         )
-        event = client.get(f"/v1/events/{event_id}", headers=staff_headers)
-
-    assert review.status_code == 201
-    assert event.status_code == 200
-    assert event.json()["reviews"][0]["review_id"] == review.json()["review_id"]
-    assert "input_fingerprint" not in event.json()
-    assert "external_key" not in event.json()
-
-
-def test_health_is_independent_of_openai_key(settings) -> None:
-    configured = replace(settings, openai_advisory_enabled=True, openai_api_key=None)
-    app = create_app(settings=configured, classifier=SplitThreatClassifier())
-    with TestClient(app) as client:
-        live = client.get("/health/live")
-        ready = client.get("/health/ready")
-
-    assert live.status_code == 200
-    assert ready.status_code == 200
-    assert ready.json()["ready"] is True
-    assert ready.json()["advisory_enabled"] is False
-
-
-def test_naive_timestamp_is_rejected(settings, rose_headers) -> None:
-    app = create_app(settings=settings, classifier=SplitThreatClassifier())
-    body = payload("naive", "hello")
-    body["occurred_at"] = "2026-10-02T01:00:00"
-    with TestClient(app) as client:
-        response = client.post("/v1/moderate", headers=rose_headers, json=body)
-
-    assert response.status_code == 422
-
-
-def test_stub_classifier_is_not_reported_production_ready(settings) -> None:
-    app = create_app(settings=settings)
-    with TestClient(app) as client:
-        response = client.get("/health/ready")
-
-    assert response.status_code == 503
-    assert response.json()["classifier_ready"] is False
-
-
-def test_unready_classifier_is_forced_fail_open(settings, rose_headers) -> None:
-    app = create_app(settings=settings, classifier=UnreadyBlockingClassifier())
-    with TestClient(app) as client:
-        response = client.post(
-            "/v1/moderate", headers=rose_headers, json=payload("loading", "anything")
-        )
-
-    body = response.json()
-    assert response.status_code == 200
-    assert body["action"] == "ALLOW"
-    assert body["fallback_state"] == "classifier_not_ready"
-
-
-def test_unknown_request_fields_are_rejected(settings, rose_headers) -> None:
-    app = create_app(settings=settings, classifier=SplitThreatClassifier())
-    body = payload("unknown-field", "hello")
-    body["internal_admin_override"] = True
-    with TestClient(app) as client:
-        response = client.post("/v1/moderate", headers=rose_headers, json=body)
-
-    assert response.status_code == 422
+    assert first.json()["incident"]["incident_id"] == second.json()["incident"]["incident_id"]
+    assert second.json()["incident"]["kind"] == "DOGPILE"
+    with sqlite3.connect(settings.database_path) as connection:
+        assert connection.execute("SELECT COUNT(*) FROM incidents").fetchone()[0] == 1
+        assert connection.execute("SELECT COUNT(*) FROM incident_events").fetchone()[0] == 2

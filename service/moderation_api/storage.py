@@ -1,23 +1,50 @@
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import json
 import sqlite3
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from typing import Any, cast
 from uuid import uuid4
 
+from .migrations import LATEST_SCHEMA_VERSION, migrate, schema_version
 from .models import (
-    Action,
     AdvisoryEvidence,
     AdvisoryStatus,
+    ChannelProfile,
+    Containment,
+    ContextEvidence,
+    ContextMessage,
+    CorrectionAuthority,
+    CorrectionDecision,
+    CorrectionRejectRequest,
+    CorrectionRequest,
+    CorrectionResponse,
+    CorrectionStatus,
+    CorrectionVote,
     EventDetails,
+    IncidentKind,
+    IncidentSignal,
+    IncidentSummary,
+    IngestionStatus,
     Label,
+    MemoryFact,
+    MemoryKind,
+    MemorySnapshot,
+    MessageAction,
+    MessageRef,
     ModerationRequest,
     ModerationResponse,
-    ReviewRequest,
-    ReviewResponse,
+    Platform,
+    ReviewItem,
+    ReviewPriority,
+    SafetyMemoryFact,
+    SafetyMemoryKind,
+    StrikeRecommendation,
+    SupportFlow,
 )
 
 
@@ -37,72 +64,14 @@ class DecisionConflict(RuntimeError):
     pass
 
 
+class ProposalNotFound(RuntimeError):
+    pass
+
+
 @dataclass(frozen=True, slots=True)
 class Reservation:
     event_id: str
     replay: bool
-
-
-_SCHEMA = """
-CREATE TABLE IF NOT EXISTS moderation_events (
-  event_id TEXT PRIMARY KEY,
-  external_key TEXT NOT NULL UNIQUE,
-  input_fingerprint TEXT NOT NULL,
-  client_id TEXT NOT NULL,
-  platform TEXT NOT NULL,
-  scope_id TEXT NOT NULL,
-  channel_id TEXT,
-  external_message_id TEXT NOT NULL,
-  sender_id TEXT NOT NULL,
-  occurred_at TEXT NOT NULL,
-  text TEXT NOT NULL,
-  reply_to_message_id TEXT,
-  status TEXT NOT NULL CHECK(status IN ('PENDING', 'FINAL')),
-  action TEXT,
-  label TEXT,
-  degraded INTEGER NOT NULL DEFAULT 0,
-  fallback_state TEXT,
-  created_at TEXT NOT NULL,
-  finalized_at TEXT
-);
-CREATE TABLE IF NOT EXISTS decision_evidence (
-  event_id TEXT PRIMARY KEY REFERENCES moderation_events(event_id) ON DELETE CASCADE,
-  scores_json TEXT NOT NULL,
-  rule_hits_json TEXT NOT NULL,
-  reason_codes_json TEXT NOT NULL,
-  related_message_ids_json TEXT NOT NULL,
-  local_model_version TEXT NOT NULL CHECK(length(local_model_version) > 0),
-  policy_version TEXT NOT NULL CHECK(length(policy_version) > 0),
-  latency_ms INTEGER NOT NULL CHECK(latency_ms >= 0),
-  created_at TEXT NOT NULL
-);
-CREATE TABLE IF NOT EXISTS advisory_results (
-  event_id TEXT PRIMARY KEY REFERENCES moderation_events(event_id) ON DELETE CASCADE,
-  status TEXT NOT NULL,
-  model TEXT,
-  flagged INTEGER,
-  scores_json TEXT NOT NULL DEFAULT '{}',
-  categories_json TEXT NOT NULL DEFAULT '{}',
-  error_code TEXT,
-  latency_ms INTEGER,
-  disagrees_with_local INTEGER,
-  updated_at TEXT NOT NULL
-);
-CREATE TABLE IF NOT EXISTS reviews (
-  review_id TEXT PRIMARY KEY,
-  event_id TEXT NOT NULL REFERENCES moderation_events(event_id) ON DELETE CASCADE,
-  reviewer_id TEXT NOT NULL,
-  label TEXT NOT NULL,
-  action TEXT NOT NULL,
-  reason_codes_json TEXT NOT NULL,
-  note TEXT,
-  created_at TEXT NOT NULL
-);
-CREATE INDEX IF NOT EXISTS idx_events_scope_time
-  ON moderation_events(platform, scope_id, occurred_at);
-CREATE INDEX IF NOT EXISTS idx_reviews_event_time
-  ON reviews(event_id, created_at);
-"""
 
 
 class ModerationStore:
@@ -110,397 +79,1099 @@ class ModerationStore:
         self._path = path
 
     async def initialize(self) -> None:
-        await asyncio.to_thread(self._initialize_sync)
+        await asyncio.to_thread(_initialize, self._path)
 
     async def health_check(self) -> bool:
-        return await asyncio.to_thread(self._health_check_sync)
+        return await asyncio.to_thread(_health_check, self._path)
+
+    async def schema_version(self) -> int | None:
+        return await asyncio.to_thread(_read_schema_version, self._path)
 
     async def reserve_event(
         self,
         request: ModerationRequest,
         client_id: str,
-        fingerprint: str,
+        request_fingerprint: str,
+        canonical_fingerprint: str,
         advisory_status: AdvisoryStatus,
     ) -> Reservation:
         return await asyncio.to_thread(
-            self._reserve_event_sync,
+            _reserve_event,
+            self._path,
             request,
             client_id,
-            fingerprint,
+            request_fingerprint,
+            canonical_fingerprint,
             advisory_status,
         )
 
-    async def finalize_event(self, response: ModerationResponse) -> None:
-        await asyncio.to_thread(self._finalize_event_sync, response)
+    async def finalize_event(
+        self,
+        response: ModerationResponse,
+        evidence_event_ids: tuple[str, ...],
+        related_event_ids: tuple[str, ...],
+        incident_signal: IncidentSignal | None,
+    ) -> None:
+        await asyncio.to_thread(
+            _finalize_event,
+            self._path,
+            response,
+            evidence_event_ids,
+            related_event_ids,
+            incident_signal,
+        )
 
     async def load_decision(self, event_id: str) -> ModerationResponse:
-        return await asyncio.to_thread(self._load_decision_sync, event_id)
-
-    async def create_review(self, request: ReviewRequest) -> ReviewResponse:
-        return await asyncio.to_thread(self._create_review_sync, request)
+        return await asyncio.to_thread(_load_decision, self._path, event_id)
 
     async def get_event(self, event_id: str) -> EventDetails:
-        return await asyncio.to_thread(self._get_event_sync, event_id)
+        return await asyncio.to_thread(_get_event, self._path, event_id)
+
+    async def list_review_items(self, limit: int) -> list[ReviewItem]:
+        return await asyncio.to_thread(_list_review_items, self._path, limit)
+
+    async def create_correction(
+        self,
+        request: CorrectionRequest,
+        admin_override: bool,
+    ) -> CorrectionResponse:
+        return await asyncio.to_thread(_create_correction, self._path, request, admin_override)
+
+    async def reject_correction(
+        self,
+        proposal_id: str,
+        request: CorrectionRejectRequest,
+        admin_override: bool,
+    ) -> CorrectionResponse:
+        return await asyncio.to_thread(
+            _reject_correction,
+            self._path,
+            proposal_id,
+            request,
+            admin_override,
+        )
 
     async def save_advisory(self, event_id: str, evidence: AdvisoryEvidence) -> None:
-        await asyncio.to_thread(self._save_advisory_sync, event_id, evidence)
+        await asyncio.to_thread(_save_advisory, self._path, event_id, evidence)
 
-    def _connect(self) -> sqlite3.Connection:
-        connection = sqlite3.connect(self._path, timeout=2.0)
-        connection.row_factory = sqlite3.Row
-        connection.execute("PRAGMA foreign_keys = ON")
-        return connection
-
-    def _initialize_sync(self) -> None:
-        self._path.parent.mkdir(parents=True, exist_ok=True)
-        with self._connect() as connection:
-            connection.execute("PRAGMA journal_mode = WAL")
-            connection.execute("PRAGMA synchronous = NORMAL")
-            connection.executescript(_SCHEMA)
-
-    def _health_check_sync(self) -> bool:
-        try:
-            with self._connect() as connection:
-                row = connection.execute("SELECT 1").fetchone()
-            return row is not None and row[0] == 1
-        except sqlite3.Error:
-            return False
-
-    def _reserve_event_sync(
+    async def load_recent_context(
         self,
-        request: ModerationRequest,
-        client_id: str,
-        fingerprint: str,
-        advisory_status: AdvisoryStatus,
-    ) -> Reservation:
-        external_key = _external_key(request)
-        event_id = str(uuid4())
-        now = _utc_now()
-        try:
-            with self._connect() as connection:
-                self._insert_event(
-                    connection,
-                    event_id,
-                    external_key,
-                    fingerprint,
-                    client_id,
-                    request,
-                    now,
-                )
-                self._insert_advisory(connection, event_id, advisory_status, now)
-            return Reservation(event_id, replay=False)
-        except sqlite3.IntegrityError:
-            return self._resolve_existing(external_key, fingerprint)
+        window_seconds: int,
+        limit: int,
+    ) -> tuple[ContextMessage, ...]:
+        return await asyncio.to_thread(_load_recent_context, self._path, window_seconds, limit)
 
-    def _insert_event(
+    async def load_memory_snapshot(
         self,
-        connection: sqlite3.Connection,
-        event_id: str,
-        external_key: str,
-        fingerprint: str,
-        client_id: str,
-        request: ModerationRequest,
-        now: str,
-    ) -> None:
-        connection.execute(
-            """INSERT INTO moderation_events (
-              event_id, external_key, input_fingerprint, client_id, platform, scope_id,
-              channel_id, external_message_id, sender_id, occurred_at, text,
-              reply_to_message_id, status, created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'PENDING', ?)""",
-            (
-                event_id,
-                external_key,
-                fingerprint,
-                client_id,
-                request.platform,
-                request.scope_id,
-                request.channel_id,
-                request.external_message_id,
-                request.sender_id,
-                request.occurred_at.isoformat(),
-                request.text,
-                request.reply_to_message_id,
+        current: ContextMessage,
+        limit: int,
+    ) -> MemorySnapshot:
+        return await asyncio.to_thread(_load_memory_snapshot, self._path, current, limit)
+
+    async def save_memory_fact(self, fact: MemoryFact) -> None:
+        await asyncio.to_thread(_save_memory_fact, self._path, fact)
+
+    async def save_safety_memory_fact(self, fact: SafetyMemoryFact) -> None:
+        await asyncio.to_thread(_save_safety_memory_fact, self._path, fact)
+
+
+def _connect(path: Path) -> sqlite3.Connection:
+    connection = sqlite3.connect(path, timeout=2.0)
+    connection.row_factory = sqlite3.Row
+    connection.execute("PRAGMA foreign_keys = ON")
+    return connection
+
+
+def _initialize(path: Path) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with _connect(path) as connection:
+        connection.execute("PRAGMA journal_mode = WAL")
+        connection.execute("PRAGMA synchronous = NORMAL")
+        migrate(connection)
+
+
+def _health_check(path: Path) -> bool:
+    try:
+        with _connect(path) as connection:
+            row = connection.execute("SELECT 1").fetchone()
+            version = schema_version(connection)
+        return bool(row and row[0] == 1 and version == LATEST_SCHEMA_VERSION)
+    except Exception:
+        return False
+
+
+def _read_schema_version(path: Path) -> int | None:
+    try:
+        with _connect(path) as connection:
+            return schema_version(connection)
+    except Exception:
+        return None
+
+
+def _reserve_event(
+    path: Path,
+    request: ModerationRequest,
+    client_id: str,
+    request_fingerprint: str,
+    canonical_fingerprint: str,
+    advisory_status: AdvisoryStatus,
+) -> Reservation:
+    now = _utc_now()
+    with _connect(path) as connection:
+        existing = _find_existing(connection, request)
+        if existing is not None:
+            return _resolve_existing(connection, existing, request, request_fingerprint, now)
+        mirror = _find_canonical(connection, request.canonical_message_id)
+        if mirror is not None:
+            return _resolve_mirror(
+                connection,
+                mirror,
+                request,
+                request_fingerprint,
+                canonical_fingerprint,
                 now,
-            ),
-        )
-
-    def _insert_advisory(
-        self,
-        connection: sqlite3.Connection,
-        event_id: str,
-        status: AdvisoryStatus,
-        now: str,
-    ) -> None:
-        connection.execute(
-            "INSERT INTO advisory_results(event_id, status, updated_at) VALUES (?, ?, ?)",
-            (event_id, status.value, now),
-        )
-
-    def _resolve_existing(self, external_key: str, fingerprint: str) -> Reservation:
-        with self._connect() as connection:
-            row = connection.execute(
-                """SELECT event_id, input_fingerprint, status
-                   FROM moderation_events WHERE external_key = ?""",
-                (external_key,),
-            ).fetchone()
-        if row is None or row["input_fingerprint"] != fingerprint:
-            raise EventConflict("external message id was already used with different content")
-        if row["status"] != "FINAL":
-            raise EventInProgress("matching event is still being processed")
-        return Reservation(str(row["event_id"]), replay=True)
-
-    def _finalize_event_sync(self, response: ModerationResponse) -> None:
-        if response.event_id is None:
-            raise DecisionConflict("cannot finalize a response without an event id")
-        now = _utc_now()
-        with self._connect() as connection:
-            cursor = connection.execute(
-                """UPDATE moderation_events
-                   SET status='FINAL', action=?, label=?, degraded=?,
-                       fallback_state=?, finalized_at=?
-                   WHERE event_id=? AND status='PENDING'""",
-                (
-                    response.action.value,
-                    response.label.value,
-                    int(response.degraded),
-                    response.fallback_state,
-                    now,
-                    response.event_id,
-                ),
             )
-            if cursor.rowcount != 1:
-                raise DecisionConflict("event is missing or already finalized")
-            self._insert_evidence(connection, response, now)
-            self._update_advisory_status(connection, response, now)
-
-    def _update_advisory_status(
-        self,
-        connection: sqlite3.Connection,
-        response: ModerationResponse,
-        now: str,
-    ) -> None:
-        error_code = (
-            "advisory_queue_saturated"
-            if response.advisory_status is AdvisoryStatus.QUEUE_SATURATED
-            else None
+        return _insert_new_event(
+            connection,
+            request,
+            client_id,
+            request_fingerprint,
+            canonical_fingerprint,
+            advisory_status,
+            now,
         )
+
+
+def _find_existing(
+    connection: sqlite3.Connection,
+    request: ModerationRequest,
+) -> sqlite3.Row | None:
+    alias = cast(
+        sqlite3.Row | None,
         connection.execute(
-            """UPDATE advisory_results
-               SET status=?, error_code=?, updated_at=? WHERE event_id=?""",
-            (response.advisory_status.value, error_code, now, response.event_id),
-        )
-
-    def _insert_evidence(
-        self,
-        connection: sqlite3.Connection,
-        response: ModerationResponse,
-        now: str,
-    ) -> None:
+            """SELECT a.event_id, a.request_fingerprint, e.status, 'alias' AS source
+               FROM message_aliases a JOIN moderation_events e ON e.event_id=a.event_id
+               WHERE a.alias_key=?""",
+            (_external_key(request),),
+        ).fetchone(),
+    )
+    if alias is not None:
+        return alias
+    return cast(
+        sqlite3.Row | None,
         connection.execute(
-            """INSERT INTO decision_evidence (
-              event_id, scores_json, rule_hits_json, reason_codes_json,
-              related_message_ids_json, local_model_version, policy_version,
-              latency_ms, created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-            (
-                response.event_id,
-                _json(response.scores),
-                _json(response.rule_hits),
-                _json(response.reason_codes),
-                _json(response.related_message_ids),
-                response.local_model_version,
-                response.policy_version,
-                response.latency_ms,
-                now,
-            ),
-        )
+            """SELECT event_id, input_fingerprint AS request_fingerprint, status,
+                      'legacy' AS source
+               FROM moderation_events WHERE external_key=?""",
+            (_external_key(request),),
+        ).fetchone(),
+    )
 
-    def _load_decision_sync(self, event_id: str) -> ModerationResponse:
-        with self._connect() as connection:
-            row = connection.execute(_DECISION_SELECT, (event_id,)).fetchone()
-        if row is None or row["status"] != "FINAL":
-            raise EventNotFound(event_id)
-        return _decision_from_row(row)
 
-    def _create_review_sync(self, request: ReviewRequest) -> ReviewResponse:
-        review_id = str(uuid4())
-        created_at = datetime.now(UTC)
-        with self._connect() as connection:
-            row = connection.execute(
-                "SELECT status FROM moderation_events WHERE event_id=?",
-                (request.event_id,),
-            ).fetchone()
-            if row is None or row["status"] != "FINAL":
-                raise EventNotFound(request.event_id)
-            connection.execute(
-                """INSERT INTO reviews (
-                  review_id, event_id, reviewer_id, label, action, reason_codes_json,
-                  note, created_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
-                (
-                    review_id,
-                    request.event_id,
-                    request.reviewer_id,
-                    request.label.value,
-                    request.action.value,
-                    _json(request.reason_codes),
-                    request.note,
-                    created_at.isoformat(),
-                ),
-            )
-        return ReviewResponse(
-            review_id=review_id,
-            event_id=request.event_id,
-            reviewer_id=request.reviewer_id,
-            label=request.label,
-            action=request.action,
-            reason_codes=request.reason_codes,
-            note=request.note,
-            created_at=created_at,
-        )
+def _resolve_existing(
+    connection: sqlite3.Connection,
+    row: sqlite3.Row,
+    request: ModerationRequest,
+    fingerprint: str,
+    now: str,
+) -> Reservation:
+    if row["request_fingerprint"] != fingerprint:
+        raise EventConflict("external message id was already used with different input")
+    if row["source"] == "legacy":
+        _insert_alias(connection, str(row["event_id"]), request, fingerprint, now)
+    return _reservation_from_existing(row)
 
-    def _get_event_sync(self, event_id: str) -> EventDetails:
-        with self._connect() as connection:
-            row = connection.execute(_EVENT_SELECT, (event_id,)).fetchone()
-            if row is None or row["status"] != "FINAL":
-                raise EventNotFound(event_id)
-            reviews = connection.execute(
-                "SELECT * FROM reviews WHERE event_id=? ORDER BY created_at ASC",
-                (event_id,),
-            ).fetchall()
-        return _event_details_from_rows(row, reviews)
 
-    def _save_advisory_sync(self, event_id: str, evidence: AdvisoryEvidence) -> None:
-        with self._connect() as connection:
-            cursor = connection.execute(
-                """UPDATE advisory_results SET
-                  status=?, model=?, flagged=?, scores_json=?, categories_json=?,
-                  error_code=?, latency_ms=?, disagrees_with_local=?, updated_at=?
-                  WHERE event_id=?""",
-                (
-                    evidence.status.value,
-                    evidence.model,
-                    None if evidence.flagged is None else int(evidence.flagged),
-                    _json(evidence.scores),
-                    _json(evidence.categories),
-                    evidence.error_code,
-                    evidence.latency_ms,
-                    self._advisory_disagreement(connection, event_id, evidence),
-                    _utc_now(),
-                    event_id,
-                ),
-            )
-            if cursor.rowcount != 1:
-                raise EventNotFound(event_id)
+def _find_canonical(
+    connection: sqlite3.Connection,
+    canonical_message_id: str | None,
+) -> sqlite3.Row | None:
+    if canonical_message_id is None:
+        return None
+    return cast(
+        sqlite3.Row | None,
+        connection.execute(
+            """SELECT event_id, status, canonical_fingerprint FROM moderation_events
+               WHERE canonical_message_id=?""",
+            (canonical_message_id,),
+        ).fetchone(),
+    )
 
-    def _advisory_disagreement(
-        self,
-        connection: sqlite3.Connection,
-        event_id: str,
-        evidence: AdvisoryEvidence,
-    ) -> int | None:
-        if evidence.flagged is None:
-            return None
-        row = connection.execute(
-            "SELECT action FROM moderation_events WHERE event_id=?",
-            (event_id,),
-        ).fetchone()
-        if row is None or row["action"] is None:
-            return None
-        local_flagged = row["action"] != Action.ALLOW.value
-        return int(bool(evidence.flagged) != local_flagged)
+
+def _resolve_mirror(
+    connection: sqlite3.Connection,
+    row: sqlite3.Row,
+    request: ModerationRequest,
+    request_fingerprint: str,
+    canonical_fingerprint: str,
+    now: str,
+) -> Reservation:
+    stored = row["canonical_fingerprint"]
+    if stored is not None and stored != canonical_fingerprint:
+        raise EventConflict("canonical message id was reused for different message content")
+    reservation = _reservation_from_existing(row)
+    _insert_alias(connection, reservation.event_id, request, request_fingerprint, now)
+    return reservation
+
+
+def _insert_new_event(
+    connection: sqlite3.Connection,
+    request: ModerationRequest,
+    client_id: str,
+    request_fingerprint: str,
+    canonical_fingerprint: str,
+    advisory_status: AdvisoryStatus,
+    now: str,
+) -> Reservation:
+    event_id = str(uuid4())
+    _insert_event(
+        connection, event_id, request, client_id, request_fingerprint, canonical_fingerprint, now
+    )
+    _insert_alias(connection, event_id, request, request_fingerprint, now)
+    connection.execute(
+        "INSERT INTO advisory_results(event_id,status,updated_at) VALUES(?,?,?)",
+        (event_id, advisory_status.value, now),
+    )
+    return Reservation(event_id, replay=False)
+
+
+def _insert_event(
+    connection: sqlite3.Connection,
+    event_id: str,
+    request: ModerationRequest,
+    client_id: str,
+    fingerprint: str,
+    canonical_fingerprint: str,
+    now: str,
+) -> None:
+    connection.execute(
+        """INSERT INTO moderation_events (
+          event_id,external_key,input_fingerprint,client_id,platform,channel_profile,
+          scope_id,channel_id,conversation_id,external_message_id,canonical_message_id,
+          canonical_fingerprint,sender_id,sender_identity_id,recipient_ids_json,
+          recipient_identity_ids_json,target_ids_json,target_identity_ids_json,
+          occurred_at,text,reply_to_message_id,status,created_at
+        ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'PENDING',?)""",
+        _event_values(event_id, request, client_id, fingerprint, canonical_fingerprint, now),
+    )
+
+
+def _event_values(
+    event_id: str,
+    request: ModerationRequest,
+    client_id: str,
+    fingerprint: str,
+    canonical_fingerprint: str,
+    now: str,
+) -> tuple[object, ...]:
+    return (
+        event_id, _external_key(request), fingerprint, client_id, request.platform.value,
+        request.channel_profile.value, request.scope_id, request.channel_id,
+        request.conversation_id, request.external_message_id, request.canonical_message_id,
+        canonical_fingerprint, request.sender_id, request.sender_identity_id,
+        _json(request.recipient_ids), _json(request.recipient_identity_ids),
+        _json(request.target_ids), _json(request.target_identity_ids),
+        request.occurred_at.isoformat(), request.text, request.reply_to_message_id, now,
+    )
+
+
+def _insert_alias(
+    connection: sqlite3.Connection,
+    event_id: str,
+    request: ModerationRequest,
+    fingerprint: str,
+    now: str,
+) -> None:
+    connection.execute(
+        """INSERT INTO message_aliases (
+          alias_key,event_id,request_fingerprint,platform,scope_id,channel_id,
+          external_message_id,created_at
+        ) VALUES(?,?,?,?,?,?,?,?)""",
+        (
+            _external_key(request), event_id, fingerprint, request.platform.value,
+            request.scope_id, request.channel_id, request.external_message_id, now,
+        ),
+    )
+
+
+def _reservation_from_existing(row: sqlite3.Row) -> Reservation:
+    if row["status"] != "FINAL":
+        raise EventInProgress("matching event is still being processed")
+    return Reservation(str(row["event_id"]), replay=True)
+
+
+def _finalize_event(
+    path: Path,
+    response: ModerationResponse,
+    evidence_event_ids: tuple[str, ...],
+    related_event_ids: tuple[str, ...],
+    incident_signal: IncidentSignal | None,
+) -> None:
+    if response.event_id is None:
+        raise DecisionConflict("cannot finalize response without event id")
+    now = _utc_now()
+    with _connect(path) as connection:
+        _finalize_event_row(connection, response, now)
+        _insert_decision_evidence(connection, response, evidence_event_ids, related_event_ids, now)
+        if incident_signal is not None and response.incident is not None:
+            _upsert_incident(connection, response.event_id, response.incident, incident_signal, now)
+        _update_advisory_status(connection, response, now)
+
+
+def _finalize_event_row(
+    connection: sqlite3.Connection,
+    response: ModerationResponse,
+    now: str,
+) -> None:
+    cursor = connection.execute(
+        """UPDATE moderation_events SET status='FINAL',action=?,label=?,degraded=?,
+           fallback_state=?,finalized_at=? WHERE event_id=? AND status='PENDING'""",
+        (
+            response.message_action.value, response.semantic_label.value,
+            int(response.degraded), response.fallback_state, now, response.event_id,
+        ),
+    )
+    if cursor.rowcount != 1:
+        raise DecisionConflict("event is missing or already finalized")
+
+
+def _insert_decision_evidence(
+    connection: sqlite3.Connection,
+    response: ModerationResponse,
+    evidence_event_ids: tuple[str, ...],
+    related_event_ids: tuple[str, ...],
+    now: str,
+) -> None:
+    connection.execute(
+        """INSERT INTO decision_evidence (
+          event_id,scores_json,rule_hits_json,reason_codes_json,related_message_ids_json,
+          local_model_version,policy_version,latency_ms,created_at,ingestion_status,
+          message_action,semantic_label,review_priority,strike_recommendation,containment,
+          containment_duration_seconds,support_flow,confidence,evidence_event_ids_json,
+          related_event_ids_json,incident_id
+        ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+        _evidence_values(response, evidence_event_ids, related_event_ids, now),
+    )
+
+
+def _evidence_values(
+    response: ModerationResponse,
+    evidence_event_ids: tuple[str, ...],
+    related_event_ids: tuple[str, ...],
+    now: str,
+) -> tuple[object, ...]:
+    return (
+        response.event_id, _json(response.scores), _json(response.rule_hits),
+        _json(response.reason_codes), _json(response.related_message_ids),
+        response.local_model_version, response.policy_version, response.latency_ms, now,
+        response.ingestion_status.value, response.message_action.value,
+        response.semantic_label.value, response.review_priority.value,
+        response.strike_recommendation.value, response.containment.value,
+        response.containment_duration_seconds, response.support_flow.value,
+        response.confidence, _json(evidence_event_ids), _json(related_event_ids),
+        response.incident.incident_id if response.incident else None,
+    )
+
+
+def _upsert_incident(
+    connection: sqlite3.Connection,
+    event_id: str,
+    summary: IncidentSummary,
+    signal: IncidentSignal,
+    now: str,
+) -> None:
+    connection.execute(
+        """INSERT INTO incidents(
+             incident_id,incident_key,kind,severity,coordinated,created_at,updated_at
+           ) VALUES(?,?,?,?,?,?,?) ON CONFLICT(incident_key) DO UPDATE SET
+           severity=MAX(incidents.severity,excluded.severity),
+           coordinated=MAX(incidents.coordinated,excluded.coordinated),
+           updated_at=excluded.updated_at""",
+        (
+            summary.incident_id, signal.incident_key, summary.kind.value, summary.severity,
+            int(summary.coordinated), now, now,
+        ),
+    )
+    connection.execute(
+        """INSERT OR IGNORE INTO incident_events(
+             incident_id,event_id,sender_id,target_ids_json,created_at
+           ) SELECT ?,event_id,sender_id,target_ids_json,?
+             FROM moderation_events WHERE event_id=?""",
+        (summary.incident_id, now, event_id),
+    )
+
+
+def _update_advisory_status(
+    connection: sqlite3.Connection,
+    response: ModerationResponse,
+    now: str,
+) -> None:
+    error = (
+        "advisory_queue_saturated"
+        if response.advisory_status is AdvisoryStatus.QUEUE_SATURATED
+        else None
+    )
+    connection.execute(
+        "UPDATE advisory_results SET status=?,error_code=?,updated_at=? WHERE event_id=?",
+        (response.advisory_status.value, error, now, response.event_id),
+    )
 
 
 _DECISION_SELECT = """
-SELECT e.*, d.*, a.status AS advisory_status
-FROM moderation_events e
-JOIN decision_evidence d ON d.event_id = e.event_id
-LEFT JOIN advisory_results a ON a.event_id = e.event_id
-WHERE e.event_id = ?
+SELECT e.*,d.*,a.status AS advisory_status FROM moderation_events e
+JOIN decision_evidence d ON d.event_id=e.event_id
+LEFT JOIN advisory_results a ON a.event_id=e.event_id WHERE e.event_id=?
 """
 
 _EVENT_SELECT = """
-SELECT e.*, d.*, a.status AS advisory_status, a.model AS advisory_model,
-       a.flagged AS advisory_flagged, a.scores_json AS advisory_scores_json,
-       a.categories_json AS advisory_categories_json, a.error_code AS advisory_error_code,
+SELECT e.*,d.*,a.status AS advisory_status,a.model AS advisory_model,
+       a.flagged AS advisory_flagged,a.scores_json AS advisory_scores_json,
+       a.categories_json AS advisory_categories_json,a.error_code AS advisory_error_code,
        a.latency_ms AS advisory_latency_ms,
        a.disagrees_with_local AS advisory_disagrees_with_local
-FROM moderation_events e
-JOIN decision_evidence d ON d.event_id = e.event_id
-LEFT JOIN advisory_results a ON a.event_id = e.event_id
-WHERE e.event_id = ?
+FROM moderation_events e JOIN decision_evidence d ON d.event_id=e.event_id
+LEFT JOIN advisory_results a ON a.event_id=e.event_id WHERE e.event_id=?
 """
 
 
-def _decision_from_row(row: sqlite3.Row) -> ModerationResponse:
+def _load_decision(path: Path, event_id: str) -> ModerationResponse:
+    with _connect(path) as connection:
+        row = connection.execute(_DECISION_SELECT, (event_id,)).fetchone()
+        if row is None or row["status"] != "FINAL":
+            raise EventNotFound(event_id)
+        return _decision_from_row(connection, row)
+
+
+def _decision_from_row(
+    connection: sqlite3.Connection,
+    row: sqlite3.Row,
+) -> ModerationResponse:
+    related_event_ids = tuple(json.loads(row["related_event_ids_json"] or "[]"))
+    related_refs = _message_refs(connection, related_event_ids)
     return ModerationResponse(
-        event_id=row["event_id"],
-        action=Action(row["action"]),
-        label=Label(row["label"]),
-        scores=json.loads(row["scores_json"]),
+        event_id=str(row["event_id"]),
+        ingestion_status=IngestionStatus(row["ingestion_status"] or "INGESTED"),
+        message_action=MessageAction(row["message_action"] or _legacy_action(row["action"])),
+        semantic_label=Label(row["semantic_label"] or row["label"]),
+        review_priority=ReviewPriority(row["review_priority"]),
+        strike_recommendation=StrikeRecommendation(row["strike_recommendation"]),
+        containment=Containment(row["containment"]),
+        containment_duration_seconds=row["containment_duration_seconds"],
+        support_flow=SupportFlow(row["support_flow"]),
+        scores=json.loads(row["scores_json"]), confidence=row["confidence"],
         rule_hits=json.loads(row["rule_hits_json"]),
         reason_codes=json.loads(row["reason_codes_json"]),
         related_message_ids=json.loads(row["related_message_ids_json"]),
-        local_model_version=row["local_model_version"],
-        policy_version=row["policy_version"],
+        related_messages=related_refs,
+        incident=_incident_summary(connection, row["incident_id"]),
+        local_model_version=str(row["local_model_version"]),
+        policy_version=str(row["policy_version"]),
         advisory_status=AdvisoryStatus(row["advisory_status"] or "DISABLED"),
-        latency_ms=int(row["latency_ms"]),
-        degraded=bool(row["degraded"]),
+        latency_ms=int(row["latency_ms"]), degraded=bool(row["degraded"]),
         fallback_state=row["fallback_state"],
     )
 
 
-def _event_details_from_rows(row: sqlite3.Row, reviews: list[sqlite3.Row]) -> EventDetails:
-    advisory = AdvisoryEvidence(
+def _message_refs(
+    connection: sqlite3.Connection,
+    event_ids: tuple[str, ...],
+) -> list[MessageRef]:
+    refs: list[MessageRef] = []
+    for event_id in event_ids:
+        rows = connection.execute(
+            """SELECT platform,scope_id,channel_id,external_message_id FROM message_aliases
+               WHERE event_id=? ORDER BY created_at ASC""",
+            (event_id,),
+        ).fetchall()
+        if not rows:
+            rows = connection.execute(
+                """SELECT platform,scope_id,channel_id,external_message_id FROM moderation_events
+                   WHERE event_id=?""",
+                (event_id,),
+            ).fetchall()
+        refs.extend(_message_ref(row) for row in rows)
+    return refs
+
+
+def _incident_summary(
+    connection: sqlite3.Connection,
+    incident_id: str | None,
+) -> IncidentSummary | None:
+    if incident_id is None:
+        return None
+    incident = connection.execute(
+        "SELECT * FROM incidents WHERE incident_id=?", (incident_id,)
+    ).fetchone()
+    if incident is None:
+        return None
+    events = connection.execute(
+        "SELECT sender_id,target_ids_json FROM incident_events WHERE incident_id=?",
+        (incident_id,),
+    ).fetchall()
+    participants = sorted({str(row["sender_id"]) for row in events})
+    targets = sorted({target for row in events for target in json.loads(row["target_ids_json"])})
+    return IncidentSummary(
+        incident_id=incident_id, kind=IncidentKind(incident["kind"]),
+        severity=int(incident["severity"]), coordinated=bool(incident["coordinated"]),
+        participant_ids=participants, target_ids=targets,
+    )
+
+
+def _get_event(path: Path, event_id: str) -> EventDetails:
+    with _connect(path) as connection:
+        row = connection.execute(_EVENT_SELECT, (event_id,)).fetchone()
+        if row is None or row["status"] != "FINAL":
+            raise EventNotFound(event_id)
+        decision = _decision_from_row(connection, row)
+        corrections = _corrections_for_event(connection, event_id)
+        accepted = _accepted_correction(connection, event_id)
+        context = _context_evidence_rows(connection, row)
+        return _event_details(row, decision, corrections, accepted, context)
+
+
+def _context_evidence_rows(
+    connection: sqlite3.Connection,
+    row: sqlite3.Row,
+) -> list[ContextEvidence]:
+    event_ids = tuple(json.loads(row["evidence_event_ids_json"] or "[]"))
+    evidence: list[ContextEvidence] = []
+    for event_id in event_ids:
+        item = connection.execute(
+            """SELECT event_id,platform,scope_id,channel_id,external_message_id,
+                      sender_id,occurred_at,text FROM moderation_events
+               WHERE event_id=? AND status='FINAL'""",
+            (event_id,),
+        ).fetchone()
+        if item is not None:
+            evidence.append(_context_evidence(item))
+    return evidence
+
+
+def _event_details(
+    row: sqlite3.Row,
+    decision: ModerationResponse,
+    corrections: list[CorrectionResponse],
+    accepted: CorrectionResponse | None,
+    context: list[ContextEvidence],
+) -> EventDetails:
+    return EventDetails(
+        event_id=str(row["event_id"]), client_id=str(row["client_id"]),
+        platform=Platform(row["platform"]), channel_profile=_profile_from_row(row),
+        scope_id=str(row["scope_id"]), channel_id=row["channel_id"],
+        conversation_id=row["conversation_id"], external_message_id=str(row["external_message_id"]),
+        canonical_message_id=row["canonical_message_id"], sender_id=str(row["sender_id"]),
+        occurred_at=datetime.fromisoformat(row["occurred_at"]), text=str(row["text"]),
+        reply_to_message_id=row["reply_to_message_id"], decision=decision,
+        advisory=_advisory_from_row(row), corrections=corrections,
+        accepted_correction=accepted, context_evidence=context,
+    )
+
+
+def _advisory_from_row(row: sqlite3.Row) -> AdvisoryEvidence:
+    disagreement = row["advisory_disagrees_with_local"]
+    return AdvisoryEvidence(
         status=AdvisoryStatus(row["advisory_status"] or "DISABLED"),
         model=row["advisory_model"],
         flagged=None if row["advisory_flagged"] is None else bool(row["advisory_flagged"]),
         scores=json.loads(row["advisory_scores_json"] or "{}"),
         categories=json.loads(row["advisory_categories_json"] or "{}"),
-        error_code=row["advisory_error_code"],
-        latency_ms=row["advisory_latency_ms"],
-        disagrees_with_local=(
-            None
-            if row["advisory_disagrees_with_local"] is None
-            else bool(row["advisory_disagrees_with_local"])
+        error_code=row["advisory_error_code"], latency_ms=row["advisory_latency_ms"],
+        disagrees_with_local=None if disagreement is None else bool(disagreement),
+    )
+
+
+def _list_review_items(path: Path, limit: int) -> list[ReviewItem]:
+    with _connect(path) as connection:
+        rows = connection.execute(
+            """SELECT e.event_id,e.occurred_at,e.platform,e.channel_profile,
+                      d.semantic_label,d.message_action,d.review_priority,d.reason_codes_json,
+                      d.incident_id FROM moderation_events e
+               JOIN decision_evidence d ON d.event_id=e.event_id
+               LEFT JOIN accepted_corrections a ON a.event_id=e.event_id
+               WHERE e.status='FINAL' AND d.review_priority!='NONE' AND a.event_id IS NULL
+               ORDER BY CASE d.review_priority WHEN 'URGENT' THEN 0 ELSE 1 END,e.occurred_at ASC
+               LIMIT ?""",
+            (limit,),
+        ).fetchall()
+    return [_review_item(row) for row in rows]
+
+
+def _create_correction(
+    path: Path,
+    request: CorrectionRequest,
+    admin_override: bool,
+) -> CorrectionResponse:
+    corrected_json = _json(request.corrected.model_dump(mode="json"))
+    correction_hash = hashlib.sha256(corrected_json.encode()).hexdigest()
+    now = _utc_now()
+    with _connect(path) as connection:
+        _require_final_event(connection, request.event_id)
+        _guard_existing_correction(connection, request.event_id, correction_hash, admin_override)
+        proposal = _find_or_create_proposal(
+            connection, request, correction_hash, corrected_json, now
+        )
+        _guard_rejected_proposal(proposal, admin_override)
+        _record_vote(
+            connection,
+            str(proposal["proposal_id"]),
+            request.reviewer_id,
+            request.authority,
+            CorrectionVote.APPROVE,
+            now,
+        )
+        _accept_if_ready(
+            connection, str(proposal["proposal_id"]), request.event_id, admin_override, now
+        )
+        refreshed = _proposal_row(connection, str(proposal["proposal_id"]))
+        assert refreshed is not None
+        return _correction_response(connection, refreshed)
+
+
+def _reject_correction(
+    path: Path,
+    proposal_id: str,
+    request: CorrectionRejectRequest,
+    admin_override: bool,
+) -> CorrectionResponse:
+    now = _utc_now()
+    with _connect(path) as connection:
+        proposal = _proposal_row(connection, proposal_id)
+        if proposal is None:
+            raise ProposalNotFound(proposal_id)
+        if proposal["status"] == CorrectionStatus.ACCEPTED.value and not admin_override:
+            raise DecisionConflict("accepted correction requires Admin+ to reverse")
+        _record_vote(
+            connection,
+            proposal_id,
+            request.reviewer_id,
+            request.authority,
+            CorrectionVote.REJECT,
+            now,
+        )
+        _reject_if_ready(connection, proposal_id, admin_override, now)
+        refreshed = _proposal_row(connection, proposal_id)
+        assert refreshed is not None
+        return _correction_response(connection, refreshed)
+
+
+def _guard_existing_correction(
+    connection: sqlite3.Connection,
+    event_id: str,
+    correction_hash: str,
+    admin_override: bool,
+) -> None:
+    accepted = connection.execute(
+        """SELECT p.correction_hash FROM accepted_corrections a
+           JOIN correction_proposals p ON p.proposal_id=a.proposal_id WHERE a.event_id=?""",
+        (event_id,),
+    ).fetchone()
+    if (
+        accepted is not None
+        and accepted["correction_hash"] != correction_hash
+        and not admin_override
+    ):
+        raise DecisionConflict("event already has a different accepted correction")
+
+
+def _guard_rejected_proposal(row: sqlite3.Row, admin_override: bool) -> None:
+    if row["status"] == CorrectionStatus.REJECTED.value and not admin_override:
+        raise DecisionConflict("matching correction proposal was rejected")
+
+
+def _find_or_create_proposal(
+    connection: sqlite3.Connection,
+    request: CorrectionRequest,
+    correction_hash: str,
+    corrected_json: str,
+    now: str,
+) -> sqlite3.Row:
+    row = cast(
+        sqlite3.Row | None,
+        connection.execute(
+            "SELECT * FROM correction_proposals WHERE event_id=? AND correction_hash=?",
+            (request.event_id, correction_hash),
+        ).fetchone(),
+    )
+    if row is not None:
+        return row
+    proposal_id = str(uuid4())
+    connection.execute(
+        """INSERT INTO correction_proposals(
+          proposal_id,event_id,correction_hash,corrected_json,note,status,created_at
+        ) VALUES(?,?,?,?,?,?,?)""",
+        (
+            proposal_id, request.event_id, correction_hash, corrected_json, request.note,
+            CorrectionStatus.PENDING_CONFIRMATION.value, now,
         ),
     )
-    return EventDetails(
-        event_id=row["event_id"],
-        client_id=row["client_id"],
-        platform=row["platform"],
-        scope_id=row["scope_id"],
-        channel_id=row["channel_id"],
-        external_message_id=row["external_message_id"],
-        sender_id=row["sender_id"],
-        occurred_at=datetime.fromisoformat(row["occurred_at"]),
-        text=row["text"],
-        reply_to_message_id=row["reply_to_message_id"],
-        decision=_decision_from_row(row),
-        advisory=advisory,
-        reviews=[_review_from_row(item) for item in reviews],
+    created = _proposal_row(connection, proposal_id)
+    assert created is not None
+    return created
+
+
+def _record_vote(
+    connection: sqlite3.Connection,
+    proposal_id: str,
+    reviewer_id: str,
+    authority: CorrectionAuthority,
+    vote: CorrectionVote,
+    now: str,
+) -> None:
+    existing = connection.execute(
+        "SELECT vote FROM correction_votes WHERE proposal_id=? AND reviewer_id=?",
+        (proposal_id, reviewer_id),
+    ).fetchone()
+    if existing is not None:
+        if existing["vote"] != vote.value:
+            raise DecisionConflict("reviewer already cast the opposite vote")
+        return
+    connection.execute(
+        """INSERT INTO correction_votes(proposal_id,reviewer_id,authority,vote,created_at)
+           VALUES(?,?,?,?,?)""",
+        (proposal_id, reviewer_id, authority.value, vote.value, now),
     )
 
 
-def _review_from_row(row: sqlite3.Row) -> ReviewResponse:
-    return ReviewResponse(
-        review_id=row["review_id"],
-        event_id=row["event_id"],
-        reviewer_id=row["reviewer_id"],
-        label=Label(row["label"]),
-        action=Action(row["action"]),
-        reason_codes=json.loads(row["reason_codes_json"]),
-        note=row["note"],
+def _accept_if_ready(
+    connection: sqlite3.Connection,
+    proposal_id: str,
+    event_id: str,
+    admin_override: bool,
+    now: str,
+) -> None:
+    approvals, _ = _vote_counts(connection, proposal_id)
+    if not admin_override and approvals < 2:
+        return
+    connection.execute(
+        "UPDATE correction_proposals SET status=?,resolved_at=? WHERE proposal_id=?",
+        (CorrectionStatus.ACCEPTED.value, now, proposal_id),
+    )
+    connection.execute(
+        """INSERT INTO accepted_corrections(event_id,proposal_id,accepted_at) VALUES(?,?,?)
+           ON CONFLICT(event_id) DO UPDATE SET proposal_id=excluded.proposal_id,
+           accepted_at=excluded.accepted_at""",
+        (event_id, proposal_id, now),
+    )
+
+
+def _reject_if_ready(
+    connection: sqlite3.Connection,
+    proposal_id: str,
+    admin_override: bool,
+    now: str,
+) -> None:
+    _, rejections = _vote_counts(connection, proposal_id)
+    if not admin_override and rejections < 2:
+        return
+    connection.execute(
+        "UPDATE correction_proposals SET status=?,resolved_at=? WHERE proposal_id=?",
+        (CorrectionStatus.REJECTED.value, now, proposal_id),
+    )
+    connection.execute("DELETE FROM accepted_corrections WHERE proposal_id=?", (proposal_id,))
+
+
+def _proposal_row(connection: sqlite3.Connection, proposal_id: str) -> sqlite3.Row | None:
+    return cast(
+        sqlite3.Row | None,
+        connection.execute(
+            "SELECT * FROM correction_proposals WHERE proposal_id=?",
+            (proposal_id,),
+        ).fetchone(),
+    )
+
+
+def _vote_counts(connection: sqlite3.Connection, proposal_id: str) -> tuple[int, int]:
+    rows = connection.execute(
+        "SELECT vote,COUNT(*) AS total FROM correction_votes WHERE proposal_id=? GROUP BY vote",
+        (proposal_id,),
+    ).fetchall()
+    counts = {str(row["vote"]): int(row["total"]) for row in rows}
+    return counts.get(CorrectionVote.APPROVE.value, 0), counts.get(CorrectionVote.REJECT.value, 0)
+
+
+def _correction_response(
+    connection: sqlite3.Connection,
+    row: sqlite3.Row,
+) -> CorrectionResponse:
+    approvals, rejections = _vote_counts(connection, str(row["proposal_id"]))
+    return CorrectionResponse(
+        proposal_id=str(row["proposal_id"]), event_id=str(row["event_id"]),
+        status=CorrectionStatus(row["status"]),
+        corrected=CorrectionDecision.model_validate(json.loads(row["corrected_json"])),
+        approvals=approvals, rejections=rejections,
         created_at=datetime.fromisoformat(row["created_at"]),
+        resolved_at=(
+            None if row["resolved_at"] is None else datetime.fromisoformat(row["resolved_at"])
+        ),
     )
+
+
+def _corrections_for_event(
+    connection: sqlite3.Connection,
+    event_id: str,
+) -> list[CorrectionResponse]:
+    rows = connection.execute(
+        "SELECT * FROM correction_proposals WHERE event_id=? ORDER BY created_at ASC",
+        (event_id,),
+    ).fetchall()
+    return [_correction_response(connection, row) for row in rows]
+
+
+def _accepted_correction(
+    connection: sqlite3.Connection,
+    event_id: str,
+) -> CorrectionResponse | None:
+    row = connection.execute(
+        """SELECT p.* FROM accepted_corrections a
+           JOIN correction_proposals p ON p.proposal_id=a.proposal_id WHERE a.event_id=?""",
+        (event_id,),
+    ).fetchone()
+    return None if row is None else _correction_response(connection, row)
+
+
+def _require_final_event(connection: sqlite3.Connection, event_id: str) -> None:
+    row = connection.execute(
+        "SELECT status FROM moderation_events WHERE event_id=?", (event_id,)
+    ).fetchone()
+    if row is None or row["status"] != "FINAL":
+        raise EventNotFound(event_id)
+
+
+def _save_advisory(path: Path, event_id: str, evidence: AdvisoryEvidence) -> None:
+    with _connect(path) as connection:
+        disagreement = _advisory_disagreement(connection, event_id, evidence)
+        cursor = connection.execute(
+            """UPDATE advisory_results SET status=?,model=?,flagged=?,scores_json=?,
+               categories_json=?,error_code=?,latency_ms=?,disagrees_with_local=?,updated_at=?
+               WHERE event_id=?""",
+            (
+                evidence.status.value, evidence.model,
+                None if evidence.flagged is None else int(evidence.flagged),
+                _json(evidence.scores), _json(evidence.categories), evidence.error_code,
+                evidence.latency_ms, disagreement, _utc_now(), event_id,
+            ),
+        )
+        if cursor.rowcount != 1:
+            raise EventNotFound(event_id)
+
+
+def _advisory_disagreement(
+    connection: sqlite3.Connection,
+    event_id: str,
+    evidence: AdvisoryEvidence,
+) -> int | None:
+    if evidence.flagged is None:
+        return None
+    row = connection.execute(
+        """SELECT COALESCE(d.message_action,e.action) AS message_action FROM moderation_events e
+           LEFT JOIN decision_evidence d ON d.event_id=e.event_id WHERE e.event_id=?""",
+        (event_id,),
+    ).fetchone()
+    if row is None or row["message_action"] is None:
+        return None
+    local_flagged = _legacy_action(str(row["message_action"])) == MessageAction.BLOCK.value
+    return int(bool(evidence.flagged) != local_flagged)
+
+
+def _load_recent_context(
+    path: Path,
+    window_seconds: int,
+    limit: int,
+) -> tuple[ContextMessage, ...]:
+    cutoff = datetime.now(UTC) - timedelta(seconds=window_seconds)
+    with _connect(path) as connection:
+        rows = connection.execute(
+            """SELECT * FROM moderation_events WHERE status='FINAL' AND channel_profile IS NOT NULL
+               AND occurred_at>=? ORDER BY occurred_at DESC LIMIT ?""",
+            (cutoff.isoformat(), limit),
+        ).fetchall()
+    messages = [_context_message_from_row(row) for row in reversed(rows)]
+    return tuple(item for item in messages if not item.channel_profile.exempt)
+
+
+def _load_memory_snapshot(
+    path: Path,
+    current: ContextMessage,
+    limit: int,
+) -> MemorySnapshot:
+    subject_ids = [current.sender_id]
+    if current.sender_identity_id:
+        subject_ids.append(current.sender_identity_id)
+    targets = _memory_targets(current)
+    now = _utc_now()
+    with _connect(path) as connection:
+        punishment = _load_punishment_memory(
+            connection, subject_ids, current.platform, targets, now, limit
+        )
+        safety = _load_safety_memory(connection, subject_ids, now, limit)
+    return MemorySnapshot(tuple(punishment), tuple(safety))
+
+
+def _memory_targets(current: ContextMessage) -> set[str]:
+    return {
+        *current.recipient_ids, *current.target_ids,
+        *current.recipient_identity_ids, *current.target_identity_ids,
+    }
+
+
+def _load_punishment_memory(
+    connection: sqlite3.Connection,
+    subject_ids: list[str],
+    platform: Platform,
+    targets: set[str],
+    now: str,
+    limit: int,
+) -> list[MemoryFact]:
+    placeholders = ",".join("?" for _ in subject_ids)
+    rows = connection.execute(
+        f"""SELECT * FROM moderation_memory WHERE platform=? AND subject_id IN ({placeholders})
+            AND (expires_at IS NULL OR expires_at>?) ORDER BY created_at DESC LIMIT ?""",
+        (platform.value, *subject_ids, now, limit),
+    ).fetchall()
+    return [
+        _memory_fact(row) for row in rows
+        if row["target_id"] is None or str(row["target_id"]) in targets
+    ]
+
+
+def _load_safety_memory(
+    connection: sqlite3.Connection,
+    subject_ids: list[str],
+    now: str,
+    limit: int,
+) -> list[SafetyMemoryFact]:
+    placeholders = ",".join("?" for _ in subject_ids)
+    rows = connection.execute(
+        f"""SELECT * FROM safety_memory WHERE subject_id IN ({placeholders})
+            AND (expires_at IS NULL OR expires_at>?) ORDER BY created_at DESC LIMIT ?""",
+        (*subject_ids, now, limit),
+    ).fetchall()
+    return [_safety_memory_fact(row) for row in rows]
+
+
+def _save_memory_fact(path: Path, fact: MemoryFact) -> None:
+    with _connect(path) as connection:
+        connection.execute(
+            """INSERT INTO moderation_memory(
+              memory_id,kind,subject_id,target_id,platform,payload_json,confidence,source,
+              confirmed,created_at,updated_at,expires_at
+            ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(memory_id) DO UPDATE SET
+              kind=excluded.kind,target_id=excluded.target_id,payload_json=excluded.payload_json,
+              confidence=excluded.confidence,source=excluded.source,confirmed=excluded.confirmed,
+              updated_at=excluded.updated_at,expires_at=excluded.expires_at""",
+            _memory_values(fact),
+        )
+
+
+def _memory_values(fact: MemoryFact) -> tuple[object, ...]:
+    return (
+        fact.memory_id, fact.kind.value, fact.subject_id, fact.target_id, fact.platform.value,
+        _json(fact.payload), fact.confidence, fact.source, int(fact.confirmed),
+        fact.created_at.isoformat(), _utc_now(),
+        None if fact.expires_at is None else fact.expires_at.isoformat(),
+    )
+
+
+def _save_safety_memory_fact(path: Path, fact: SafetyMemoryFact) -> None:
+    with _connect(path) as connection:
+        connection.execute(
+            """INSERT INTO safety_memory(
+              memory_id,kind,subject_id,payload_json,confidence,source,
+              created_at,updated_at,expires_at
+            ) VALUES(?,?,?,?,?,?,?,?,?) ON CONFLICT(memory_id) DO UPDATE SET
+              kind=excluded.kind,payload_json=excluded.payload_json,confidence=excluded.confidence,
+              source=excluded.source,updated_at=excluded.updated_at,
+              expires_at=excluded.expires_at""",
+            (
+                fact.memory_id, fact.kind.value, fact.subject_id, _json(fact.payload),
+                fact.confidence, fact.source, fact.created_at.isoformat(), _utc_now(),
+                None if fact.expires_at is None else fact.expires_at.isoformat(),
+            ),
+        )
+
+
+def _message_ref(row: sqlite3.Row) -> MessageRef:
+    return MessageRef(
+        platform=Platform(row["platform"]), scope_id=str(row["scope_id"]),
+        channel_id=row["channel_id"], external_message_id=str(row["external_message_id"]),
+    )
+
+
+def _context_evidence(row: sqlite3.Row) -> ContextEvidence:
+    return ContextEvidence(
+        event_id=str(row["event_id"]), message=_message_ref(row),
+        sender_id=str(row["sender_id"]), occurred_at=datetime.fromisoformat(row["occurred_at"]),
+        text=str(row["text"]),
+    )
+
+
+def _review_item(row: sqlite3.Row) -> ReviewItem:
+    return ReviewItem(
+        event_id=str(row["event_id"]), occurred_at=datetime.fromisoformat(row["occurred_at"]),
+        platform=Platform(row["platform"]), channel_profile=_profile_from_row(row),
+        semantic_label=Label(row["semantic_label"]),
+        message_action=MessageAction(row["message_action"]),
+        review_priority=ReviewPriority(row["review_priority"]),
+        reason_codes=json.loads(row["reason_codes_json"]), incident_id=row["incident_id"],
+    )
+
+
+def _profile_from_row(row: sqlite3.Row) -> ChannelProfile:
+    value = row["channel_profile"]
+    if value is not None:
+        return ChannelProfile(value)
+    if row["platform"] == Platform.MINECRAFT.value:
+        return ChannelProfile.MINECRAFT_PUBLIC
+    return ChannelProfile.DISCORD_GENERAL
+
+
+def _context_message_from_row(row: sqlite3.Row) -> ContextMessage:
+    return ContextMessage(
+        event_id=str(row["event_id"]), platform=Platform(row["platform"]),
+        channel_profile=_profile_from_row(row), scope_id=str(row["scope_id"]),
+        channel_id=row["channel_id"], conversation_id=row["conversation_id"],
+        external_message_id=str(row["external_message_id"]),
+        canonical_message_id=row["canonical_message_id"],
+        sender_id=str(row["sender_id"]), sender_identity_id=row["sender_identity_id"],
+        recipient_ids=tuple(json.loads(row["recipient_ids_json"] or "[]")),
+        recipient_identity_ids=tuple(json.loads(row["recipient_identity_ids_json"] or "[]")),
+        target_ids=tuple(json.loads(row["target_ids_json"] or "[]")),
+        target_identity_ids=tuple(json.loads(row["target_identity_ids_json"] or "[]")),
+        occurred_at=datetime.fromisoformat(row["occurred_at"]), text=str(row["text"]),
+        reply_to_message_id=row["reply_to_message_id"],
+    )
+
+
+def _memory_fact(row: sqlite3.Row) -> MemoryFact:
+    return MemoryFact(
+        memory_id=str(row["memory_id"]), kind=MemoryKind(row["kind"]),
+        subject_id=str(row["subject_id"]), target_id=row["target_id"],
+        platform=Platform(row["platform"]), payload=json.loads(row["payload_json"]),
+        confidence=float(row["confidence"]), source=str(row["source"]),
+        confirmed=bool(row["confirmed"]), created_at=datetime.fromisoformat(row["created_at"]),
+        expires_at=None if row["expires_at"] is None else datetime.fromisoformat(row["expires_at"]),
+    )
+
+
+def _safety_memory_fact(row: sqlite3.Row) -> SafetyMemoryFact:
+    return SafetyMemoryFact(
+        memory_id=str(row["memory_id"]), kind=SafetyMemoryKind(row["kind"]),
+        subject_id=str(row["subject_id"]), payload=json.loads(row["payload_json"]),
+        confidence=float(row["confidence"]), source=str(row["source"]),
+        created_at=datetime.fromisoformat(row["created_at"]),
+        expires_at=None if row["expires_at"] is None else datetime.fromisoformat(row["expires_at"]),
+    )
+
+
+def _legacy_action(value: str | None) -> str:
+    return MessageAction.BLOCK.value if value == "BLOCK" else MessageAction.ALLOW.value
 
 
 def _external_key(request: ModerationRequest) -> str:
-    return _json((request.platform, request.scope_id, request.external_message_id))
+    return _json((request.platform.value, request.scope_id, request.external_message_id))
 
 
-def _json(value: object) -> str:
+def _json(value: Any) -> str:
     return json.dumps(value, separators=(",", ":"), sort_keys=True)
 
 

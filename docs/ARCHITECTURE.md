@@ -2,106 +2,92 @@
 
 ## Core boundary
 
-`AI-Moderation-API` is a central, private moderation service. RoseChat, Discord, and EnthusiaStaff are clients/consumers; none should embed independent copies of the semantic policy.
+`AI-Moderation-API` is the central private moderation service. RoseChat, the Discord Ticket Bot, and EnthusiaStaff are clients/consumers; they do not embed separate semantic-policy implementations.
 
 ```text
 RoseChat ─────────────┐
-                     │ private authenticated API
-Discord Ticket Bot ──┼────────► AI Moderation API
-                     │              │
-EnthusiaStaff ───────┘              ├─ rolling context store
-                                    ├─ deterministic safety rules
-                                    ├─ local semantic classifier
-                                    ├─ OpenAI advisory moderation
-                                    ├─ durable event/review store
-                                    └─ structured decision evidence
+                     │ authenticated private API
+Discord Ticket Bot ──┼──────► AI Moderation API
+                     │           │
+EnthusiaStaff ───────┘           ├─ scope gate / canonical dedup
+                                 ├─ bounded relationship context
+                                 ├─ structured durable memory
+                                 ├─ local semantic classifier
+                                 ├─ policy decision dimensions
+                                 ├─ incident aggregation
+                                 ├─ SQLite event/review store
+                                 └─ async OpenAI advisory
 ```
 
-## Hosting
+The AI service is optional. Chat and normal EnthusiaStaff functionality must remain usable if it is stopped, unhealthy, saturated, or restarting.
 
-Production target: a separate `ai-moderation/` process inside the existing Discord Ticket Bot Pterodactyl server.
+## Live path
 
-The Ticket Bot currently has enough memory headroom for a small quantized text classifier. The AI service must remain independently restartable and non-critical to the Ticket Bot process.
+1. Authenticate the caller and validate platform/channel profile metadata.
+2. Return immediately for exempt profiles without ingesting the text.
+3. Reserve an idempotent canonical event or resolve a mirror/retry.
+4. Retrieve bounded relevant short-term context and structured memory.
+5. Run the local classifier under a strict timeout.
+6. Convert classifier output into separate semantic/action/review/strike/containment/support dimensions.
+7. Atomically finalize decision evidence and optional incident linkage.
+8. Return the local decision to the client.
+9. Enqueue OpenAI Moderation asynchronously for advisory evidence only.
+10. Allow later human correction without mutating the original AI decision.
 
-If resource pressure later becomes a problem, the same service can move to another Pterodactyl container without changing the API contract.
+OpenAI is never on the latency-critical path.
 
-## Live decision path
+## Scope and privacy gate
 
-1. Client submits the new message plus source metadata.
-2. Service stores the event and updates rolling context.
-3. Deterministic normalization/rules run.
-4. Local semantic classifier evaluates the current message plus relevant prior messages.
-5. Policy engine returns `ALLOW`, `REVIEW`, or `BLOCK` with structured reason codes.
-6. Client applies only the message-level action it is authorized to apply.
-7. OpenAI Moderation runs asynchronously/advisory and is stored for comparison/training.
-8. Human review can later correct the label/action.
-
-OpenAI must not be on the latency-critical path.
+Channel profiles are explicit runtime metadata rather than literal production channel IDs. Discord ticket, staff-only, and configured exempt profiles exit before event reservation. Their text is not stored, classified, added to context, or used by incidents/memory.
 
 ## Context ownership
 
-The central service owns semantic context so Minecraft and Discord use the same rules.
+The central service owns semantic context so Minecraft and Discord use the same linkage rules. Context is relationship-bounded rather than global.
 
-Each event includes:
-- platform;
-- server/guild and channel/scope;
-- stable external message ID;
-- sender pseudonymous ID;
-- timestamp;
-- text;
-- reply/reference metadata where available.
+Useful links include same-sender continuity, PM/public participant relationships, targets, explicit replies, conversation IDs, and authoritative cross-platform identity IDs. Candidate scope count, message count, time window, and intervening-message count are bounded.
 
-Context should favor:
-- the same sender's recent 3–5 messages;
-- recent messages in the same channel/scope;
-- tight time windows (initial target roughly 30–45 seconds);
-- explicit reply/reply-to relationships.
+The request dispatcher hashes a canonical identity when available, otherwise the platform/server/sender tuple, so related messages from one sender stay FIFO even when they cross public/private channels.
 
-A later message can change the interpretation of prior messages. The response may therefore contain `related_message_ids` so the client can remove earlier messages when a split-message threat becomes clear.
+## Canonical events and mirrors
 
-Example:
+A logical message may have multiple platform message IDs. `canonical_message_id` identifies that logical message; `message_aliases` maps each platform copy to one moderation event. This prevents mirrors from double-counting incidents, strikes, or context while still preserving all deletion targets.
 
-```text
-A: im gonna stab you
-A: irl
-```
+## Incident aggregation
 
-The second event may produce `BLOCK` plus both message IDs.
+A message remains a message. Multi-message behavior is represented separately as an incident with event links, sender IDs, target IDs, severity, kind, and coordination state. The design supports repeated harassment, unwanted contact, dogpiling, threats, doxxing, blackmail, grooming, and safety incidents without concatenating different speakers into one authored statement.
 
-## Fail-open contract
+## Durable memory
 
-AI is an add-on.
+Policy-relevant memory is structured data rather than model weights.
 
-For RoseChat/Discord:
-- timeout, connection failure, malformed response, queue saturation, service restart, model load failure, or circuit-open state => do not block normal chat;
-- clients use a strict deadline and bounded async queue;
-- no AI network work on Paper's main thread;
-- repeated failures open a circuit breaker;
-- health recovery closes it automatically.
+Punishment-oriented `moderation_memory` is platform-separated and supports target-specific facts, confidence/provenance, confirmation state, and expiry. `safety_memory` is stored/retrieved separately so self-harm/safety history cannot become punishment reputation. `identity_links` reserves the durable authoritative account-link model.
 
-For EnthusiaStaff:
-- normal moderation/cases/staff tools never depend on AI availability;
-- AI can submit evidence/review items, but it never directly owns bans/mutes.
+Memory absence or read failure is neutral/fail-open; it never fabricates history.
 
-## Decision evidence
+## Restart recovery
 
-Store structured evidence, not hidden chain-of-thought:
-- action;
-- semantic label;
-- per-class probabilities;
-- rule hits;
-- reason-code list;
-- relevant context message IDs;
-- local model version;
-- policy version;
-- OpenAI moderation model/scores;
-- local/OpenAI disagreement marker;
-- latency;
-- fallback/health state;
-- human review outcome.
+Recent finalized moderated events are rehydrated from SQLite into bounded in-memory context at startup. Exempt rows are defensively ignored and canonical IDs deduplicate mirror copies.
 
-## Privacy / repository boundary
+A rehydration failure keeps readiness false and forces moderation into fail-open operation until a clean restart. This avoids making blocking decisions from a partially recovered context state.
 
-The GitHub repository is currently public. Synthetic phrases, interview records, policy definitions, schemas, tests, and deliberately curated/redacted examples belong in GitHub.
+## Persistence and migrations
 
-Raw production chat events and identifiers stay in the service's private runtime datastore. They are not auto-pushed to GitHub. Reviewed/redacted examples may be promoted into the curated dataset.
+SQLite stores raw private runtime events, structured decision evidence, OpenAI advisory results, incidents, durable memories, identity links, and correction workflow state.
+
+Schema changes are versioned with transactional `PRAGMA user_version` migrations. Migration failure rolls back instead of deleting/recreating the database. A newer unsupported schema is rejected.
+
+## Review/corrections
+
+Review reads use explicit public response models. Only context event IDs recorded as material evidence are exposed with an event.
+
+Corrections use proposals/votes. Two distinct normal staff approvals finalize; Admin+ may finalize immediately. Rejections follow the same two-person/Admin+ authority model. The original AI decision remains immutable beside the accepted correction for audit and later curated training export.
+
+## Fail-open boundary
+
+Classifier, memory, context, storage, restart-rehydration, migration/readiness, queue, timeout, and OpenAI failures must not create a harmful block by default. If durable finalization of a classifier decision fails, the caller receives an unpersisted fail-open allow rather than the original block.
+
+Automatic punishments remain disabled during calibration/acceptance. The central service returns containment/strike recommendations; EnthusiaStaff owns authoritative punishment state and staff own bans.
+
+## Repository/data boundary
+
+The GitHub repository is public. Policy, schemas, synthetic examples, tests, and deliberately redacted/curated data may live here. Raw production messages, account identifiers, secrets, and private moderation evidence remain in private runtime storage.
