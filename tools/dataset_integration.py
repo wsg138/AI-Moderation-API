@@ -530,12 +530,13 @@ def _report_sections(
         "- Every source `family_id`, text-only exact group, and >=0.90 near group is kept",
         "  in one integration family before splitting.",
         "- Owner golden fixtures are never copied into these manifests. Synthetic records",
-        "  with >=0.94 similarity to a golden fixture are forced into frozen evaluation.",
+        f"  with >={GOLDEN_SENSITIVE_THRESHOLD:.2f} similarity to a golden fixture are forced",
+        "  into frozen evaluation.",
         f"- Golden-sensitive synthetic records forced out of training: **{len(sensitive)}**.",
         "",
         "## Decision contrasts",
         "",
-        "The machine-readable audit records exact and >=0.94 near pairs whose Policy-v1",
+        "The machine-readable audit records exact and >=0.88 near pairs whose Policy-v1",
         "outcome dimensions differ. These are candidates for intentional minimal pairs or",
         "data defects; W11 does not silently relabel them.",
         "",
@@ -582,7 +583,7 @@ def build_outputs(root: Path) -> dict[Path, str]:
 
 
 def _json_text(value: object) -> str:
-    return json.dumps(value, indent=2, sort_keys=True, ensure_ascii=False) + "\n"
+    return json.dumps(value, indent=2, ensure_ascii=False) + "\n"
 
 
 def write_outputs(root: Path, outputs: dict[Path, str]) -> None:
