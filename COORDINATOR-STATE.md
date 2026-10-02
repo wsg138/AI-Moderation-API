@@ -4,7 +4,7 @@ Last updated: 2026-10-01
 
 ## Current phase
 
-**Phase 0 — owner policy interview; API foundation merged**
+**Phase 1 — Policy v1 merged; runtime/QA reconciliation underway**
 
 The repository has been initialized and the worker system is live.
 
@@ -144,3 +144,24 @@ Production status:
 - no AI service deployment;
 - no production-data mutation;
 - no secrets committed.
+
+
+## W00 / Policy v1 merge checkpoint
+
+Policy v1 was coordinator-reviewed and merged via PR #24.
+
+- Accepted W00 head: `082dba9c9e959af4abd119cd7542b1348f5edcfd`
+- Merge commit: `4b101a687adb88317f0c1c09df5bc1c442be7f75`
+- Exact-head service-ci #19: success
+- 84 recorded interview decisions/notes after owner clarification W00-079
+- Discord ticket channels: completely exempt
+- Discord staff-only channels: completely exempt
+- Direct targeted staff abuse: BLOCK + strike
+- Remaining unresolved edges are tracked in `policy/UNRESOLVED-DECISIONS.md`
+
+Immediate parallel work authorized:
+- #19 runtime/API/storage/context reconciliation with Policy v1
+- #25 dataset-QA vocabulary/schema reconciliation with Policy v1
+- #26 owner-policy golden acceptance set
+
+W02–W10 remain blocked until #25 is accepted and generator launch packets are refreshed against final Policy-v1 QA schema.
