@@ -7,7 +7,6 @@ import re
 import unicodedata
 from collections import Counter, defaultdict
 from dataclasses import dataclass
-from difflib import SequenceMatcher
 from itertools import combinations
 from pathlib import Path
 from typing import Any
@@ -17,9 +16,9 @@ GOLDEN_PATH = Path("data/eval/owner-policy-v1.jsonl")
 OUTPUT_DIR = Path("data/integration")
 REPORT_PATH = Path("docs/W11-DATASET-INTEGRATION-REPORT.md")
 ALGORITHM_VERSION = "w11-v1"
-NEAR_THRESHOLD = 0.88
-FAMILY_NEAR_THRESHOLD = 0.965
-GOLDEN_SENSITIVE_THRESHOLD = 0.94
+NEAR_THRESHOLD = 0.75
+FAMILY_NEAR_THRESHOLD = 0.90
+GOLDEN_SENSITIVE_THRESHOLD = 0.88
 MAX_BLOCK_SIZE = 80
 ADVERSARIAL_HASH_PERCENT = 45
 EXTRA_ADVERSARIAL_HASH_PERCENT = 8
@@ -202,13 +201,27 @@ def near_candidates(examples: list[Example]) -> list[dict[str, object]]:
             continue
         left = by_id[left_id]
         right = by_id[right_id]
-        ratio = SequenceMatcher(
-            None, left.comparison_text, right.comparison_text, autojunk=False
-        ).ratio()
+        ratio = text_similarity(left.comparison_text, right.comparison_text)
         if ratio < NEAR_THRESHOLD:
             continue
         candidates.append(_near_row(left, right, ratio))
     return candidates
+
+
+def _char_trigrams(value: str) -> set[str]:
+    padded = f"  {value}  "
+    return {padded[index : index + 3] for index in range(max(1, len(padded) - 2))}
+
+
+def text_similarity(left: str, right: str) -> float:
+    left_grams = _char_trigrams(left)
+    right_grams = _char_trigrams(right)
+    if not left_grams and not right_grams:
+        return 1.0
+    if not left_grams or not right_grams:
+        return 0.0
+    shared = len(left_grams & right_grams)
+    return 2 * shared / (len(left_grams) + len(right_grams))
 
 
 def _near_row(left: Example, right: Example, ratio: float) -> dict[str, object]:
@@ -264,9 +277,9 @@ def _best_golden_match(
     exact = False
     for golden_id, golden_key, golden_text in golden:
         is_exact = bool(example.sequence_key and example.sequence_key == golden_key)
-        ratio = 1.0 if is_exact else SequenceMatcher(
-            None, example.comparison_text, golden_text, autojunk=False
-        ).ratio()
+        ratio = 1.0 if is_exact else text_similarity(
+            example.comparison_text, golden_text
+        )
         if ratio > best_ratio:
             best_id, best_ratio, exact = golden_id, ratio, is_exact
     if best_ratio < NEAR_THRESHOLD:
@@ -411,7 +424,7 @@ def contradiction_rows(
         if not bool(group["same_outcome"]):
             rows.append({"kind": "exact_contrast", **group})
     for row in near:
-        if not bool(row["same_outcome"]) and float(row["similarity"]) >= 0.94:
+        if not bool(row["same_outcome"]) and float(row["similarity"]) >= 0.88:
             rows.append({"kind": "near_decision_contrast", **row})
     return rows
 
@@ -508,7 +521,7 @@ def _report_sections(
         "## Leakage and family safety",
         "",
         f"- Redundant same-outcome text-only exact groups: **{len(redundant)}**.",
-        "- Every source `family_id`, text-only exact group, and >=0.965 near group is kept",
+        "- Every source `family_id`, text-only exact group, and >=0.90 near group is kept",
         "  in one integration family before splitting.",
         "- Owner golden fixtures are never copied into these manifests. Synthetic records",
         "  with >=0.94 similarity to a golden fixture are forced into frozen evaluation.",
@@ -524,7 +537,7 @@ def _report_sections(
         "",
         "Near-duplicate detection is deterministic lexical candidate finding, not semantic",
         "embedding similarity. It uses shared normalized token bigrams followed by",
-        "difflib.SequenceMatcher. Human review remains required for policy interpretation.",
+        "normalized character-trigram Dice similarity. Human review remains required.",
         "",
         "## Files",
         "",
