@@ -2,7 +2,7 @@ from collections.abc import AsyncIterator, Awaitable, Callable
 from contextlib import asynccontextmanager
 from typing import Annotated
 
-from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi import Depends, FastAPI, HTTPException, Query, status
 from fastapi.responses import JSONResponse
 
 from .advisory import (
@@ -15,16 +15,29 @@ from .auth import Authenticator, Principal, permission_dependency
 from .classifier import LocalClassifier, StubClassifier
 from .config import Settings
 from .context import RollingContextStore
+from .migrations import LATEST_SCHEMA_VERSION
 from .models import (
+    CorrectionAuthority,
+    CorrectionRejectRequest,
+    CorrectionRequest,
+    CorrectionResponse,
     EventDetails,
     HealthResponse,
     ModerationRequest,
     ModerationResponse,
-    ReviewRequest,
-    ReviewResponse,
+    ReviewQueueResponse,
 )
 from .runtime import ModerationRuntime, ProcessingTimeout, RequestQueueFull
-from .storage import EventConflict, EventInProgress, EventNotFound, ModerationStore
+from .storage import (
+    DecisionConflict,
+    EventConflict,
+    EventInProgress,
+    EventNotFound,
+    ModerationStore,
+    ProposalNotFound,
+)
+
+AuthDependency = Callable[..., Awaitable[Principal]]
 
 
 def create_app(
@@ -49,7 +62,7 @@ def create_app(
         yield
         await runtime.stop()
 
-    app = FastAPI(title="Enthusia AI Moderation API", version="0.1.0", lifespan=lifespan)
+    app = FastAPI(title="Enthusia AI Moderation API", version="0.2.0", lifespan=lifespan)
     moderate_auth = permission_dependency(authenticator, "moderate")
     review_read_auth = permission_dependency(authenticator, "review:read")
     review_write_auth = permission_dependency(authenticator, "review:write")
@@ -66,6 +79,8 @@ def _build_context(settings: Settings) -> RollingContextStore:
         messages_per_scope=settings.context_messages_per_scope,
         sender_messages=settings.context_sender_messages,
         channel_messages=settings.context_channel_messages,
+        linked_scopes=settings.context_linked_scopes,
+        intervening_messages=settings.context_intervening_messages,
     )
 
 
@@ -114,21 +129,13 @@ def _register_health(
         database_ready = await store.health_check()
         classifier = runtime.classifier_health()
         classifier_ready = classifier.get("ready") is True
-        is_ready = database_ready and classifier_ready
-        payload = HealthResponse(
-            status="ready" if is_ready else "not_ready",
-            ready=is_ready,
-            request_queue_depth=runtime.queue_depth,
-            request_queue_capacity=runtime.queue_capacity,
-            request_workers=runtime.worker_count,
-            classifier_ready=classifier_ready,
-            classifier_mode=str(classifier.get("mode", "unknown")),
-            local_model_version=(
-                str(classifier["model_version"]) if classifier.get("model_version") else None
-            ),
-            advisory_enabled=advisory_enabled,
-            advisory_queue_depth=runtime.advisory_queue_depth,
-            advisory_queue_capacity=runtime.advisory_queue_capacity,
+        is_ready = database_ready and classifier_ready and runtime.context_ready
+        payload = _health_payload(
+            runtime,
+            classifier,
+            classifier_ready,
+            advisory_enabled,
+            is_ready,
         )
         if is_ready:
             return payload
@@ -138,10 +145,36 @@ def _register_health(
         )
 
 
+def _health_payload(
+    runtime: ModerationRuntime,
+    classifier: dict[str, object],
+    classifier_ready: bool,
+    advisory_enabled: bool,
+    is_ready: bool,
+) -> HealthResponse:
+    # schema_version is filled by the async route after the DB health check.
+    return HealthResponse(
+        status="ready" if is_ready else "not_ready",
+        ready=is_ready,
+        schema_version=LATEST_SCHEMA_VERSION,
+        request_queue_depth=runtime.queue_depth,
+        request_queue_capacity=runtime.queue_capacity,
+        request_workers=runtime.worker_count,
+        classifier_ready=classifier_ready,
+        classifier_mode=str(classifier.get("mode", "unknown")),
+        local_model_version=_optional_string(classifier.get("model_version")),
+        advisory_enabled=advisory_enabled,
+        advisory_queue_depth=runtime.advisory_queue_depth,
+        advisory_queue_capacity=runtime.advisory_queue_capacity,
+        rehydrated_context_messages=runtime.rehydrated_context_messages,
+        context_ready=runtime.context_ready,
+    )
+
+
 def _register_moderation(
     app: FastAPI,
     runtime: ModerationRuntime,
-    auth_dependency: Callable[..., Awaitable[Principal]],
+    auth_dependency: AuthDependency,
 ) -> None:
     @app.post("/v1/moderate", response_model=ModerationResponse)
     async def moderate(
@@ -153,50 +186,113 @@ def _register_moderation(
         except RequestQueueFull as exc:
             raise HTTPException(
                 status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail="moderation queue saturated",
+                detail="moderation queue saturated; client must fail open",
             ) from exc
         except ProcessingTimeout as exc:
             raise HTTPException(
                 status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail="moderation deadline exceeded",
+                detail="moderation deadline exceeded; client must fail open",
             ) from exc
         except EventInProgress as exc:
             raise HTTPException(
-                status.HTTP_409_CONFLICT,
-                detail="event is still processing",
+                status.HTTP_409_CONFLICT, detail="event is still processing"
             ) from exc
         except EventConflict as exc:
             raise HTTPException(
                 status.HTTP_409_CONFLICT,
-                detail="external message id conflict",
+                detail="external or canonical message id conflict",
             ) from exc
 
 
 def _register_reviews(
     app: FastAPI,
     store: ModerationStore,
-    read_dependency: Callable[..., Awaitable[Principal]],
-    write_dependency: Callable[..., Awaitable[Principal]],
+    read_dependency: AuthDependency,
+    write_dependency: AuthDependency,
 ) -> None:
+    _register_event_read(app, store, read_dependency)
+    _register_review_queue(app, store, read_dependency)
+    _register_correction_write(app, store, write_dependency)
+    _register_correction_reject(app, store, write_dependency)
+
+
+def _register_event_read(app: FastAPI, store: ModerationStore, dependency: AuthDependency) -> None:
     @app.get("/v1/events/{event_id}", response_model=EventDetails)
     async def get_event(
         event_id: str,
-        _: Annotated[Principal, Depends(read_dependency)],
+        _: Annotated[Principal, Depends(dependency)],
     ) -> EventDetails:
         try:
             return await store.get_event(event_id)
         except EventNotFound as exc:
             raise HTTPException(status.HTTP_404_NOT_FOUND, detail="event not found") from exc
 
-    @app.post("/v1/reviews", response_model=ReviewResponse, status_code=status.HTTP_201_CREATED)
-    async def create_review(
-        request: ReviewRequest,
-        _: Annotated[Principal, Depends(write_dependency)],
-    ) -> ReviewResponse:
+
+def _register_review_queue(
+    app: FastAPI,
+    store: ModerationStore,
+    dependency: AuthDependency,
+) -> None:
+    @app.get("/v1/review-items", response_model=ReviewQueueResponse)
+    async def review_items(
+        _: Annotated[Principal, Depends(dependency)],
+        limit: Annotated[int, Query(ge=1, le=250)] = 100,
+    ) -> ReviewQueueResponse:
+        return ReviewQueueResponse(items=await store.list_review_items(limit))
+
+
+def _register_correction_write(
+    app: FastAPI,
+    store: ModerationStore,
+    dependency: AuthDependency,
+) -> None:
+    @app.post("/v1/review-corrections", response_model=CorrectionResponse, status_code=201)
+    async def create_correction(
+        request: CorrectionRequest,
+        principal: Annotated[Principal, Depends(dependency)],
+    ) -> CorrectionResponse:
+        admin_override = _authorize_correction_authority(principal, request.authority)
         try:
-            return await store.create_review(request)
+            return await store.create_correction(request, admin_override)
         except EventNotFound as exc:
             raise HTTPException(status.HTTP_404_NOT_FOUND, detail="event not found") from exc
+        except DecisionConflict as exc:
+            raise HTTPException(status.HTTP_409_CONFLICT, detail=str(exc)) from exc
+
+
+def _register_correction_reject(
+    app: FastAPI,
+    store: ModerationStore,
+    dependency: AuthDependency,
+) -> None:
+    @app.post("/v1/review-corrections/{proposal_id}/reject", response_model=CorrectionResponse)
+    async def reject_correction(
+        proposal_id: str,
+        request: CorrectionRejectRequest,
+        principal: Annotated[Principal, Depends(dependency)],
+    ) -> CorrectionResponse:
+        admin_override = _authorize_correction_authority(principal, request.authority)
+        try:
+            return await store.reject_correction(proposal_id, request, admin_override)
+        except ProposalNotFound as exc:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, detail="correction not found") from exc
+        except DecisionConflict as exc:
+            raise HTTPException(status.HTTP_409_CONFLICT, detail=str(exc)) from exc
+
+
+def _authorize_correction_authority(
+    principal: Principal,
+    authority: CorrectionAuthority,
+) -> bool:
+    if authority is not CorrectionAuthority.ADMIN:
+        return False
+    if "review:admin" not in principal.permissions:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, detail="admin correction permission denied")
+    return True
+
+
+def _optional_string(value: object) -> str | None:
+    return str(value) if value else None
 
 
 app = create_app()

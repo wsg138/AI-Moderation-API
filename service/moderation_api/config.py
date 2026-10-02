@@ -5,7 +5,7 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 
-_ALLOWED_PERMISSIONS = frozenset({"moderate", "review:read", "review:write"})
+_ALLOWED_PERMISSIONS = frozenset({"moderate", "review:read", "review:write", "review:admin"})
 
 
 @dataclass(frozen=True, slots=True)
@@ -18,7 +18,7 @@ class ClientCredential:
 @dataclass(frozen=True, slots=True)
 class Settings:
     database_path: Path = Path("runtime-data/moderation.sqlite3")
-    policy_version: str = "draft"
+    policy_version: str = "v1"
     clients: tuple[ClientCredential, ...] = ()
     request_queue_size: int = 256
     request_workers: int = 4
@@ -29,6 +29,10 @@ class Settings:
     context_messages_per_scope: int = 100
     context_sender_messages: int = 5
     context_channel_messages: int = 8
+    context_linked_scopes: int = 16
+    context_intervening_messages: int = 20
+    context_rehydrate_limit: int = 500
+    memory_fact_limit: int = 64
     openai_advisory_enabled: bool = False
     openai_api_key: str | None = None
     openai_model: str = "omni-moderation-latest"
@@ -40,7 +44,7 @@ class Settings:
     def from_env(cls) -> Settings:
         return cls(
             database_path=Path(_env("AI_MOD_DATABASE_PATH", "runtime-data/moderation.sqlite3")),
-            policy_version=_env("AI_MOD_POLICY_VERSION", "draft"),
+            policy_version=_env("AI_MOD_POLICY_VERSION", "v1"),
             clients=_parse_clients(os.getenv("AI_MOD_CLIENTS_JSON", "[]")),
             request_queue_size=_positive_int("AI_MOD_REQUEST_QUEUE_SIZE", 256),
             request_workers=_positive_int("AI_MOD_REQUEST_WORKERS", 4),
@@ -51,6 +55,10 @@ class Settings:
             context_messages_per_scope=_positive_int("AI_MOD_CONTEXT_MESSAGES_PER_SCOPE", 100),
             context_sender_messages=_positive_int("AI_MOD_CONTEXT_SENDER_MESSAGES", 5),
             context_channel_messages=_positive_int("AI_MOD_CONTEXT_CHANNEL_MESSAGES", 8),
+            context_linked_scopes=_positive_int("AI_MOD_CONTEXT_LINKED_SCOPES", 16),
+            context_intervening_messages=_positive_int("AI_MOD_CONTEXT_INTERVENING_MESSAGES", 20),
+            context_rehydrate_limit=_positive_int("AI_MOD_CONTEXT_REHYDRATE_LIMIT", 500),
+            memory_fact_limit=_positive_int("AI_MOD_MEMORY_FACT_LIMIT", 64),
             openai_advisory_enabled=_bool_env("AI_MOD_OPENAI_ADVISORY_ENABLED", False),
             openai_api_key=os.getenv("OPENAI_API_KEY") or None,
             openai_model=_env("AI_MOD_OPENAI_MODEL", "omni-moderation-latest"),
