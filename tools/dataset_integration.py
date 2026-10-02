@@ -421,6 +421,39 @@ def _group_id(ids: list[str]) -> str:
     return f"IF-{_stable_hash(joined):08x}-{len(ids):04d}"
 
 
+def cross_source_review(
+    examples: list[Example],
+    near: list[dict[str, object]],
+) -> list[dict[str, object]]:
+    by_id = {item.example_id: item for item in examples}
+    rows: list[dict[str, object]] = []
+    for row in near:
+        if not bool(row["cross_source"]) or bool(row["same_outcome"]):
+            continue
+        if float(row["similarity"]) < FAMILY_NEAR_THRESHOLD:
+            continue
+        left = by_id[str(row["left"])]
+        right = by_id[str(row["right"])]
+        rows.append(_cross_source_disposition(left, right, row))
+    return rows
+
+
+def _cross_source_disposition(
+    left: Example,
+    right: Example,
+    row: dict[str, object],
+) -> dict[str, object]:
+    reasons = set(left.data.get("reason_codes", [])) | set(right.data.get("reason_codes", []))
+    flirting = bool({"public_flirting", "private_flirting"} & reasons)
+    disposition = "intentional_policy_contrast" if flirting else "requires_policy_review"
+    policy_source = "policy/POLICY-v1.md §11" if flirting else None
+    return {
+        **row,
+        "disposition": disposition,
+        "policy_source": policy_source,
+    }
+
+
 def contradiction_rows(
     exact: list[dict[str, object]],
     near: list[dict[str, object]],
@@ -474,6 +507,7 @@ def audit_payload(
         "redundant_exact_groups": redundant_exact,
         "near_candidates": near,
         "cross_source_near_candidates": cross_near,
+        "cross_source_review": cross_source_review(examples, near),
         "contradictions": contradiction_rows(exact, near),
         "golden_leakage_candidates": leakage,
         "integration_group_count": len(groups),
@@ -495,6 +529,10 @@ def render_report(
     near = audit["near_candidates"]
     cross_near = audit["cross_source_near_candidates"]
     contradictions = audit["contradictions"]
+    cross_review = audit["cross_source_review"]
+    unresolved_cross = [
+        row for row in cross_review if row["disposition"] == "requires_policy_review"
+    ]
     lines = [
         "# W11 dataset integration report",
         "",
@@ -505,7 +543,9 @@ def render_report(
         f"- Text-only exact groups: **{len(exact)}**",
         f"- Near candidates (>= {NEAR_THRESHOLD:.2f}): **{len(near)}**",
         f"- Cross-source near candidates: **{len(cross_near)}**",
-        f"- Decision-contrast candidates requiring review: **{len(contradictions)}**",
+        f"- Decision-contrast lexical candidates: **{len(contradictions)}**",
+        f"- High-similarity cross-worker contrasts reviewed: **{len(cross_review)}**",
+        f"- Unresolved cross-worker contradictions: **{len(unresolved_cross)}**",
         f"- Golden near/exact candidates: **{len(leakage)}**",
         f"- Golden-sensitive (>= {GOLDEN_SENSITIVE_THRESHOLD:.2f}): **{len(sensitive)}**",
         "",
