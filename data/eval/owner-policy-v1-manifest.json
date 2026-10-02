@@ -1,0 +1,1778 @@
+{
+  "schema_version": "owner-policy-golden-v1",
+  "policy_version": "v1",
+  "generated_from": [
+    "policy/interviews/2026-10-01-owner-interview.jsonl",
+    "policy/interviews/2026-10-02-owner-interview-continuation.jsonl",
+    "policy/POLICY-v1.md",
+    "policy/INTERVIEW-DECISION-MAP.md",
+    "policy/UNRESOLVED-DECISIONS.md"
+  ],
+  "direct_golden_fixtures": {
+    "path": "data/eval/owner-policy-v1.jsonl",
+    "count": 52,
+    "id_prefix": "OPV1",
+    "training_default": "excluded",
+    "exact_or_normalized_interview_wording_only": true
+  },
+  "policy_engine_assertions": [
+    {
+      "assertion_id": "OPA-001",
+      "statement": "AI moderation never issues bans; staff own bans and serious final sanctions.",
+      "source_interview_ids": [
+        "W00-NOTE-003"
+      ],
+      "policy_sections": [
+        "1",
+        "12",
+        "14"
+      ],
+      "expected": {
+        "ai_may_ban": false
+      },
+      "evidence_tier": "interview",
+      "provenance_gap": false
+    },
+    {
+      "assertion_id": "OPA-002",
+      "statement": "Every automated mute alerts staff and gives an appeal/ticket path.",
+      "source_interview_ids": [
+        "W00-NOTE-002",
+        "W00-NOTE-003"
+      ],
+      "policy_sections": [
+        "14"
+      ],
+      "expected": {
+        "mute_staff_alert": true,
+        "appeal_path": true
+      },
+      "evidence_tier": "interview",
+      "provenance_gap": false
+    },
+    {
+      "assertion_id": "OPA-003",
+      "statement": "Discord ticket channels are fully exempt from automated moderation and ticket content is not moderation context.",
+      "source_interview_ids": [
+        "W00-024",
+        "W00-032",
+        "W00-060"
+      ],
+      "policy_sections": [
+        "3"
+      ],
+      "expected": {
+        "classify": false,
+        "use_as_context": false
+      },
+      "evidence_tier": "interview",
+      "provenance_gap": false
+    },
+    {
+      "assertion_id": "OPA-004",
+      "statement": "Discord staff-only channels are fully exempt from automated moderation and later moderation context.",
+      "source_interview_ids": [
+        "W00-079"
+      ],
+      "policy_sections": [
+        "3"
+      ],
+      "expected": {
+        "classify": false,
+        "use_as_context": false
+      },
+      "evidence_tier": "interview",
+      "provenance_gap": false
+    },
+    {
+      "assertion_id": "OPA-005",
+      "statement": "Minecraft private messages are moderated and may inform related public decisions.",
+      "source_interview_ids": [
+        "W00-NOTE-001",
+        "W00-015",
+        "W00-016",
+        "W00-NOTE-002"
+      ],
+      "policy_sections": [
+        "3",
+        "4"
+      ],
+      "expected": {
+        "moderate_private_messages": true,
+        "allow_related_cross_surface_context": true
+      },
+      "evidence_tier": "interview",
+      "provenance_gap": false
+    },
+    {
+      "assertion_id": "OPA-006",
+      "statement": "Staff review may display private-message context actually used by moderation.",
+      "source_interview_ids": [
+        "W00-017"
+      ],
+      "policy_sections": [
+        "4"
+      ],
+      "expected": {
+        "staff_may_view_used_private_context": true
+      },
+      "evidence_tier": "interview",
+      "provenance_gap": false
+    },
+    {
+      "assertion_id": "OPA-007",
+      "statement": "Relevant moderation memory may persist across days when technically practical.",
+      "source_interview_ids": [
+        "W00-048"
+      ],
+      "policy_sections": [
+        "5"
+      ],
+      "expected": {
+        "durable_relevant_memory": true
+      },
+      "evidence_tier": "interview",
+      "provenance_gap": false
+    },
+    {
+      "assertion_id": "OPA-008",
+      "statement": "Maintain both player-global and target-specific harassment/relationship history.",
+      "source_interview_ids": [
+        "W00-050"
+      ],
+      "policy_sections": [
+        "5",
+        "7"
+      ],
+      "expected": {
+        "global_history": true,
+        "target_specific_history": true
+      },
+      "evidence_tier": "interview",
+      "provenance_gap": false
+    },
+    {
+      "assertion_id": "OPA-009",
+      "statement": "Moderation history decays; a first mild harassment incident may effectively fade after about seven days, while recurring behavior remains relevant longer.",
+      "source_interview_ids": [
+        "W00-052",
+        "W00-074"
+      ],
+      "policy_sections": [
+        "5",
+        "7"
+      ],
+      "expected": {
+        "history_decays": true,
+        "mild_first_anchor_days": 7
+      },
+      "evidence_tier": "interview",
+      "provenance_gap": false
+    },
+    {
+      "assertion_id": "OPA-010",
+      "statement": "Accepted false-positive corrections remove punishment effect but preserve supervised negative evidence and improve behavior system-wide.",
+      "source_interview_ids": [
+        "W00-053",
+        "W00-054"
+      ],
+      "policy_sections": [
+        "5",
+        "14"
+      ],
+      "expected": {
+        "remove_punishment_effect": true,
+        "preserve_training_evidence": true,
+        "system_wide": true
+      },
+      "evidence_tier": "interview",
+      "provenance_gap": false
+    },
+    {
+      "assertion_id": "OPA-011",
+      "statement": "Ordinary staff corrections require two-person agreement; Admin+ may immediately override.",
+      "source_interview_ids": [
+        "W00-067"
+      ],
+      "policy_sections": [
+        "5",
+        "14"
+      ],
+      "expected": {
+        "normal_staff_approvals": 2,
+        "admin_override": true
+      },
+      "evidence_tier": "interview",
+      "provenance_gap": false
+    },
+    {
+      "assertion_id": "OPA-012",
+      "statement": "Self-harm safety history has zero punishment effect on unrelated later moderation.",
+      "source_interview_ids": [
+        "W00-055"
+      ],
+      "policy_sections": [
+        "5",
+        "9"
+      ],
+      "expected": {
+        "safety_history_punishment_effect": false
+      },
+      "evidence_tier": "interview",
+      "provenance_gap": false
+    },
+    {
+      "assertion_id": "OPA-013",
+      "statement": "Self-reported age is only a clue; reliable/high-confidence evidence is required for authoritative minor status.",
+      "source_interview_ids": [
+        "W00-057",
+        "W00-058"
+      ],
+      "policy_sections": [
+        "5",
+        "11"
+      ],
+      "expected": {
+        "self_report_is_proof": false,
+        "reliable_minor_evidence_required": true
+      },
+      "evidence_tier": "interview",
+      "provenance_gap": false
+    },
+    {
+      "assertion_id": "OPA-014",
+      "statement": "Authoritatively linked Minecraft/Discord identities may share relevant context, but punishment histories remain separate by platform.",
+      "source_interview_ids": [
+        "W00-059",
+        "W00-075"
+      ],
+      "policy_sections": [
+        "4",
+        "5"
+      ],
+      "expected": {
+        "cross_platform_context": true,
+        "shared_punishment_history": false
+      },
+      "evidence_tier": "interview",
+      "provenance_gap": false
+    },
+    {
+      "assertion_id": "OPA-015",
+      "statement": "Coordinated dogpile participants have participating messages blocked and each participant receives a strike.",
+      "source_interview_ids": [
+        "W00-051"
+      ],
+      "policy_sections": [
+        "7"
+      ],
+      "expected": {
+        "action": "BLOCK",
+        "strike_each": true
+      },
+      "evidence_tier": "interview",
+      "provenance_gap": false
+    },
+    {
+      "assertion_id": "OPA-016",
+      "statement": "Uncoordinated mild pile-ons do not automatically strike every participant; rude messages may be blocked and target controls offered.",
+      "source_interview_ids": [
+        "W00-066"
+      ],
+      "policy_sections": [
+        "7"
+      ],
+      "expected": {
+        "automatic_strike_each": false,
+        "target_controls": true
+      },
+      "evidence_tier": "interview",
+      "provenance_gap": false
+    },
+    {
+      "assertion_id": "OPA-017",
+      "statement": "Repeated genuine stop requests end mutual-banter tolerance; clear later mutual joking can reset it. If one surveyed participant is uncomfortable, that controls.",
+      "source_interview_ids": [
+        "W00-049",
+        "W00-065"
+      ],
+      "policy_sections": [
+        "7"
+      ],
+      "expected": {
+        "repeated_stop_ends_tolerance": true,
+        "one_uncomfortable_controls": true
+      },
+      "evidence_tier": "interview",
+      "provenance_gap": false
+    },
+    {
+      "assertion_id": "OPA-018",
+      "statement": "Stronger target filtering may block otherwise tolerated rude content only for that target without creating a strike by itself.",
+      "source_interview_ids": [
+        "W00-068"
+      ],
+      "policy_sections": [
+        "7"
+      ],
+      "expected": {
+        "target_specific_extra_blocking": true,
+        "extra_block_strike": false
+      },
+      "evidence_tier": "interview",
+      "provenance_gap": false
+    },
+    {
+      "assertion_id": "OPA-019",
+      "statement": "Do not reconnect a vague later message across a long unrelated gap merely because old context could make it threatening.",
+      "source_interview_ids": [
+        "W00-061",
+        "W00-004"
+      ],
+      "policy_sections": [
+        "4"
+      ],
+      "expected": {
+        "long_gap_speculative_linkage": false
+      },
+      "evidence_tier": "interview",
+      "provenance_gap": false
+    },
+    {
+      "assertion_id": "OPA-020",
+      "statement": "Victim-safety support is used only when danger is reliably identified and can ask whether the player/everyone around them is safe and offer emergency/support information.",
+      "source_interview_ids": [
+        "W00-062"
+      ],
+      "policy_sections": [
+        "6"
+      ],
+      "expected": {
+        "requires_reliable_danger": true,
+        "support_flow": "TARGET_SAFETY_CHECK"
+      },
+      "evidence_tier": "interview",
+      "provenance_gap": false
+    },
+    {
+      "assertion_id": "OPA-021",
+      "statement": "Recent confirmed threat history may heighten review of a later borderline message but does not create automatic punishment from history alone.",
+      "source_interview_ids": [
+        "W00-063"
+      ],
+      "policy_sections": [
+        "5",
+        "6"
+      ],
+      "expected": {
+        "review_may_increase": true,
+        "history_only_punishment": false
+      },
+      "evidence_tier": "interview",
+      "provenance_gap": false
+    },
+    {
+      "assertion_id": "OPA-022",
+      "statement": "Apparent doxxing is block + strike + urgent staff ping, with no automatic mute solely from detector output.",
+      "source_interview_ids": [
+        "W00-069"
+      ],
+      "policy_sections": [
+        "12"
+      ],
+      "expected": {
+        "action": "BLOCK",
+        "strike": true,
+        "review_priority": "URGENT",
+        "containment": "NONE"
+      },
+      "evidence_tier": "interview",
+      "provenance_gap": false
+    },
+    {
+      "assertion_id": "OPA-023",
+      "statement": "Target-confirmed real doxxing receives a 30-day mute, staff alert, and appeal path even if the target asks for no further punishment.",
+      "source_interview_ids": [
+        "W00-070"
+      ],
+      "policy_sections": [
+        "12",
+        "14"
+      ],
+      "expected": {
+        "containment": "MUTE",
+        "containment_duration_seconds": 2592000,
+        "staff_alert": true,
+        "appeal_path": true
+      },
+      "evidence_tier": "interview",
+      "provenance_gap": false
+    },
+    {
+      "assertion_id": "OPA-024",
+      "statement": "Third-party self-harm concern triggers a broad safety check; if help is needed, provide support information and ping staff.",
+      "source_interview_ids": [
+        "W00-072"
+      ],
+      "policy_sections": [
+        "9"
+      ],
+      "expected": {
+        "support_flow": "SELF_HARM_CHECK",
+        "staff_ping_if_help_needed": true
+      },
+      "evidence_tier": "interview",
+      "provenance_gap": false
+    },
+    {
+      "assertion_id": "OPA-025",
+      "statement": "Direct messages to a recipient who has ignored the sender are not moderated for that ignored relationship.",
+      "source_interview_ids": [
+        "W00-073"
+      ],
+      "policy_sections": [
+        "7"
+      ],
+      "expected": {
+        "moderate_ignored_relationship": false
+      },
+      "evidence_tier": "interview",
+      "provenance_gap": false
+    },
+    {
+      "assertion_id": "OPA-026",
+      "statement": "Actual slurs used in counterspeech or reclaimed/self-reference are still blocked and struck.",
+      "source_interview_ids": [
+        "W00-076"
+      ],
+      "policy_sections": [
+        "10"
+      ],
+      "expected": {
+        "action": "BLOCK",
+        "strike": true
+      },
+      "evidence_tier": "interview",
+      "provenance_gap": false
+    },
+    {
+      "assertion_id": "OPA-027",
+      "statement": "A reliably known minor's claimed consent does not override the sexual-minor block + strike rule.",
+      "source_interview_ids": [
+        "W00-077"
+      ],
+      "policy_sections": [
+        "11"
+      ],
+      "expected": {
+        "action": "BLOCK",
+        "strike": true,
+        "minor_consent_exception": false
+      },
+      "evidence_tier": "interview",
+      "provenance_gap": false
+    },
+    {
+      "assertion_id": "OPA-028",
+      "statement": "House/home threat handling depends on real-world cues: standalone burn-the-house language is gameplay-ambiguous/allow; outside-the-house-now is block + strike; explosive delivery is block + review and strikes when clearly real-world.",
+      "source_interview_ids": [
+        "W00-078"
+      ],
+      "policy_sections": [
+        "6"
+      ],
+      "expected": {
+        "context_sensitive": true
+      },
+      "evidence_tier": "interview",
+      "provenance_gap": false
+    },
+    {
+      "assertion_id": "OPA-029",
+      "statement": "Recent completed low-risk safety checks may suppress repeated prompts for a cooling-off period, but escalating language retriggers the flow.",
+      "source_interview_ids": [
+        "W00-056"
+      ],
+      "policy_sections": [
+        "9"
+      ],
+      "expected": {
+        "cooldown_low_risk_prompts": true,
+        "retrigger_on_escalation": true
+      },
+      "evidence_tier": "interview",
+      "provenance_gap": false
+    },
+    {
+      "assertion_id": "OPA-030",
+      "statement": "Additional configured Discord channels may be made completely exempt from automated moderation.",
+      "source_interview_ids": [
+        "W00-032"
+      ],
+      "policy_sections": [
+        "3"
+      ],
+      "expected": {
+        "configurable_exempt_channels": true
+      },
+      "evidence_tier": "interview",
+      "provenance_gap": false
+    },
+    {
+      "assertion_id": "OPA-031",
+      "statement": "Exempt staff-only Discord content must not influence later public moderation.",
+      "source_interview_ids": [
+        "W00-079"
+      ],
+      "policy_sections": [
+        "3"
+      ],
+      "expected": {
+        "use_as_context": false
+      },
+      "evidence_tier": "interview",
+      "provenance_gap": false
+    },
+    {
+      "assertion_id": "OPA-032",
+      "statement": "Mirrored Minecraft/Discord copies count as one canonical moderation event and are not double-counted.",
+      "source_interview_ids": [],
+      "policy_sections": [
+        "3"
+      ],
+      "expected": {
+        "mirror_count_once": true
+      },
+      "evidence_tier": "policy_only",
+      "provenance_gap": true
+    },
+    {
+      "assertion_id": "OPA-033",
+      "statement": "Chat fails open when AI/classifier is unavailable or too slow; missing durable memory must not be invented.",
+      "source_interview_ids": [],
+      "policy_sections": [
+        "2",
+        "15"
+      ],
+      "expected": {
+        "fail_open": true,
+        "invent_missing_history": false
+      },
+      "evidence_tier": "policy_only",
+      "provenance_gap": true
+    },
+    {
+      "assertion_id": "OPA-034",
+      "statement": "A staff-confirmed serious recent threat may trigger a target safety check; Policy v1's working ~24-hour recency is not present in the interview JSONL.",
+      "source_interview_ids": [],
+      "policy_sections": [
+        "6"
+      ],
+      "expected": {
+        "target_safety_check_for_recent_confirmed_threat": true
+      },
+      "evidence_tier": "policy_only",
+      "provenance_gap": true
+    },
+    {
+      "assertion_id": "OPA-035",
+      "statement": "Public-rule alignment does not authorize AI bans; zero-tolerance language remains a human-enforcement boundary.",
+      "source_interview_ids": [
+        "W00-NOTE-004",
+        "W00-NOTE-003"
+      ],
+      "policy_sections": [
+        "16"
+      ],
+      "expected": {
+        "ai_may_ban": false
+      },
+      "evidence_tier": "interview",
+      "provenance_gap": false
+    }
+  ],
+  "non_fixture_policy_notes": [
+    {
+      "source_interview_ids": [
+        "W00-NOTE-004"
+      ],
+      "topic": "live_public_rules_cross_check",
+      "reason": "Source/background alignment note rather than a standalone classifier scenario. The AI-ban boundary is represented by OPA-035."
+    }
+  ],
+  "unresolved_owner_policy_edges": [
+    {
+      "edge": "discord_bot_dms",
+      "source_interview_ids": [],
+      "policy_sections": [
+        "3"
+      ],
+      "reason": "Whether DMs to/from the Discord bot are moderated is not frozen."
+    },
+    {
+      "edge": "graphic_self_harm_disclosure",
+      "source_interview_ids": [
+        "W00-009"
+      ],
+      "policy_sections": [
+        "9"
+      ],
+      "reason": "Exact action/alert timing for excessively graphic first-person disclosure remains unresolved."
+    },
+    {
+      "edge": "consensual_explicit_adult_pm",
+      "source_interview_ids": [
+        "W00-071"
+      ],
+      "policy_sections": [
+        "11"
+      ],
+      "reason": "Only ordinary non-explicit flirting is resolved; consensual explicit adult PM boundary is not."
+    },
+    {
+      "edge": "uncertain_age_grooming",
+      "source_interview_ids": [
+        "W00-037",
+        "W00-057",
+        "W00-058"
+      ],
+      "policy_sections": [
+        "11",
+        "12"
+      ],
+      "reason": "Clear grooming with reliable minor status is resolved; uncertain-age grooming is not."
+    },
+    {
+      "edge": "broader_dangerous_instructions",
+      "source_interview_ids": [
+        "W00-040",
+        "W00-041"
+      ],
+      "policy_sections": [
+        "13"
+      ],
+      "reason": "Explosive examples are covered; broader dangerous-instruction domains are not frozen."
+    },
+    {
+      "edge": "fake_doxxing_strike_cleanup",
+      "source_interview_ids": [
+        "W00-069"
+      ],
+      "policy_sections": [
+        "12"
+      ],
+      "reason": "Whether the initial apparent-doxxing strike is automatically reversed after fake confirmation is unresolved."
+    },
+    {
+      "edge": "full_threat_containment_matrix",
+      "source_interview_ids": [
+        "W00-003",
+        "W00-038",
+        "W00-039"
+      ],
+      "policy_sections": [
+        "6"
+      ],
+      "reason": "Several duration anchors exist, but no complete severity-to-duration matrix is frozen."
+    },
+    {
+      "edge": "blackmail_containment_duration",
+      "source_interview_ids": [
+        "W00-036"
+      ],
+      "policy_sections": [
+        "12"
+      ],
+      "reason": "Clear blackmail is muted pending review, but no default/maximum duration is frozen."
+    },
+    {
+      "edge": "accidental_slur_lexical_matches",
+      "source_interview_ids": [],
+      "policy_sections": [
+        "10"
+      ],
+      "reason": "Naive substring false positives must be avoided, but exact lexical disambiguation examples are not frozen."
+    }
+  ],
+  "known_superseded_or_clarified_answers": [
+    {
+      "topic": "minor_age_self_report_premise",
+      "earlier_source_interview_ids": [
+        "W00-013"
+      ],
+      "later_source_interview_ids": [
+        "W00-057",
+        "W00-058"
+      ],
+      "note": "The earlier minor solicitation scenario contains an 'im 16' line, but later owner answers establish that self-report alone is only a clue. The golden fixture therefore requires reliable minor status in context rather than treating the line itself as proof."
+    },
+    {
+      "topic": "apparent_doxxing_enforcement_detail",
+      "earlier_source_interview_ids": [
+        "W00-035"
+      ],
+      "later_source_interview_ids": [
+        "W00-069"
+      ],
+      "note": "The later answer adds explicit strike + urgent staff ping and confirms no automatic mute solely from apparent doxxing."
+    },
+    {
+      "topic": "quoted_condemning_actual_slur_strike",
+      "earlier_source_interview_ids": [
+        "W00-043"
+      ],
+      "later_source_interview_ids": [
+        "W00-076"
+      ],
+      "note": "W00-043 left the strike dimension for a quoted/condemning actual slur unresolved. W00-076 later resolved actual slur use in counterspeech/reclaimed contexts as BLOCK + strike. Under the source hierarchy, the later owner answer controls; OPV1-0045 therefore uses strike=true and cites both records."
+    }
+  ],
+  "policy_raw_conflicts": [],
+  "provenance_gaps": [
+    {
+      "assertion_id": "OPA-032",
+      "statement": "Mirrored Minecraft/Discord copies count as one canonical moderation event and are not double-counted.",
+      "policy_sections": [
+        "3"
+      ],
+      "reason": "Merged Policy v1 assertion has no matching direct interview JSONL record; retained as policy-only acceptance evidence, not interview-derived golden truth."
+    },
+    {
+      "assertion_id": "OPA-033",
+      "statement": "Chat fails open when AI/classifier is unavailable or too slow; missing durable memory must not be invented.",
+      "policy_sections": [
+        "2",
+        "15"
+      ],
+      "reason": "Merged Policy v1 assertion has no matching direct interview JSONL record; retained as policy-only acceptance evidence, not interview-derived golden truth."
+    },
+    {
+      "assertion_id": "OPA-034",
+      "statement": "A staff-confirmed serious recent threat may trigger a target safety check; Policy v1's working ~24-hour recency is not present in the interview JSONL.",
+      "policy_sections": [
+        "6"
+      ],
+      "reason": "Merged Policy v1 assertion has no matching direct interview JSONL record; retained as policy-only acceptance evidence, not interview-derived golden truth."
+    }
+  ],
+  "source_coverage": {
+    "total_interview_records": 84,
+    "status_counts": {
+      "resolved": 61,
+      "policy_note": 22,
+      "unresolved": 1
+    },
+    "records": [
+      {
+        "interview_item_id": "W00-001",
+        "interview_status": "resolved",
+        "representation": "direct_fixture",
+        "fixture_ids": [
+          "OPV1-0001"
+        ],
+        "assertion_ids": []
+      },
+      {
+        "interview_item_id": "W00-002",
+        "interview_status": "resolved",
+        "representation": "direct_fixture",
+        "fixture_ids": [
+          "OPV1-0002"
+        ],
+        "assertion_ids": []
+      },
+      {
+        "interview_item_id": "W00-003",
+        "interview_status": "resolved",
+        "representation": "direct_fixture",
+        "fixture_ids": [
+          "OPV1-0003"
+        ],
+        "assertion_ids": []
+      },
+      {
+        "interview_item_id": "W00-004",
+        "interview_status": "resolved",
+        "representation": "fixture_and_assertion",
+        "fixture_ids": [
+          "OPV1-0004",
+          "OPV1-0005"
+        ],
+        "assertion_ids": [
+          "OPA-019"
+        ]
+      },
+      {
+        "interview_item_id": "W00-005",
+        "interview_status": "resolved",
+        "representation": "direct_fixture",
+        "fixture_ids": [
+          "OPV1-0006"
+        ],
+        "assertion_ids": []
+      },
+      {
+        "interview_item_id": "W00-006",
+        "interview_status": "resolved",
+        "representation": "direct_fixture",
+        "fixture_ids": [
+          "OPV1-0007"
+        ],
+        "assertion_ids": []
+      },
+      {
+        "interview_item_id": "W00-007",
+        "interview_status": "resolved",
+        "representation": "direct_fixture",
+        "fixture_ids": [
+          "OPV1-0008"
+        ],
+        "assertion_ids": []
+      },
+      {
+        "interview_item_id": "W00-008",
+        "interview_status": "resolved",
+        "representation": "direct_fixture",
+        "fixture_ids": [
+          "OPV1-0009"
+        ],
+        "assertion_ids": []
+      },
+      {
+        "interview_item_id": "W00-009",
+        "interview_status": "resolved",
+        "representation": "direct_fixture",
+        "fixture_ids": [
+          "OPV1-0010"
+        ],
+        "assertion_ids": []
+      },
+      {
+        "interview_item_id": "W00-010",
+        "interview_status": "resolved",
+        "representation": "direct_fixture",
+        "fixture_ids": [
+          "OPV1-0011"
+        ],
+        "assertion_ids": []
+      },
+      {
+        "interview_item_id": "W00-011",
+        "interview_status": "resolved",
+        "representation": "direct_fixture",
+        "fixture_ids": [
+          "OPV1-0012"
+        ],
+        "assertion_ids": []
+      },
+      {
+        "interview_item_id": "W00-012",
+        "interview_status": "resolved",
+        "representation": "direct_fixture",
+        "fixture_ids": [
+          "OPV1-0013"
+        ],
+        "assertion_ids": []
+      },
+      {
+        "interview_item_id": "W00-013",
+        "interview_status": "resolved",
+        "representation": "direct_fixture",
+        "fixture_ids": [
+          "OPV1-0014"
+        ],
+        "assertion_ids": []
+      },
+      {
+        "interview_item_id": "W00-014-MC",
+        "interview_status": "resolved",
+        "representation": "direct_fixture",
+        "fixture_ids": [
+          "OPV1-0015"
+        ],
+        "assertion_ids": []
+      },
+      {
+        "interview_item_id": "W00-014-DISCORD",
+        "interview_status": "resolved",
+        "representation": "direct_fixture",
+        "fixture_ids": [
+          "OPV1-0016"
+        ],
+        "assertion_ids": []
+      },
+      {
+        "interview_item_id": "W00-NOTE-001",
+        "interview_status": "policy_note",
+        "representation": "policy_assertion",
+        "fixture_ids": [],
+        "assertion_ids": [
+          "OPA-005"
+        ]
+      },
+      {
+        "interview_item_id": "W00-015",
+        "interview_status": "resolved",
+        "representation": "fixture_and_assertion",
+        "fixture_ids": [
+          "OPV1-0017"
+        ],
+        "assertion_ids": [
+          "OPA-005"
+        ]
+      },
+      {
+        "interview_item_id": "W00-016",
+        "interview_status": "resolved",
+        "representation": "fixture_and_assertion",
+        "fixture_ids": [
+          "OPV1-0018"
+        ],
+        "assertion_ids": [
+          "OPA-005"
+        ]
+      },
+      {
+        "interview_item_id": "W00-017",
+        "interview_status": "policy_note",
+        "representation": "policy_assertion",
+        "fixture_ids": [],
+        "assertion_ids": [
+          "OPA-006"
+        ]
+      },
+      {
+        "interview_item_id": "W00-018",
+        "interview_status": "resolved",
+        "representation": "direct_fixture",
+        "fixture_ids": [
+          "OPV1-0019"
+        ],
+        "assertion_ids": []
+      },
+      {
+        "interview_item_id": "W00-019",
+        "interview_status": "resolved",
+        "representation": "direct_fixture",
+        "fixture_ids": [
+          "OPV1-0020"
+        ],
+        "assertion_ids": []
+      },
+      {
+        "interview_item_id": "W00-020",
+        "interview_status": "resolved",
+        "representation": "direct_fixture",
+        "fixture_ids": [
+          "OPV1-0021",
+          "OPV1-0022",
+          "OPV1-0023"
+        ],
+        "assertion_ids": []
+      },
+      {
+        "interview_item_id": "W00-021",
+        "interview_status": "resolved",
+        "representation": "direct_fixture",
+        "fixture_ids": [
+          "OPV1-0024"
+        ],
+        "assertion_ids": []
+      },
+      {
+        "interview_item_id": "W00-022",
+        "interview_status": "resolved",
+        "representation": "direct_fixture",
+        "fixture_ids": [
+          "OPV1-0025"
+        ],
+        "assertion_ids": []
+      },
+      {
+        "interview_item_id": "W00-023",
+        "interview_status": "resolved",
+        "representation": "direct_fixture",
+        "fixture_ids": [
+          "OPV1-0026"
+        ],
+        "assertion_ids": []
+      },
+      {
+        "interview_item_id": "W00-024",
+        "interview_status": "resolved",
+        "representation": "fixture_and_assertion",
+        "fixture_ids": [
+          "OPV1-0027"
+        ],
+        "assertion_ids": [
+          "OPA-003"
+        ]
+      },
+      {
+        "interview_item_id": "W00-025",
+        "interview_status": "resolved",
+        "representation": "direct_fixture",
+        "fixture_ids": [
+          "OPV1-0028"
+        ],
+        "assertion_ids": []
+      },
+      {
+        "interview_item_id": "W00-026",
+        "interview_status": "resolved",
+        "representation": "direct_fixture",
+        "fixture_ids": [
+          "OPV1-0014",
+          "OPV1-0029"
+        ],
+        "assertion_ids": []
+      },
+      {
+        "interview_item_id": "W00-027",
+        "interview_status": "resolved",
+        "representation": "direct_fixture",
+        "fixture_ids": [
+          "OPV1-0030"
+        ],
+        "assertion_ids": []
+      },
+      {
+        "interview_item_id": "W00-028",
+        "interview_status": "resolved",
+        "representation": "direct_fixture",
+        "fixture_ids": [
+          "OPV1-0031"
+        ],
+        "assertion_ids": []
+      },
+      {
+        "interview_item_id": "W00-029",
+        "interview_status": "resolved",
+        "representation": "direct_fixture",
+        "fixture_ids": [
+          "OPV1-0032"
+        ],
+        "assertion_ids": []
+      },
+      {
+        "interview_item_id": "W00-030",
+        "interview_status": "resolved",
+        "representation": "direct_fixture",
+        "fixture_ids": [
+          "OPV1-0033"
+        ],
+        "assertion_ids": []
+      },
+      {
+        "interview_item_id": "W00-031",
+        "interview_status": "resolved",
+        "representation": "direct_fixture",
+        "fixture_ids": [
+          "OPV1-0034"
+        ],
+        "assertion_ids": []
+      },
+      {
+        "interview_item_id": "W00-NOTE-002",
+        "interview_status": "policy_note",
+        "representation": "policy_assertion",
+        "fixture_ids": [],
+        "assertion_ids": [
+          "OPA-002",
+          "OPA-005"
+        ]
+      },
+      {
+        "interview_item_id": "W00-032",
+        "interview_status": "policy_note",
+        "representation": "policy_assertion",
+        "fixture_ids": [],
+        "assertion_ids": [
+          "OPA-003",
+          "OPA-030"
+        ]
+      },
+      {
+        "interview_item_id": "W00-033",
+        "interview_status": "resolved",
+        "representation": "direct_fixture",
+        "fixture_ids": [
+          "OPV1-0035"
+        ],
+        "assertion_ids": []
+      },
+      {
+        "interview_item_id": "W00-034",
+        "interview_status": "resolved",
+        "representation": "direct_fixture",
+        "fixture_ids": [
+          "OPV1-0036"
+        ],
+        "assertion_ids": []
+      },
+      {
+        "interview_item_id": "W00-035",
+        "interview_status": "resolved",
+        "representation": "direct_fixture",
+        "fixture_ids": [
+          "OPV1-0037"
+        ],
+        "assertion_ids": []
+      },
+      {
+        "interview_item_id": "W00-036",
+        "interview_status": "resolved",
+        "representation": "direct_fixture",
+        "fixture_ids": [
+          "OPV1-0038"
+        ],
+        "assertion_ids": []
+      },
+      {
+        "interview_item_id": "W00-037",
+        "interview_status": "resolved",
+        "representation": "direct_fixture",
+        "fixture_ids": [
+          "OPV1-0039"
+        ],
+        "assertion_ids": []
+      },
+      {
+        "interview_item_id": "W00-038",
+        "interview_status": "resolved",
+        "representation": "direct_fixture",
+        "fixture_ids": [
+          "OPV1-0040"
+        ],
+        "assertion_ids": []
+      },
+      {
+        "interview_item_id": "W00-039",
+        "interview_status": "resolved",
+        "representation": "direct_fixture",
+        "fixture_ids": [
+          "OPV1-0041"
+        ],
+        "assertion_ids": []
+      },
+      {
+        "interview_item_id": "W00-040",
+        "interview_status": "resolved",
+        "representation": "direct_fixture",
+        "fixture_ids": [
+          "OPV1-0042"
+        ],
+        "assertion_ids": []
+      },
+      {
+        "interview_item_id": "W00-041",
+        "interview_status": "resolved",
+        "representation": "direct_fixture",
+        "fixture_ids": [
+          "OPV1-0043"
+        ],
+        "assertion_ids": []
+      },
+      {
+        "interview_item_id": "W00-042",
+        "interview_status": "resolved",
+        "representation": "direct_fixture",
+        "fixture_ids": [
+          "OPV1-0044"
+        ],
+        "assertion_ids": []
+      },
+      {
+        "interview_item_id": "W00-043",
+        "interview_status": "resolved",
+        "representation": "direct_fixture",
+        "fixture_ids": [
+          "OPV1-0045"
+        ],
+        "assertion_ids": []
+      },
+      {
+        "interview_item_id": "W00-044",
+        "interview_status": "resolved",
+        "representation": "direct_fixture",
+        "fixture_ids": [
+          "OPV1-0046"
+        ],
+        "assertion_ids": []
+      },
+      {
+        "interview_item_id": "W00-045",
+        "interview_status": "resolved",
+        "representation": "direct_fixture",
+        "fixture_ids": [
+          "OPV1-0047"
+        ],
+        "assertion_ids": []
+      },
+      {
+        "interview_item_id": "W00-046",
+        "interview_status": "resolved",
+        "representation": "direct_fixture",
+        "fixture_ids": [
+          "OPV1-0048"
+        ],
+        "assertion_ids": []
+      },
+      {
+        "interview_item_id": "W00-047",
+        "interview_status": "resolved",
+        "representation": "direct_fixture",
+        "fixture_ids": [
+          "OPV1-0049"
+        ],
+        "assertion_ids": []
+      },
+      {
+        "interview_item_id": "W00-NOTE-003",
+        "interview_status": "policy_note",
+        "representation": "policy_assertion",
+        "fixture_ids": [],
+        "assertion_ids": [
+          "OPA-001",
+          "OPA-002",
+          "OPA-035"
+        ]
+      },
+      {
+        "interview_item_id": "W00-NOTE-004",
+        "interview_status": "policy_note",
+        "representation": "policy_assertion",
+        "fixture_ids": [],
+        "assertion_ids": [
+          "OPA-035"
+        ]
+      },
+      {
+        "interview_item_id": "W00-048",
+        "interview_status": "policy_note",
+        "representation": "policy_assertion",
+        "fixture_ids": [],
+        "assertion_ids": [
+          "OPA-007"
+        ]
+      },
+      {
+        "interview_item_id": "W00-049",
+        "interview_status": "resolved",
+        "representation": "policy_assertion",
+        "fixture_ids": [],
+        "assertion_ids": [
+          "OPA-017"
+        ]
+      },
+      {
+        "interview_item_id": "W00-050",
+        "interview_status": "policy_note",
+        "representation": "policy_assertion",
+        "fixture_ids": [],
+        "assertion_ids": [
+          "OPA-008"
+        ]
+      },
+      {
+        "interview_item_id": "W00-051",
+        "interview_status": "resolved",
+        "representation": "policy_assertion",
+        "fixture_ids": [],
+        "assertion_ids": [
+          "OPA-015"
+        ]
+      },
+      {
+        "interview_item_id": "W00-052",
+        "interview_status": "policy_note",
+        "representation": "policy_assertion",
+        "fixture_ids": [],
+        "assertion_ids": [
+          "OPA-009"
+        ]
+      },
+      {
+        "interview_item_id": "W00-053",
+        "interview_status": "policy_note",
+        "representation": "policy_assertion",
+        "fixture_ids": [],
+        "assertion_ids": [
+          "OPA-010"
+        ]
+      },
+      {
+        "interview_item_id": "W00-054",
+        "interview_status": "policy_note",
+        "representation": "policy_assertion",
+        "fixture_ids": [],
+        "assertion_ids": [
+          "OPA-010"
+        ]
+      },
+      {
+        "interview_item_id": "W00-055",
+        "interview_status": "resolved",
+        "representation": "fixture_and_assertion",
+        "fixture_ids": [
+          "OPV1-0050"
+        ],
+        "assertion_ids": [
+          "OPA-012"
+        ]
+      },
+      {
+        "interview_item_id": "W00-056",
+        "interview_status": "policy_note",
+        "representation": "policy_assertion",
+        "fixture_ids": [],
+        "assertion_ids": [
+          "OPA-029"
+        ]
+      },
+      {
+        "interview_item_id": "W00-057",
+        "interview_status": "policy_note",
+        "representation": "fixture_and_assertion",
+        "fixture_ids": [
+          "OPV1-0014",
+          "OPV1-0030",
+          "OPV1-0039"
+        ],
+        "assertion_ids": [
+          "OPA-013"
+        ]
+      },
+      {
+        "interview_item_id": "W00-058",
+        "interview_status": "policy_note",
+        "representation": "fixture_and_assertion",
+        "fixture_ids": [
+          "OPV1-0014",
+          "OPV1-0030",
+          "OPV1-0039"
+        ],
+        "assertion_ids": [
+          "OPA-013"
+        ]
+      },
+      {
+        "interview_item_id": "W00-059",
+        "interview_status": "policy_note",
+        "representation": "policy_assertion",
+        "fixture_ids": [],
+        "assertion_ids": [
+          "OPA-014"
+        ]
+      },
+      {
+        "interview_item_id": "W00-060",
+        "interview_status": "policy_note",
+        "representation": "policy_assertion",
+        "fixture_ids": [],
+        "assertion_ids": [
+          "OPA-003"
+        ]
+      },
+      {
+        "interview_item_id": "W00-061",
+        "interview_status": "resolved",
+        "representation": "policy_assertion",
+        "fixture_ids": [],
+        "assertion_ids": [
+          "OPA-019"
+        ]
+      },
+      {
+        "interview_item_id": "W00-062",
+        "interview_status": "policy_note",
+        "representation": "policy_assertion",
+        "fixture_ids": [],
+        "assertion_ids": [
+          "OPA-020"
+        ]
+      },
+      {
+        "interview_item_id": "W00-063",
+        "interview_status": "resolved",
+        "representation": "policy_assertion",
+        "fixture_ids": [],
+        "assertion_ids": [
+          "OPA-021"
+        ]
+      },
+      {
+        "interview_item_id": "W00-064",
+        "interview_status": "unresolved",
+        "representation": "unresolved",
+        "fixture_ids": [],
+        "assertion_ids": []
+      },
+      {
+        "interview_item_id": "W00-065",
+        "interview_status": "policy_note",
+        "representation": "policy_assertion",
+        "fixture_ids": [],
+        "assertion_ids": [
+          "OPA-017"
+        ]
+      },
+      {
+        "interview_item_id": "W00-066",
+        "interview_status": "resolved",
+        "representation": "policy_assertion",
+        "fixture_ids": [],
+        "assertion_ids": [
+          "OPA-016"
+        ]
+      },
+      {
+        "interview_item_id": "W00-067",
+        "interview_status": "policy_note",
+        "representation": "policy_assertion",
+        "fixture_ids": [],
+        "assertion_ids": [
+          "OPA-011"
+        ]
+      },
+      {
+        "interview_item_id": "W00-068",
+        "interview_status": "policy_note",
+        "representation": "policy_assertion",
+        "fixture_ids": [],
+        "assertion_ids": [
+          "OPA-018"
+        ]
+      },
+      {
+        "interview_item_id": "W00-069",
+        "interview_status": "resolved",
+        "representation": "fixture_and_assertion",
+        "fixture_ids": [
+          "OPV1-0037"
+        ],
+        "assertion_ids": [
+          "OPA-022"
+        ]
+      },
+      {
+        "interview_item_id": "W00-070",
+        "interview_status": "resolved",
+        "representation": "policy_assertion",
+        "fixture_ids": [],
+        "assertion_ids": [
+          "OPA-023"
+        ]
+      },
+      {
+        "interview_item_id": "W00-071",
+        "interview_status": "resolved",
+        "representation": "direct_fixture",
+        "fixture_ids": [
+          "OPV1-0051",
+          "OPV1-0052"
+        ],
+        "assertion_ids": []
+      },
+      {
+        "interview_item_id": "W00-072",
+        "interview_status": "resolved",
+        "representation": "policy_assertion",
+        "fixture_ids": [],
+        "assertion_ids": [
+          "OPA-024"
+        ]
+      },
+      {
+        "interview_item_id": "W00-073",
+        "interview_status": "resolved",
+        "representation": "policy_assertion",
+        "fixture_ids": [],
+        "assertion_ids": [
+          "OPA-025"
+        ]
+      },
+      {
+        "interview_item_id": "W00-074",
+        "interview_status": "policy_note",
+        "representation": "policy_assertion",
+        "fixture_ids": [],
+        "assertion_ids": [
+          "OPA-009"
+        ]
+      },
+      {
+        "interview_item_id": "W00-075",
+        "interview_status": "policy_note",
+        "representation": "policy_assertion",
+        "fixture_ids": [],
+        "assertion_ids": [
+          "OPA-014"
+        ]
+      },
+      {
+        "interview_item_id": "W00-076",
+        "interview_status": "resolved",
+        "representation": "fixture_and_assertion",
+        "fixture_ids": [
+          "OPV1-0045"
+        ],
+        "assertion_ids": [
+          "OPA-026"
+        ]
+      },
+      {
+        "interview_item_id": "W00-077",
+        "interview_status": "resolved",
+        "representation": "policy_assertion",
+        "fixture_ids": [],
+        "assertion_ids": [
+          "OPA-027"
+        ]
+      },
+      {
+        "interview_item_id": "W00-078",
+        "interview_status": "resolved",
+        "representation": "policy_assertion",
+        "fixture_ids": [],
+        "assertion_ids": [
+          "OPA-028"
+        ]
+      },
+      {
+        "interview_item_id": "W00-079",
+        "interview_status": "resolved",
+        "representation": "policy_assertion",
+        "fixture_ids": [],
+        "assertion_ids": [
+          "OPA-004",
+          "OPA-031"
+        ]
+      }
+    ]
+  },
+  "policy_section_coverage": {
+    "1": {
+      "direct_fixture_ids": [],
+      "assertion_ids": [
+        "OPA-001"
+      ]
+    },
+    "2": {
+      "direct_fixture_ids": [
+        "OPV1-0034"
+      ],
+      "assertion_ids": [
+        "OPA-033"
+      ]
+    },
+    "3": {
+      "direct_fixture_ids": [
+        "OPV1-0017",
+        "OPV1-0018",
+        "OPV1-0019",
+        "OPV1-0027"
+      ],
+      "assertion_ids": [
+        "OPA-003",
+        "OPA-004",
+        "OPA-005",
+        "OPA-030",
+        "OPA-031",
+        "OPA-032"
+      ]
+    },
+    "4": {
+      "direct_fixture_ids": [
+        "OPV1-0003",
+        "OPV1-0004",
+        "OPV1-0005",
+        "OPV1-0007",
+        "OPV1-0018",
+        "OPV1-0033",
+        "OPV1-0034"
+      ],
+      "assertion_ids": [
+        "OPA-005",
+        "OPA-006",
+        "OPA-014",
+        "OPA-019"
+      ]
+    },
+    "5": {
+      "direct_fixture_ids": [
+        "OPV1-0050"
+      ],
+      "assertion_ids": [
+        "OPA-007",
+        "OPA-008",
+        "OPA-009",
+        "OPA-010",
+        "OPA-011",
+        "OPA-012",
+        "OPA-013",
+        "OPA-014",
+        "OPA-021"
+      ]
+    },
+    "6": {
+      "direct_fixture_ids": [
+        "OPV1-0001",
+        "OPV1-0002",
+        "OPV1-0003",
+        "OPV1-0004",
+        "OPV1-0005",
+        "OPV1-0006",
+        "OPV1-0007",
+        "OPV1-0018",
+        "OPV1-0019",
+        "OPV1-0031",
+        "OPV1-0033",
+        "OPV1-0035",
+        "OPV1-0040",
+        "OPV1-0041"
+      ],
+      "assertion_ids": [
+        "OPA-020",
+        "OPA-021",
+        "OPA-028",
+        "OPA-034"
+      ]
+    },
+    "7": {
+      "direct_fixture_ids": [
+        "OPV1-0008",
+        "OPV1-0009",
+        "OPV1-0017",
+        "OPV1-0032",
+        "OPV1-0046",
+        "OPV1-0047"
+      ],
+      "assertion_ids": [
+        "OPA-008",
+        "OPA-009",
+        "OPA-015",
+        "OPA-016",
+        "OPA-017",
+        "OPA-018",
+        "OPA-025"
+      ]
+    },
+    "8": {
+      "direct_fixture_ids": [
+        "OPV1-0036"
+      ],
+      "assertion_ids": []
+    },
+    "9": {
+      "direct_fixture_ids": [
+        "OPV1-0010",
+        "OPV1-0011",
+        "OPV1-0020",
+        "OPV1-0021",
+        "OPV1-0022",
+        "OPV1-0023",
+        "OPV1-0024",
+        "OPV1-0048",
+        "OPV1-0049",
+        "OPV1-0050"
+      ],
+      "assertion_ids": [
+        "OPA-012",
+        "OPA-024",
+        "OPA-029"
+      ]
+    },
+    "10": {
+      "direct_fixture_ids": [
+        "OPV1-0012",
+        "OPV1-0013",
+        "OPV1-0025",
+        "OPV1-0026",
+        "OPV1-0044",
+        "OPV1-0045"
+      ],
+      "assertion_ids": [
+        "OPA-026"
+      ]
+    },
+    "11": {
+      "direct_fixture_ids": [
+        "OPV1-0014",
+        "OPV1-0028",
+        "OPV1-0029",
+        "OPV1-0030",
+        "OPV1-0039",
+        "OPV1-0051",
+        "OPV1-0052"
+      ],
+      "assertion_ids": [
+        "OPA-013",
+        "OPA-027"
+      ]
+    },
+    "12": {
+      "direct_fixture_ids": [
+        "OPV1-0037",
+        "OPV1-0038",
+        "OPV1-0039"
+      ],
+      "assertion_ids": [
+        "OPA-001",
+        "OPA-022",
+        "OPA-023"
+      ]
+    },
+    "13": {
+      "direct_fixture_ids": [
+        "OPV1-0015",
+        "OPV1-0016",
+        "OPV1-0042",
+        "OPV1-0043"
+      ],
+      "assertion_ids": []
+    },
+    "14": {
+      "direct_fixture_ids": [
+        "OPV1-0014",
+        "OPV1-0038",
+        "OPV1-0039",
+        "OPV1-0040",
+        "OPV1-0046",
+        "OPV1-0047"
+      ],
+      "assertion_ids": [
+        "OPA-001",
+        "OPA-002",
+        "OPA-010",
+        "OPA-011",
+        "OPA-023"
+      ]
+    },
+    "15": {
+      "direct_fixture_ids": [],
+      "assertion_ids": [
+        "OPA-033"
+      ]
+    },
+    "16": {
+      "direct_fixture_ids": [],
+      "assertion_ids": [
+        "OPA-035"
+      ]
+    },
+    "17": {
+      "direct_fixture_ids": [],
+      "assertion_ids": []
+    },
+    "18": {
+      "direct_fixture_ids": [],
+      "assertion_ids": []
+    }
+  },
+  "validation": {
+    "dedicated_test": "pytest tests/test_owner_policy_golden.py",
+    "dataset_qa_status": "Policy-v1 dataset QA from issue #25 / PR #27 is merged. Generator-only ID/range rules are not applied to OPV1 evaluation IDs; dedicated golden-set tests now cross-check every non-null golden enum/reason-code value against the merged centralized Policy-v1 QA vocabulary.",
+    "missing_offset_normalization": "When the raw interview omitted offset_ms, the golden record uses 0 plus timing_known=false. Array order is authoritative; 0 must not be interpreted as measured simultaneity."
+  }
+}
