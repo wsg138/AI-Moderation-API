@@ -613,7 +613,7 @@ def render_report(
         f"- Near candidates (>= {NEAR_THRESHOLD:.2f}): **{len(near)}**",
         f"- Cross-source near candidates: **{len(cross_near)}**",
         f"- Decision-contrast lexical candidates: **{len(contradictions)}**",
-        f"- High-similarity cross-worker contrasts reviewed: **{len(cross_review)}**",
+        f"- Cross-worker differing-decision pairs reviewed: **{len(cross_review)}**",
         f"- Unresolved cross-worker contradictions: **{len(unresolved_cross)}**",
         f"- Golden near/exact candidates: **{len(leakage)}**",
         f"- Golden-sensitive (>= {GOLDEN_SENSITIVE_THRESHOLD:.2f}): **{len(sensitive)}**",
@@ -623,9 +623,30 @@ def render_report(
     ]
     for name in ("train", "validation", "test", "frozen_adversarial"):
         lines.append(f"- {name}: **{len(parts[name])}**")
+    lines.extend(_cross_source_review_section(cross_review))
     lines.extend(_distribution_sections(audit))
     lines.extend(_report_sections(audit, sensitive))
     return "\n".join(lines) + "\n"
+
+
+def _cross_source_review_section(
+    rows: list[dict[str, object]],
+) -> list[str]:
+    lines = [
+        "",
+        "## Cross-worker near-pair policy review",
+        "",
+        "| Pair | Similarity | Disposition | Policy source |",
+        "|---|---:|---|---|",
+    ]
+    for row in rows:
+        pair = f"{row['left']} ↔ {row['right']}"
+        lines.append(
+            f"| `{pair}` | {row['similarity']} | "
+            f"`{row['disposition']}` | {row['policy_source'] or ''} |"
+        )
+    lines.append("")
+    return lines
 
 
 def _distribution_sections(audit: dict[str, object]) -> list[str]:
