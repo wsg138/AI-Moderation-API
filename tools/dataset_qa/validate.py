@@ -69,6 +69,72 @@ def _validate_enum(
     return [_diagnostic(record.path, record.line, "error", "unknown_value", message)]
 
 
+def _validate_bool(record: RecordRef, field: str) -> list[Diagnostic]:
+    if isinstance(record.data.get(field), bool):
+        return []
+    message = f"'{field}' must be a boolean"
+    return [_diagnostic(record.path, record.line, "error", "invalid_type", message)]
+
+
+def _validate_duration(record: RecordRef) -> list[Diagnostic]:
+    value = record.data.get("containment_duration_seconds")
+    if value is None:
+        return []
+    if isinstance(value, int) and not isinstance(value, bool) and value > 0:
+        return []
+    message = "'containment_duration_seconds' must be null or a positive integer"
+    return [_diagnostic(record.path, record.line, "error", "invalid_duration", message)]
+
+
+def _containment_duration_diagnostics(record: RecordRef) -> list[Diagnostic]:
+    if "containment_duration_seconds" not in record.data:
+        return []
+    containment = record.data.get("containment")
+    duration = record.data.get("containment_duration_seconds")
+    if containment == "NONE" and duration is not None:
+        message = "containment NONE must use a null containment duration"
+        return [
+            _diagnostic(
+                record.path,
+                record.line,
+                "error",
+                "containment_duration_conflict",
+                message,
+            )
+        ]
+    if containment == "MUTE" and duration is None:
+        message = "MUTE has no concrete duration; verify this is an unresolved policy edge"
+        return [
+            _diagnostic(
+                record.path,
+                record.line,
+                "warning",
+                "mute_duration_unspecified",
+                message,
+            )
+        ]
+    return []
+
+
+def _exempt_profile_diagnostics(record: RecordRef, config: QaConfig) -> list[Diagnostic]:
+    profile = record.data.get("channel_profile")
+    if profile not in config.exempt_channel_profiles:
+        return []
+    message = (
+        f"channel profile '{profile}' is exempt from semantic classification; "
+        "keep it only for a deliberate policy-engine fixture"
+    )
+    return [
+        _diagnostic(
+            record.path,
+            record.line,
+            "warning",
+            "exempt_channel_profile",
+            message,
+        )
+    ]
+
+
 def _invalid_string_field(
     record: RecordRef,
     index: int,
@@ -261,6 +327,26 @@ def _validate_family_id(record: RecordRef, config: QaConfig) -> list[Diagnostic]
     ]
 
 
+def _policy_field_diagnostics(record: RecordRef, config: QaConfig) -> list[Diagnostic]:
+    diagnostics: list[Diagnostic] = []
+    enum_fields = (
+        ("channel_profile", config.channel_profiles),
+        ("review_priority", config.review_priorities),
+        ("containment", config.containments),
+        ("support_flow", config.support_flows),
+    )
+    for field, allowed in enum_fields:
+        if field in record.data:
+            diagnostics.extend(_validate_enum(record, field, allowed))
+    if "strike" in record.data:
+        diagnostics.extend(_validate_bool(record, "strike"))
+    if "containment_duration_seconds" in record.data:
+        diagnostics.extend(_validate_duration(record))
+    diagnostics.extend(_containment_duration_diagnostics(record))
+    diagnostics.extend(_exempt_profile_diagnostics(record, config))
+    return diagnostics
+
+
 def _validate_schema(record: RecordRef, config: QaConfig) -> list[Diagnostic]:
     diagnostics = _require_fields(record, config)
     for field in STRING_FIELDS:
@@ -270,6 +356,7 @@ def _validate_schema(record: RecordRef, config: QaConfig) -> list[Diagnostic]:
         diagnostics.extend(_validate_enum(record, "label", config.labels))
     if "action" in record.data:
         diagnostics.extend(_validate_enum(record, "action", config.actions))
+    diagnostics.extend(_policy_field_diagnostics(record, config))
     if "messages" in record.data or "target_index" in record.data:
         diagnostics.extend(_validate_messages(record, config))
     if "reason_codes" in record.data:

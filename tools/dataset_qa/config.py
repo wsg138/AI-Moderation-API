@@ -14,6 +14,11 @@ class QaConfig:
     message_required_fields: tuple[str, ...]
     labels: frozenset[str]
     actions: frozenset[str]
+    review_priorities: frozenset[str]
+    containments: frozenset[str]
+    support_flows: frozenset[str]
+    channel_profiles: frozenset[str]
+    exempt_channel_profiles: frozenset[str]
     reason_codes: frozenset[str]
     id_ranges: dict[str, ExpectedRange]
     family_id_pattern: str
@@ -37,6 +42,11 @@ def _build_config(raw: dict[str, Any]) -> QaConfig:
         message_required_fields=tuple(raw["message_required_fields"]),
         labels=frozenset(raw["labels"]),
         actions=frozenset(raw["actions"]),
+        review_priorities=frozenset(raw["review_priorities"]),
+        containments=frozenset(raw["containments"]),
+        support_flows=frozenset(raw["support_flows"]),
+        channel_profiles=frozenset(raw["channel_profiles"]),
+        exempt_channel_profiles=frozenset(raw["exempt_channel_profiles"]),
         reason_codes=frozenset(raw["reason_codes"]),
         id_ranges=ranges,
         family_id_pattern=str(raw["family_id_pattern"]),

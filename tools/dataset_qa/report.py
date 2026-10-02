@@ -4,7 +4,18 @@ from collections import Counter
 
 from .model import DatasetResult, RecordRef
 
-COUNT_FIELDS = ("source", "domain", "difficulty", "platform_hint", "label", "action")
+COUNT_FIELDS = (
+    "source",
+    "domain",
+    "difficulty",
+    "platform_hint",
+    "channel_profile",
+    "label",
+    "action",
+    "review_priority",
+    "containment",
+    "support_flow",
+)
 
 
 def _sorted_counts(values: list[str]) -> dict[str, int]:
@@ -16,6 +27,15 @@ def _field_counts(records: list[RecordRef], field: str) -> dict[str, int]:
         value
         for record in records
         if isinstance((value := record.data.get(field)), str)
+    ]
+    return _sorted_counts(values)
+
+
+def _bool_counts(records: list[RecordRef], field: str) -> dict[str, int]:
+    values = [
+        str(value).lower()
+        for record in records
+        if isinstance((value := record.data.get(field)), bool)
     ]
     return _sorted_counts(values)
 
@@ -51,6 +71,30 @@ def _family_counts(records: list[RecordRef]) -> dict[str, int]:
     return _sorted_counts(values)
 
 
+def _duration_bucket(record: RecordRef) -> tuple[str, str | None]:
+    if "containment_duration_seconds" not in record.data:
+        return "missing", None
+    duration = record.data.get("containment_duration_seconds")
+    containment = record.data.get("containment")
+    if duration is None:
+        mute_bucket = "mute_without_duration" if containment == "MUTE" else None
+        return "null", mute_bucket
+    if isinstance(duration, int) and not isinstance(duration, bool) and duration > 0:
+        mute_bucket = "mute_with_duration" if containment == "MUTE" else None
+        return "concrete", mute_bucket
+    return "invalid", None
+
+
+def _duration_coverage(records: list[RecordRef]) -> dict[str, int]:
+    counts: Counter[str] = Counter()
+    for record in records:
+        primary, mute_bucket = _duration_bucket(record)
+        counts[primary] += 1
+        if mute_bucket is not None:
+            counts[mute_bucket] += 1
+    return dict(sorted(counts.items()))
+
+
 def _diagnostic_counts(result: DatasetResult) -> dict[str, object]:
     by_code = Counter(item.code for item in result.diagnostics)
     return {
@@ -82,6 +126,8 @@ def build_report(result: DatasetResult) -> dict[str, object]:
         "path": str(result.path),
         "records": denominator,
         "fields": fields,
+        "strike": _bool_counts(result.records, "strike"),
+        "containment_duration": _duration_coverage(result.records),
         "messages": {
             "count_distribution": message_distribution,
             "multi_message_records": multi_message,
@@ -168,6 +214,8 @@ def render_markdown_report(report: dict[str, object]) -> str:
     ]
     for field, values in report["fields"].items():
         lines.extend(_table(field, values))
+    lines.extend(_table("Strike", report["strike"]))
+    lines.extend(_table("Containment duration coverage", report["containment_duration"]))
     lines.extend(_table("Reason codes", report["reason_codes"]))
     lines.extend(_table("Message count", messages["count_distribution"]))
     lines.extend(_table("Diagnostic codes", diagnostics["by_code"]))
