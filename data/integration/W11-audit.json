@@ -5220,7 +5220,7 @@
     {
       "left": "G03-0352",
       "right": "G03-0364",
-      "similarity": 1,
+      "similarity": 1.0,
       "same_outcome": true,
       "same_source_family": false,
       "cross_source": false
@@ -5228,7 +5228,7 @@
     {
       "left": "G03-0352",
       "right": "G03-0388",
-      "similarity": 1,
+      "similarity": 1.0,
       "same_outcome": true,
       "same_source_family": false,
       "cross_source": false
@@ -5316,7 +5316,7 @@
     {
       "left": "G03-0364",
       "right": "G03-0376",
-      "similarity": 1,
+      "similarity": 1.0,
       "same_outcome": true,
       "same_source_family": false,
       "cross_source": false
@@ -5348,7 +5348,7 @@
     {
       "left": "G03-0376",
       "right": "G03-0388",
-      "similarity": 1,
+      "similarity": 1.0,
       "same_outcome": true,
       "same_source_family": false,
       "cross_source": false
@@ -23755,8 +23755,8 @@
       "URGENT": 302
     },
     "strike": {
-      "false": 3558,
-      "true": 942
+      "False": 3558,
+      "True": 942
     },
     "containment": {
       "MUTE": 195,
