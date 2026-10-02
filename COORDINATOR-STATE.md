@@ -245,3 +245,29 @@ Still blocked on revision:
   Coordinator comments on those PRs define the required regression fixes.
 
 W11 must not start until G03 and G08 are corrected, accepted, and merged. W13/W14/W15 should not treat #29 as frozen until its recovery blockers are fixed and #29 is accepted.
+
+
+## Consolidation correction / live gates
+
+Runtime:
+- PR #29 is now merged at `19f828fb10e7e2fd286161d11b230490bf0fbb5a`.
+- Two PENDING-event recovery defects identified before merge are **not resolved by that merge**.
+- Issue #39 / W19 is now the authoritative fix-forward task.
+- W13/W14/W15 remain blocked from treating the runtime contract as frozen until #39 is reviewed and merged.
+- No production deployment has occurred, so this is a pre-deployment correctness repair rather than a live rollback.
+
+Accepted synthetic datasets already integrated into `main`:
+- G01, G02, G04, G05, G06, G07, G09.
+- Their redundant still-open generator PRs were closed after confirming their commits are already present on main.
+- Original issues #3, #4, #6, #7, #8, #9, and #11 are closed/completed.
+
+Still blocked:
+- G03 / issue #5 / PR #32 — diversity/family cleanup required.
+- G08 / issue #10 / PR #37 — family/cross-worker leakage cleanup required.
+
+Fresh-runtime continuation packets:
+- `workers/handoffs/W19-pending-runtime-recovery-launch.md`
+- `workers/handoffs/W04-G03-diversity-cleanup-launch.md`
+- `workers/handoffs/W09-G08-leakage-cleanup-launch.md`
+
+W11 remains blocked until corrected G03 and G08 are accepted and integrated. Runtime client integration remains blocked until W19 is accepted.
