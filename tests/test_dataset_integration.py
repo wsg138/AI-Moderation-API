@@ -8,6 +8,7 @@ from tools import dataset_integration
 ROOT = Path(".")
 MANIFEST = ROOT / "data/integration/W11-split-manifest.json"
 AUDIT = ROOT / "data/integration/W11-audit.json"
+ADVERSARIAL = ROOT / "data/integration/W11-adversarial-eval-manifest.json"
 
 
 def test_w11_generated_outputs_are_reproducible() -> None:
@@ -36,6 +37,10 @@ def test_w11_split_manifest_preserves_family_and_partition_isolation() -> None:
         group_partitions = {partition_by_id[item] for item in group["example_ids"]}
         assert group_partitions == {group["partition"]}
 
+    audit = json.loads(AUDIT.read_text(encoding="utf-8"))
+    for row in audit["cross_source_near_candidates"]:
+        assert partition_by_id[row["left"]] == partition_by_id[row["right"]]
+
 
 def test_w11_audit_has_no_redundant_exact_or_unresolved_cross_worker_conflict() -> None:
     audit = json.loads(AUDIT.read_text(encoding="utf-8"))
@@ -46,10 +51,16 @@ def test_w11_audit_has_no_redundant_exact_or_unresolved_cross_worker_conflict() 
         for row in audit["cross_source_review"]
     )
 
-    train = set(json.loads(MANIFEST.read_text(encoding="utf-8"))["partitions"]["train"])
+    manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
+    train = set(manifest["partitions"]["train"])
     sensitive = {
         row["synthetic_id"]
         for row in audit["golden_leakage_candidates"]
         if row["training_sensitive"]
     }
     assert train.isdisjoint(sensitive)
+    assert sensitive <= set(manifest["partitions"]["frozen_adversarial"])
+
+    adversarial = json.loads(ADVERSARIAL.read_text(encoding="utf-8"))
+    assert adversarial["algorithm_version"] == manifest["algorithm_version"]
+    assert adversarial["example_ids"] == manifest["partitions"]["frozen_adversarial"]
