@@ -819,9 +819,23 @@ def check_outputs(root: Path, outputs: dict[Path, str]) -> list[str]:
         path = root / relative
         if not path.exists():
             failures.append(f"missing generated output: {relative}")
-        elif path.read_text(encoding="utf-8") != expected:
-            failures.append(f"stale generated output: {relative}")
+            continue
+        actual = path.read_text(encoding="utf-8")
+        if actual != expected:
+            failures.append(
+                f"stale generated output: {relative}; "
+                f"{_first_difference(actual, expected)}"
+            )
     return failures
+
+
+def _first_difference(actual: str, expected: str) -> str:
+    actual_lines = actual.splitlines()
+    expected_lines = expected.splitlines()
+    for index, (left, right) in enumerate(zip(actual_lines, expected_lines, strict=False), 1):
+        if left != right:
+            return f"line {index}: actual={left[:160]!r} expected={right[:160]!r}"
+    return f"line-count actual={len(actual_lines)} expected={len(expected_lines)}"
 
 
 def parse_args() -> argparse.Namespace:
