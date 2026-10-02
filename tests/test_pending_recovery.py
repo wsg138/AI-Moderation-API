@@ -284,6 +284,35 @@ async def test_pending_canonical_conflict_does_not_attach_bad_mirror(tmp_path: P
         assert connection.execute("SELECT COUNT(*) FROM message_aliases").fetchone()[0] == 1
 
 
+@pytest.mark.asyncio
+async def test_simultaneous_first_arrival_mirrors_create_one_event(tmp_path: Path) -> None:
+    path = tmp_path / "first-arrival-race.sqlite3"
+    store = ModerationStore(path)
+    await store.initialize()
+    canonical = moderation_request("mc-race", canonical_id="race-canonical")
+    mirror = moderation_request(
+        "discord-race",
+        canonical_id="race-canonical",
+        platform=Platform.DISCORD,
+        profile=ChannelProfile.DISCORD_GENERAL,
+        scope_id="guild",
+        channel_id="general",
+        sender_id="discord-player",
+    )
+
+    first, second = await asyncio.gather(
+        reserve(store, canonical, "mc-race-fingerprint"),
+        reserve(store, mirror, "discord-race-fingerprint"),
+    )
+
+    assert first.event_id == second.event_id
+    assert sum(item.lease_token is not None for item in (first, second)) == 1
+    assert sum(item.pending for item in (first, second)) == 1
+    with sqlite3.connect(path) as connection:
+        assert connection.execute("SELECT COUNT(*) FROM moderation_events").fetchone()[0] == 1
+        assert connection.execute("SELECT COUNT(*) FROM message_aliases").fetchone()[0] == 2
+
+
 class BlockingClassifier:
     def __init__(self) -> None:
         self.entered = asyncio.Event()
