@@ -4,7 +4,7 @@ Last updated: 2026-10-01
 
 ## Current phase
 
-**Phase 1 — Policy v1 merged; runtime/QA reconciliation underway**
+**Phase 2 — Policy v1/golden set frozen; synthetic generation ready**
 
 The repository has been initialized and the worker system is live.
 
@@ -165,3 +165,38 @@ Immediate parallel work authorized:
 - #26 owner-policy golden acceptance set
 
 W02–W10 remain blocked until #25 is accepted and generator launch packets are refreshed against final Policy-v1 QA schema.
+
+
+## Policy-v1 QA + golden-set checkpoint
+
+W17 Policy-v1 QA reconciliation:
+- PR #27 merged.
+- Final head: `5ea5c23acf681108aaef3ec47eb04eb12639210f`
+- Merge commit: `e7e567d32402d0e6fbf97a1f37ea0e3b840e1b89`
+- Exact-head service-ci #21: success.
+- 65 tests on that exact PR head.
+- G01–G09 records now require Policy-v1 outcome dimensions and use centralized vocabulary.
+- Issue #25 closed/completed.
+
+W18 owner-policy golden acceptance set:
+- PR #28 merged after coordinator reconciliation.
+- Final accepted head: `589e8d539e3c7bf353370c72d6a5d2bacbbe8d89`
+- Merge commit: `be1e614c086ec91021e85d4ed7fff95b2d9fc45c`
+- Exact-head service-ci #26: success.
+- Post-merge main service-ci #27: success.
+- Full repository tests on accepted head: 74 passed.
+- 52 direct owner-policy fixtures + 35 policy-engine assertions.
+- All 84 W00 interview records have traceability coverage.
+- All 9 unresolved Policy-v1 edges remain unresolved.
+- W00-043 quoted/condemning-slur strike ambiguity is clarified by later W00-076; OPV1-0045 is BLOCK + strike.
+- Three Policy-v1-only provenance gaps remain explicitly marked (mirror dedupe, fail-open/missing-memory, working ~24h recent-threat safety-check rule).
+- Issue #26 closed/completed.
+
+Dataset generation gate is now open for W02–W10. Generator workers must:
+- use Policy v1 and merged dataset QA;
+- treat the owner golden set as evaluation/acceptance, not training data;
+- avoid exact/trivial golden-set leakage;
+- preserve unresolved policy edges rather than inventing answers;
+- submit 500-record domain PRs for later W11 cross-corpus dedupe/leakage integration.
+
+Issue #19 runtime/API reconciliation remains independent and may continue in parallel.
