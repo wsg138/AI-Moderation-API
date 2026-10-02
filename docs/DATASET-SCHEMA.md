@@ -2,6 +2,12 @@
 
 Training/evaluation files use JSONL: one JSON object per example.
 
+## Generator record requiredness
+
+Every W02–W10 generator record (`G01` through `G09`) must include every field shown in the record example below except `family_id`.
+
+All Policy-v1 outcome dimensions are required so records cannot silently omit owner-policy state. `containment_duration_seconds` is a required field with a nullable value: use `null` when there is no containment or when Policy v1 explicitly leaves the mute duration unresolved. Do not omit the field and do not invent a duration from a nearby policy example.
+
 ## Record
 
 ```json
@@ -83,14 +89,19 @@ Use the narrowest label that expresses semantic truth. Policy/action fields rema
 - `URGENT`
 
 ### `strike`
-Boolean owner-desired strike/evidence escalation for this example.
+Boolean owner-desired strike/evidence escalation for this example. Use only JSON `true` or `false`, never integer or string stand-ins.
 
 ### `containment`
 - `NONE`
 - `MUTE`
 
 ### `containment_duration_seconds`
-Nullable. Set only when owner policy gives a concrete duration for the example. Do not invent a duration from a nearby category.
+Required field with a nullable value.
+
+- `containment: NONE` requires `containment_duration_seconds: null`.
+- `containment: MUTE` uses a positive integer when owner policy gives a concrete duration for that example.
+- `containment: MUTE` may use `null` only when Policy v1 explicitly leaves that duration unresolved. Dataset QA permits this but emits a warning for human confirmation.
+- Zero, negative, boolean, string, and fractional durations are invalid.
 
 ### `support_flow`
 - `NONE`
@@ -101,7 +112,7 @@ These fields intentionally separate message visibility, staff review, strike rec
 
 ## Channel profiles
 
-Recommended normalized profiles:
+Normalized profiles:
 
 - `minecraft_public`
 - `minecraft_private`
@@ -111,7 +122,7 @@ Recommended normalized profiles:
 - `discord_ticket_exempt`
 - `discord_configured_exempt`
 
-Exempt profiles are deterministic integration/runtime state and normally should not be sent to the semantic classifier. They may still appear in policy-engine tests.
+Exempt profiles are deterministic integration/runtime state and normally should not be sent to the semantic classifier. They may still appear in deliberate policy-engine fixtures, but dataset QA warns whenever an exempt profile appears so reviewers can verify that it was intentional.
 
 ## Reason codes
 

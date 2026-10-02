@@ -6,57 +6,173 @@
     "domain",
     "difficulty",
     "platform_hint",
+    "channel_profile",
     "messages",
     "target_index",
     "label",
     "action",
+    "review_priority",
+    "strike",
+    "containment",
+    "containment_duration_seconds",
+    "support_flow",
     "reason_codes",
     "notes"
   ],
-  "message_required_fields": ["speaker", "offset_ms", "text"],
+  "message_required_fields": [
+    "speaker",
+    "offset_ms",
+    "text"
+  ],
   "labels": [
     "SAFE",
     "GAMEPLAY_VIOLENCE",
     "LOW_LEVEL_HARASSMENT",
     "SEVERE_HARASSMENT",
+    "STAFF_TARGETED_ABUSE",
     "REAL_WORLD_THREAT",
     "SELF_HARM_INSTRUCTION",
     "SELF_HARM_INTENT",
+    "THIRD_PARTY_SELF_HARM_CONCERN",
     "HATE",
+    "SLUR_USE",
+    "SEXUAL_CONTENT",
     "SEXUAL_MINOR",
+    "DOXXING",
+    "BLACKMAIL",
+    "GROOMING",
     "DANGEROUS_REAL_WORLD_INSTRUCTIONS",
     "AMBIGUOUS_REVIEW"
   ],
-  "actions": ["ALLOW", "REVIEW", "BLOCK"],
+  "actions": [
+    "ALLOW",
+    "REVIEW",
+    "BLOCK"
+  ],
   "reason_codes": [
     "minecraft_gameplay_explicit",
+    "discord_gameplay_explicit",
+    "discord_general_no_game_context",
+    "private_context_relevant",
+    "cross_platform_linked_context",
+    "reply_context",
+    "split_message_context",
+    "long_gap_breaks_linkage",
+    "insufficient_context",
+    "explicit_real_world_cue",
     "real_world_location",
     "real_world_time",
-    "explicit_real_world_cue",
+    "real_world_proximity",
+    "real_world_delivery_cue",
+    "real_world_address_cue",
+    "house_ambiguous_gameplay",
     "targeted_violence",
-    "split_message_context",
+    "low_severity_insult",
+    "repeated_targeting",
+    "target_requested_stop",
+    "mutual_banter_evidence",
+    "consent_uncomfortable",
+    "multi_sender_dogpile",
+    "coordinated_dogpile",
+    "prior_confirmed_incident",
+    "target_strict_filter",
+    "ignored_relationship",
+    "staff_targeted_abuse",
     "self_harm_instruction",
     "self_harm_disclosure",
+    "third_party_self_harm_concern",
+    "gameplay_death_context",
+    "safety_check_recent",
     "identity_target",
-    "sexual_minor",
-    "dangerous_instruction_request",
+    "actual_slur",
+    "slur_reference_only",
     "quoted_or_condemned",
-    "low_severity_insult",
+    "reclaimed_slur",
     "obfuscated_evasion",
-    "insufficient_context"
+    "public_sexual_content",
+    "public_flirting",
+    "private_flirting",
+    "sexual_solicitation",
+    "sexual_minor",
+    "age_self_report_clue",
+    "age_reliable_minor",
+    "age_disputed",
+    "apparent_doxxing",
+    "confirmed_doxxing",
+    "blackmail",
+    "grooming_pattern",
+    "dangerous_instruction_request",
+    "historical_or_high_level_context",
+    "staff_confirmed",
+    "staff_overturned_false_positive"
   ],
   "id_ranges": {
-    "G01": [1, 500],
-    "G02": [1, 500],
-    "G03": [1, 500],
-    "G04": [1, 500],
-    "G05": [1, 500],
-    "G06": [1, 500],
-    "G07": [1, 500],
-    "G08": [1, 500],
-    "G09": [1, 500]
+    "G01": [
+      1,
+      500
+    ],
+    "G02": [
+      1,
+      500
+    ],
+    "G03": [
+      1,
+      500
+    ],
+    "G04": [
+      1,
+      500
+    ],
+    "G05": [
+      1,
+      500
+    ],
+    "G06": [
+      1,
+      500
+    ],
+    "G07": [
+      1,
+      500
+    ],
+    "G08": [
+      1,
+      500
+    ],
+    "G09": [
+      1,
+      500
+    ]
   },
   "family_id_pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,79}$",
   "near_duplicate_threshold": 0.92,
-  "near_contradiction_threshold": 0.985
+  "near_contradiction_threshold": 0.985,
+  "review_priorities": [
+    "NONE",
+    "NORMAL",
+    "URGENT"
+  ],
+  "containments": [
+    "NONE",
+    "MUTE"
+  ],
+  "support_flows": [
+    "NONE",
+    "SELF_HARM_CHECK",
+    "TARGET_SAFETY_CHECK"
+  ],
+  "channel_profiles": [
+    "minecraft_public",
+    "minecraft_private",
+    "discord_general",
+    "discord_gaming",
+    "discord_staff_exempt",
+    "discord_ticket_exempt",
+    "discord_configured_exempt"
+  ],
+  "exempt_channel_profiles": [
+    "discord_staff_exempt",
+    "discord_ticket_exempt",
+    "discord_configured_exempt"
+  ]
 }
