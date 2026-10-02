@@ -17452,7 +17452,7 @@
     {
       "left": "G06-0407",
       "right": "G06-0417",
-      "similarity": 0.757812,
+      "similarity": 0.757813,
       "same_outcome": true,
       "same_source_family": false,
       "cross_source": false
@@ -23792,10 +23792,10 @@
       "5": 60
     },
     "containment_duration_seconds": {
+      "604800": 160,
       "1209600": 6,
       "1814400": 25,
       "2592000": 4,
-      "604800": 160,
       "null": 4305
     },
     "multi_message": {
