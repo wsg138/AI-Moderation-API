@@ -48,9 +48,22 @@ async def test_failed_finalize_rolls_back_event_state(tmp_path) -> None:
     reservation = await store.reserve_event(
         request(), "rosechat", "fingerprint", "canonical", AdvisoryStatus.DISABLED
     )
+    assert reservation.lease_token is not None
     with pytest.raises(sqlite3.IntegrityError):
-        await store.finalize_event(response(reservation.event_id, ""), (), (), None)
-    await store.finalize_event(response(reservation.event_id, "v1"), (), (), None)
+        await store.finalize_event(
+            response(reservation.event_id, ""),
+            (),
+            (),
+            None,
+            reservation.lease_token,
+        )
+    await store.finalize_event(
+        response(reservation.event_id, "v1"),
+        (),
+        (),
+        None,
+        reservation.lease_token,
+    )
     loaded = await store.load_decision(reservation.event_id)
     assert loaded.message_action is MessageAction.ALLOW
 
@@ -62,7 +75,14 @@ async def test_advisory_disagreement_is_persisted(tmp_path) -> None:
     reservation = await store.reserve_event(
         request(), "rosechat", "fingerprint", "canonical", AdvisoryStatus.DISABLED
     )
-    await store.finalize_event(response(reservation.event_id, "v1"), (), (), None)
+    assert reservation.lease_token is not None
+    await store.finalize_event(
+        response(reservation.event_id, "v1"),
+        (),
+        (),
+        None,
+        reservation.lease_token,
+    )
     await store.save_advisory(
         reservation.event_id,
         AdvisoryEvidence(
