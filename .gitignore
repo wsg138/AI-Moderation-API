@@ -1,0 +1,37 @@
+# Runtime secrets and local configuration
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+secrets/
+runtime-secrets/
+
+# Production moderation data must never be committed
+runtime-data/
+production-data/
+chat-logs/
+moderation-events/
+*.sqlite
+*.sqlite3
+*.db
+*.db-wal
+*.db-shm
+
+# Model/build/cache artifacts
+models/*.onnx
+models/*.bin
+models/*.safetensors
+.cache/
+__pycache__/
+*.pyc
+node_modules/
+dist/
+build/
+.gradle/
+.idea/
+.vscode/
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
