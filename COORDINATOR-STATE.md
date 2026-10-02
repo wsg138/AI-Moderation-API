@@ -1,10 +1,10 @@
 # Coordinator state
 
-Last updated: 2026-10-01
+Last updated: 2026-10-02
 
 ## Current phase
 
-**Phase 2 — Policy v1/golden set frozen; synthetic generation ready**
+**Phase 3 — Runtime recovery and dataset integration accepted; model/client work ready**
 
 The repository has been initialized and the worker system is live.
 
@@ -62,11 +62,10 @@ Nine generator workers × 500 examples = **4,500 synthetic examples** before cur
 
 ## Next coordinator actions
 
-1. Continue W00 until Policy v1 is complete and reviewed.
-2. Review/merge Policy v1.
-3. Run #19 to reconcile the runtime contract with Policy v1.
-4. Release W02–W10 simultaneously once policy/schema are stable.
-5. Review dataset PRs for scope, quality, duplication, and policy consistency.
+1. Launch W12 from the accepted W11 leakage-safe manifests and frozen evaluation sets.
+2. Release W13–W15 against the now-stable post-W19 API/review contract where parallel work is useful.
+3. Keep all training/evaluation and client work pre-deployment; no live AI service or punishment enablement without a separate authorization.
+4. Require exact-head CI and independent coordinator review before each downstream merge.
 
 
 ## Worker handoff correction
@@ -314,3 +313,53 @@ Production status is unchanged:
 - no live package/config mutation;
 - no production moderation-data mutation;
 - no punishment enablement.
+
+
+## W19 runtime recovery completion — 2026-10-02
+
+W19 / issue #39 is complete.
+
+- PR #40 final head: `2954bd53b04472537ddfef9622832882b2d8c348`
+- Merge commit: `917aef4e97c539fea89d558f9e1be9d0d506b4a4`
+- Exact-head service-ci #67: success
+- Post-merge main service-ci #69: success
+- Exact-head suite: 95 tests plus Ruff, strict mypy, complexity, dataset QA, and wheel build
+- SQLite schema v2 adds durable PENDING reservation ownership/lease state.
+- Stale retry takeover is atomic and token-guarded; superseded workers cannot finalize.
+- PENDING mirror aliases are persisted and later replay resolves all known platform copies.
+- Simultaneous first-arrival canonical/mirror reservations preserve one logical event.
+- No production deployment, restart, live config change, or production-data mutation occurred.
+
+The runtime/API/review contract is no longer blocked on PENDING-event recovery. W13/W14/W15 may use the merged contract as their source baseline.
+
+
+## W11 dataset integration completion — 2026-10-02
+
+W11 / issue #12 is complete.
+
+- PR #41 final head: `3b71c0500c41f883fe6c5d462ce8732dfb185d91`
+- Merge commit: `5c337488d3014aefda7ba29fc0883b2beaa5dc0d`
+- Exact-head service-ci #83: success
+- Post-merge main service-ci #84: success
+- Exact-head suite: 98 tests plus deterministic W11 regeneration, Ruff, strict mypy, complexity, all G01–G09 validators, and wheel build
+- Integrated synthetic source corpus: exactly 4,500 records / 500 per G01–G09
+- W11 algorithm: `w11-v2`
+- 83 text-only exact groups; 0 redundant same-decision/same-context exact groups; 0 cross-worker exact groups
+- 2,722 lexical near candidates; all 27 cross-worker near pairs are integration-family linked
+- 12 cross-worker differing-decision near pairs were reviewed against settled Policy-v1 §6/§11 boundaries; 0 unresolved cross-worker contradictions
+- 1 synthetic↔golden lexical candidate at 0.760331; 0 golden-sensitive synthetic records at the 0.88 threshold
+- 1,883 integration families; largest family 45 records
+- Final frozen manifests:
+  - train: 3,269
+  - validation: 385
+  - test: 410
+  - frozen adversarial: 436
+- Owner golden set remains separate from ordinary training.
+
+Canonical W11 artifacts:
+- `data/integration/W11-audit.json`
+- `data/integration/W11-split-manifest.json`
+- `data/integration/W11-adversarial-eval-manifest.json`
+- `docs/W11-DATASET-INTEGRATION-REPORT.md`
+
+W12 / issue #13 is now unblocked. It must consume these accepted manifests without reshuffling families or tuning on test/frozen/golden acceptance evidence.
