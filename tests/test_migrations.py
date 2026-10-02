@@ -106,6 +106,7 @@ def test_pending_row_gets_recoverable_lease_during_migration(tmp_path: Path) -> 
                 "2026-10-02T04:00:00+00:00",
             ),
         )
+        connection.commit()
         migrate(connection)
         row = connection.execute(
             """SELECT reservation_token,reservation_updated_at
