@@ -22686,6 +22686,28 @@
       "cross_source": true
     }
   ],
+  "cross_source_review": [
+    {
+      "left": "G06-0152",
+      "right": "G09-0382",
+      "similarity": 0.903226,
+      "same_outcome": false,
+      "same_source_family": false,
+      "cross_source": true,
+      "disposition": "intentional_policy_contrast",
+      "policy_source": "policy/POLICY-v1.md §11"
+    },
+    {
+      "left": "G06-0256",
+      "right": "G09-0388",
+      "similarity": 0.918919,
+      "same_outcome": false,
+      "same_source_family": false,
+      "cross_source": true,
+      "disposition": "intentional_policy_contrast",
+      "policy_source": "policy/POLICY-v1.md §11"
+    }
+  ],
   "contradictions": [
     {
       "kind": "exact_contrast",
