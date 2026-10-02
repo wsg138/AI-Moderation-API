@@ -72,6 +72,9 @@ class ProposalNotFound(RuntimeError):
 class Reservation:
     event_id: str
     replay: bool
+    lease_token: str | None = None
+    pending: bool = False
+    recovery_request: ModerationRequest | None = None
 
 
 class ModerationStore:
@@ -94,6 +97,7 @@ class ModerationStore:
         request_fingerprint: str,
         canonical_fingerprint: str,
         advisory_status: AdvisoryStatus,
+        pending_stale_after_ms: int = 30_000,
     ) -> Reservation:
         return await asyncio.to_thread(
             _reserve_event,
@@ -103,6 +107,7 @@ class ModerationStore:
             request_fingerprint,
             canonical_fingerprint,
             advisory_status,
+            pending_stale_after_ms,
         )
 
     async def finalize_event(
@@ -111,6 +116,7 @@ class ModerationStore:
         evidence_event_ids: tuple[str, ...],
         related_event_ids: tuple[str, ...],
         incident_signal: IncidentSignal | None,
+        lease_token: str,
     ) -> None:
         await asyncio.to_thread(
             _finalize_event,
@@ -119,6 +125,7 @@ class ModerationStore:
             evidence_event_ids,
             related_event_ids,
             incident_signal,
+            lease_token,
         )
 
     async def load_decision(self, event_id: str) -> ModerationResponse:
@@ -215,12 +222,24 @@ def _reserve_event(
     request_fingerprint: str,
     canonical_fingerprint: str,
     advisory_status: AdvisoryStatus,
+    pending_stale_after_ms: int,
 ) -> Reservation:
-    now = _utc_now()
+    now = datetime.now(UTC)
+    now_text = now.isoformat()
     with _connect(path) as connection:
+        # Serialize the short reservation transaction so two first-arrival mirrors
+        # cannot both observe an empty canonical key before either insert commits.
+        connection.execute("BEGIN IMMEDIATE")
         existing = _find_existing(connection, request)
         if existing is not None:
-            return _resolve_existing(connection, existing, request, request_fingerprint, now)
+            return _resolve_existing(
+                connection,
+                existing,
+                request,
+                request_fingerprint,
+                now,
+                pending_stale_after_ms,
+            )
         mirror = _find_canonical(connection, request.canonical_message_id)
         if mirror is not None:
             return _resolve_mirror(
@@ -230,6 +249,7 @@ def _reserve_event(
                 request_fingerprint,
                 canonical_fingerprint,
                 now,
+                pending_stale_after_ms,
             )
         return _insert_new_event(
             connection,
@@ -238,7 +258,7 @@ def _reserve_event(
             request_fingerprint,
             canonical_fingerprint,
             advisory_status,
-            now,
+            now_text,
         )
 
 
@@ -249,7 +269,8 @@ def _find_existing(
     alias = cast(
         sqlite3.Row | None,
         connection.execute(
-            """SELECT a.event_id, a.request_fingerprint, e.status, 'alias' AS source
+            """SELECT a.event_id, a.request_fingerprint, e.status, e.created_at,
+                      e.reservation_token, e.reservation_updated_at, 'alias' AS source
                FROM message_aliases a JOIN moderation_events e ON e.event_id=a.event_id
                WHERE a.alias_key=?""",
             (_external_key(request),),
@@ -260,8 +281,8 @@ def _find_existing(
     return cast(
         sqlite3.Row | None,
         connection.execute(
-            """SELECT event_id, input_fingerprint AS request_fingerprint, status,
-                      'legacy' AS source
+            """SELECT event_id, input_fingerprint AS request_fingerprint, status, created_at,
+                      reservation_token, reservation_updated_at, 'legacy' AS source
                FROM moderation_events WHERE external_key=?""",
             (_external_key(request),),
         ).fetchone(),
@@ -273,13 +294,14 @@ def _resolve_existing(
     row: sqlite3.Row,
     request: ModerationRequest,
     fingerprint: str,
-    now: str,
+    now: datetime,
+    pending_stale_after_ms: int,
 ) -> Reservation:
     if row["request_fingerprint"] != fingerprint:
         raise EventConflict("external message id was already used with different input")
     if row["source"] == "legacy":
-        _insert_alias(connection, str(row["event_id"]), request, fingerprint, now)
-    return _reservation_from_existing(row)
+        _insert_alias(connection, str(row["event_id"]), request, fingerprint, now.isoformat())
+    return _reservation_from_existing(connection, row, now, pending_stale_after_ms)
 
 
 def _find_canonical(
@@ -291,8 +313,9 @@ def _find_canonical(
     return cast(
         sqlite3.Row | None,
         connection.execute(
-            """SELECT event_id, status, canonical_fingerprint FROM moderation_events
-               WHERE canonical_message_id=?""",
+            """SELECT event_id, status, canonical_fingerprint, created_at,
+                      reservation_token, reservation_updated_at
+               FROM moderation_events WHERE canonical_message_id=?""",
             (canonical_message_id,),
         ).fetchone(),
     )
@@ -304,14 +327,15 @@ def _resolve_mirror(
     request: ModerationRequest,
     request_fingerprint: str,
     canonical_fingerprint: str,
-    now: str,
+    now: datetime,
+    pending_stale_after_ms: int,
 ) -> Reservation:
     stored = row["canonical_fingerprint"]
     if stored is not None and stored != canonical_fingerprint:
         raise EventConflict("canonical message id was reused for different message content")
-    reservation = _reservation_from_existing(row)
-    _insert_alias(connection, reservation.event_id, request, request_fingerprint, now)
-    return reservation
+    event_id = str(row["event_id"])
+    _insert_alias(connection, event_id, request, request_fingerprint, now.isoformat())
+    return _reservation_from_existing(connection, row, now, pending_stale_after_ms)
 
 
 def _insert_new_event(
@@ -324,15 +348,23 @@ def _insert_new_event(
     now: str,
 ) -> Reservation:
     event_id = str(uuid4())
+    lease_token = str(uuid4())
     _insert_event(
-        connection, event_id, request, client_id, request_fingerprint, canonical_fingerprint, now
+        connection,
+        event_id,
+        request,
+        client_id,
+        request_fingerprint,
+        canonical_fingerprint,
+        lease_token,
+        now,
     )
     _insert_alias(connection, event_id, request, request_fingerprint, now)
     connection.execute(
         "INSERT INTO advisory_results(event_id,status,updated_at) VALUES(?,?,?)",
         (event_id, advisory_status.value, now),
     )
-    return Reservation(event_id, replay=False)
+    return Reservation(event_id, replay=False, lease_token=lease_token)
 
 
 def _insert_event(
@@ -342,6 +374,7 @@ def _insert_event(
     client_id: str,
     fingerprint: str,
     canonical_fingerprint: str,
+    lease_token: str,
     now: str,
 ) -> None:
     connection.execute(
@@ -350,9 +383,18 @@ def _insert_event(
           scope_id,channel_id,conversation_id,external_message_id,canonical_message_id,
           canonical_fingerprint,sender_id,sender_identity_id,recipient_ids_json,
           recipient_identity_ids_json,target_ids_json,target_identity_ids_json,
-          occurred_at,text,reply_to_message_id,status,created_at
-        ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'PENDING',?)""",
-        _event_values(event_id, request, client_id, fingerprint, canonical_fingerprint, now),
+          occurred_at,text,reply_to_message_id,status,created_at,reservation_token,
+          reservation_updated_at
+        ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'PENDING',?,?,?)""",
+        _event_values(
+            event_id,
+            request,
+            client_id,
+            fingerprint,
+            canonical_fingerprint,
+            lease_token,
+            now,
+        ),
     )
 
 
@@ -362,6 +404,7 @@ def _event_values(
     client_id: str,
     fingerprint: str,
     canonical_fingerprint: str,
+    lease_token: str,
     now: str,
 ) -> tuple[object, ...]:
     return (
@@ -372,6 +415,7 @@ def _event_values(
         _json(request.recipient_ids), _json(request.recipient_identity_ids),
         _json(request.target_ids), _json(request.target_identity_ids),
         request.occurred_at.isoformat(), request.text, request.reply_to_message_id, now,
+        lease_token, now,
     )
 
 
@@ -394,10 +438,89 @@ def _insert_alias(
     )
 
 
-def _reservation_from_existing(row: sqlite3.Row) -> Reservation:
-    if row["status"] != "FINAL":
-        raise EventInProgress("matching event is still being processed")
-    return Reservation(str(row["event_id"]), replay=True)
+def _reservation_from_existing(
+    connection: sqlite3.Connection,
+    row: sqlite3.Row,
+    now: datetime,
+    pending_stale_after_ms: int,
+) -> Reservation:
+    event_id = str(row["event_id"])
+    if row["status"] == "FINAL":
+        return Reservation(event_id, replay=True)
+    if not _pending_is_stale(row, now, pending_stale_after_ms):
+        return Reservation(event_id, replay=False, pending=True)
+    return _claim_stale_pending(connection, row, now)
+
+
+def _pending_is_stale(
+    row: sqlite3.Row,
+    now: datetime,
+    pending_stale_after_ms: int,
+) -> bool:
+    raw = row["reservation_updated_at"] or row["created_at"]
+    updated_at = datetime.fromisoformat(str(raw))
+    if updated_at.tzinfo is None:
+        updated_at = updated_at.replace(tzinfo=UTC)
+    age = now - updated_at.astimezone(UTC)
+    return age >= timedelta(milliseconds=pending_stale_after_ms)
+
+
+def _claim_stale_pending(
+    connection: sqlite3.Connection,
+    row: sqlite3.Row,
+    now: datetime,
+) -> Reservation:
+    event_id = str(row["event_id"])
+    previous_token = row["reservation_token"]
+    previous_updated_at = row["reservation_updated_at"]
+    lease_token = str(uuid4())
+    now_text = now.isoformat()
+    cursor = connection.execute(
+        """UPDATE moderation_events
+           SET reservation_token=?,reservation_updated_at=?
+           WHERE event_id=? AND status='PENDING'
+             AND COALESCE(reservation_token,'')=COALESCE(?, '')
+             AND COALESCE(reservation_updated_at,'')=COALESCE(?, '')""",
+        (lease_token, now_text, event_id, previous_token, previous_updated_at),
+    )
+    if cursor.rowcount != 1:
+        return Reservation(event_id, replay=False, pending=True)
+    return Reservation(
+        event_id,
+        replay=False,
+        lease_token=lease_token,
+        recovery_request=_load_pending_request(connection, event_id),
+    )
+
+
+def _load_pending_request(
+    connection: sqlite3.Connection,
+    event_id: str,
+) -> ModerationRequest:
+    row = connection.execute(
+        "SELECT * FROM moderation_events WHERE event_id=? AND status='PENDING'",
+        (event_id,),
+    ).fetchone()
+    if row is None:
+        raise EventNotFound(event_id)
+    return ModerationRequest(
+        platform=Platform(row["platform"]),
+        channel_profile=_profile_from_row(row),
+        scope_id=str(row["scope_id"]),
+        channel_id=row["channel_id"],
+        conversation_id=row["conversation_id"],
+        external_message_id=str(row["external_message_id"]),
+        canonical_message_id=row["canonical_message_id"],
+        sender_id=str(row["sender_id"]),
+        sender_identity_id=row["sender_identity_id"],
+        recipient_ids=json.loads(row["recipient_ids_json"] or "[]"),
+        recipient_identity_ids=json.loads(row["recipient_identity_ids_json"] or "[]"),
+        target_ids=json.loads(row["target_ids_json"] or "[]"),
+        target_identity_ids=json.loads(row["target_identity_ids_json"] or "[]"),
+        occurred_at=datetime.fromisoformat(row["occurred_at"]),
+        text=str(row["text"]),
+        reply_to_message_id=row["reply_to_message_id"],
+    )
 
 
 def _finalize_event(
@@ -406,12 +529,13 @@ def _finalize_event(
     evidence_event_ids: tuple[str, ...],
     related_event_ids: tuple[str, ...],
     incident_signal: IncidentSignal | None,
+    lease_token: str,
 ) -> None:
     if response.event_id is None:
         raise DecisionConflict("cannot finalize response without event id")
     now = _utc_now()
     with _connect(path) as connection:
-        _finalize_event_row(connection, response, now)
+        _finalize_event_row(connection, response, lease_token, now)
         _insert_decision_evidence(connection, response, evidence_event_ids, related_event_ids, now)
         if incident_signal is not None and response.incident is not None:
             _upsert_incident(connection, response.event_id, response.incident, incident_signal, now)
@@ -421,18 +545,26 @@ def _finalize_event(
 def _finalize_event_row(
     connection: sqlite3.Connection,
     response: ModerationResponse,
+    lease_token: str,
     now: str,
 ) -> None:
     cursor = connection.execute(
         """UPDATE moderation_events SET status='FINAL',action=?,label=?,degraded=?,
-           fallback_state=?,finalized_at=? WHERE event_id=? AND status='PENDING'""",
+           fallback_state=?,finalized_at=?,reservation_token=NULL,reservation_updated_at=?
+           WHERE event_id=? AND status='PENDING' AND reservation_token=?""",
         (
-            response.message_action.value, response.semantic_label.value,
-            int(response.degraded), response.fallback_state, now, response.event_id,
+            response.message_action.value,
+            response.semantic_label.value,
+            int(response.degraded),
+            response.fallback_state,
+            now,
+            now,
+            response.event_id,
+            lease_token,
         ),
     )
     if cursor.rowcount != 1:
-        raise DecisionConflict("event is missing or already finalized")
+        raise DecisionConflict("event is missing, finalized, or reservation ownership changed")
 
 
 def _insert_decision_evidence(

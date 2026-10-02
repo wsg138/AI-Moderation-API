@@ -24,6 +24,7 @@ class Settings:
     request_workers: int = 4
     request_timeout_ms: int = 250
     classifier_timeout_ms: int = 150
+    pending_stale_after_ms: int = 30_000
     context_window_seconds: int = 45
     context_max_scopes: int = 512
     context_messages_per_scope: int = 100
@@ -50,6 +51,7 @@ class Settings:
             request_workers=_positive_int("AI_MOD_REQUEST_WORKERS", 4),
             request_timeout_ms=_positive_int("AI_MOD_REQUEST_TIMEOUT_MS", 250),
             classifier_timeout_ms=_positive_int("AI_MOD_CLASSIFIER_TIMEOUT_MS", 150),
+            pending_stale_after_ms=_positive_int("AI_MOD_PENDING_STALE_AFTER_MS", 30_000),
             context_window_seconds=_positive_int("AI_MOD_CONTEXT_WINDOW_SECONDS", 45),
             context_max_scopes=_positive_int("AI_MOD_CONTEXT_MAX_SCOPES", 512),
             context_messages_per_scope=_positive_int("AI_MOD_CONTEXT_MESSAGES_PER_SCOPE", 100),

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import sqlite3
 
-LATEST_SCHEMA_VERSION = 1
+LATEST_SCHEMA_VERSION = 2
 
 
 class MigrationError(RuntimeError):
@@ -83,6 +83,14 @@ _V1_COLUMNS = {
         ("incident_id", "TEXT"),
     ),
 }
+
+_V2_COLUMNS = {
+    "moderation_events": (
+        ("reservation_token", "TEXT"),
+        ("reservation_updated_at", "TEXT"),
+    ),
+}
+
 
 _V1_TABLES = (
     """CREATE TABLE message_aliases (
@@ -171,7 +179,10 @@ def migrate(connection: sqlite3.Connection) -> int:
         connection.execute("BEGIN IMMEDIATE")
         _ensure_base_schema(connection)
         _validate_base_schema(connection)
-        _apply_v1(connection)
+        if current < 1:
+            _apply_v1(connection)
+        if current < 2:
+            _apply_v2(connection)
         connection.execute(f"PRAGMA user_version = {LATEST_SCHEMA_VERSION}")
         connection.commit()
     except Exception as exc:
@@ -206,6 +217,18 @@ def _apply_v1(connection: sqlite3.Connection) -> None:
     for statement in _INDEXES:
         connection.execute(statement)
     _backfill_v1_decisions(connection)
+
+
+def _apply_v2(connection: sqlite3.Connection) -> None:
+    for table, columns in _V2_COLUMNS.items():
+        for column, definition in columns:
+            _add_column_if_missing(connection, table, column, definition)
+    connection.execute(
+        """UPDATE moderation_events
+           SET reservation_token=COALESCE(reservation_token,event_id),
+               reservation_updated_at=COALESCE(reservation_updated_at,created_at)
+           WHERE status='PENDING'"""
+    )
 
 
 def _create_table_if_missing(connection: sqlite3.Connection, statement: str) -> None:

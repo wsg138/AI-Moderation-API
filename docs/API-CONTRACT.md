@@ -81,6 +81,10 @@ A repeated external message key with identical input is an idempotent replay. Re
 
 When two platform messages carry the same non-null `canonical_message_id`, the service stores one canonical moderation event. The second copy becomes a message alias and replays the existing decision. Canonical-ID reuse with different message content returns `409 Conflict`.
 
+If a mirror arrives while the canonical event is still `PENDING`, its alias is persisted immediately before the runtime waits briefly for the canonical decision. If that bounded wait cannot complete inside the moderation deadline, the mirror request fails open without creating a second logical event. A later retry resolves through the durable alias and replays the canonical decision once it is available.
+
+`PENDING` ownership uses a durable reservation token and lease timestamp. A retry does not steal a plausibly active reservation. Once the configured stale threshold has elapsed, one retry may atomically claim the existing event with a new token and resume processing from the original canonical request metadata. Finalization requires the current token, so a superseded worker cannot finalize after another retry has recovered the event.
+
 `related_messages` is resolved through aliases at read/replay time. This lets clients delete all known platform copies of the canonical event without counting a mirror as another incident/strike.
 
 ### Retroactive deletion
@@ -184,6 +188,12 @@ Migration v1:
 - maps legacy `action=REVIEW` to `message_action=ALLOW` + `review_priority=NORMAL`;
 - maps legacy `BLOCK`/`ALLOW` to the new message-action dimension;
 - preserves legacy labels as semantic labels.
+
+Migration v2:
+
+- adds `reservation_token` and `reservation_updated_at` to moderation events;
+- backfills existing `PENDING` rows with recoverable ownership state without deleting or duplicating them;
+- leaves finalized moderation decisions unchanged.
 
 Migration runs in `BEGIN IMMEDIATE` and commits only after all additions/backfills/indexes succeed. Failure rolls the transaction back and readiness remains false. A database with a schema version newer than the running binary is rejected rather than modified.
 

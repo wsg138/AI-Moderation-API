@@ -72,13 +72,50 @@ async def test_w01_database_migrates_in_place_and_preserves_legacy_review(tmp_pa
     await store.initialize()
 
     decision = await store.load_decision("legacy")
-    assert await store.schema_version() == 1
+    assert await store.schema_version() == 2
     assert decision.message_action.value == "ALLOW"
     assert decision.review_priority.value == "NORMAL"
     assert decision.semantic_label.value == "AMBIGUOUS_REVIEW"
     with sqlite3.connect(path) as connection:
         assert connection.execute("SELECT text FROM moderation_events").fetchone()[0] == "review me"
         assert connection.execute("SELECT COUNT(*) FROM reviews").fetchone()[0] == 0
+
+
+def test_pending_row_gets_recoverable_lease_during_migration(tmp_path: Path) -> None:
+    path = tmp_path / "pending-legacy.sqlite3"
+    with sqlite3.connect(path) as connection:
+        connection.executescript(LEGACY_SCHEMA)
+        connection.execute(
+            """INSERT INTO moderation_events(
+              event_id,external_key,input_fingerprint,client_id,platform,scope_id,channel_id,
+              external_message_id,sender_id,occurred_at,text,status,created_at
+            ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+            (
+                "pending-legacy",
+                '["minecraft","smp","pending"]',
+                "fingerprint",
+                "rosechat",
+                "minecraft",
+                "smp",
+                "global",
+                "pending",
+                "p1",
+                "2026-10-02T04:00:00+00:00",
+                "hello",
+                "PENDING",
+                "2026-10-02T04:00:00+00:00",
+            ),
+        )
+        connection.commit()
+        migrate(connection)
+        row = connection.execute(
+            """SELECT reservation_token,reservation_updated_at
+               FROM moderation_events WHERE event_id='pending-legacy'"""
+        ).fetchone()
+        version = connection.execute("PRAGMA user_version").fetchone()[0]
+
+    assert version == 2
+    assert row == ("pending-legacy", "2026-10-02T04:00:00+00:00")
 
 
 def test_failed_migration_rolls_back_without_recreating_database(tmp_path: Path) -> None:
