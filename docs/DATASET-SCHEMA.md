@@ -6,7 +6,7 @@ Training/evaluation files use JSONL: one JSON object per example.
 
 ```json
 {
-  "example_id": "G01-000001",
+  "example_id": "G01-0001",
   "policy_version": "draft",
   "source": "synthetic",
   "domain": "gameplay_violence",
@@ -32,9 +32,12 @@ Training/evaluation files use JSONL: one JSON object per example.
     "explicit_real_world_cue",
     "targeted_violence"
   ],
-  "notes": "Synthetic hard pair."
+  "notes": "Synthetic hard pair.",
+  "family_id": "threat.real-world-cue.001"
 }
 ```
+
+`family_id` is optional. When present, it groups paraphrases/minimal pairs that should remain together during later leakage-safe splitting. The dataset QA tooling validates its syntax but W11 owns final family decisions and splits.
 
 ## Initial label vocabulary
 
@@ -80,7 +83,7 @@ Do not store free-form hidden reasoning. Human notes may explain a policy decisi
 
 ## Uniqueness
 
-Every generator owns a fixed ID prefix/range. Exact duplicate normalized message sequences are forbidden. The integration worker also performs near-duplicate checks before merge.
+Every generator owns a fixed ID prefix/range. Current generator issues define `G01-0001..G01-0500` through `G09-0001..G09-0500`. Exact duplicate normalized message sequences are forbidden. The integration worker also performs near-duplicate checks before merge.
 
 ## Splits
 

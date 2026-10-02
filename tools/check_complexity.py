@@ -5,7 +5,7 @@ from pathlib import Path
 
 MAX_CCN = 8
 MAX_LINES = 50
-ROOTS = (Path("service"), Path("tests"))
+ROOTS = (Path("service"), Path("tests"), Path("tools/dataset_qa"))
 
 
 class ComplexityVisitor(ast.NodeVisitor):
