@@ -221,3 +221,27 @@ Complete self-contained launch packets were added in commit `c0dbbb817a020ec86bb
 Each worker owns exactly 500 IDs, must use merged Policy-v1 QA, must avoid exact/trivial golden-set leakage, must not invent unresolved policy, and must open (not merge) one PR for coordinator/W11 review.
 
 Issue #19 runtime/API reconciliation continues independently in parallel.
+
+
+## Coordinator consolidation checkpoint — 2026-10-02
+
+Accepted and merged generator PRs:
+- G01 / PR #34 — merge `8d4df80b9513e42a0e0b690bb4cb79aebe2fac38`
+- G02 / PR #31 — merge `5592c5c84d2a1efba41fcbdf72f8304ebdcbf0bc`
+- G04 / PR #36 — merge `ccba2f3583419f0c35beb68e9e09e592f24c682d`
+- G05 / PR #30 — merge `23341673cff72583b52c7ed53b10c5974f305176`
+- G06 / PR #38 — merge `f7b3e49bd6c594c5ed82c5069e0b7db5a567bf33`
+- G07 / PR #33 — merge `f021fe24e665049a9a9df70e2fcdc9d01c49ab9a`
+- G09 / PR #35 — merge `38e4919ba199578853eaaee20a644ebec89942e4`
+
+Latest main service-ci after these merges: #55 success.
+
+Still blocked on revision:
+- G03 / PR #32 — excessive identical message-text reuse across unrelated family IDs; 74 repeated text-sequence groups / 170 records, including 35 same-profile/same-outcome redundant groups.
+- G08 / PR #37 — 28 repeated text-sequence groups / 63 records assigned to separate families; 5 redundant same-profile/same-outcome groups; two exact cross-worker duplicates against accepted G01 (G08-0441 vs G01-0281, G08-0459 vs G01-0321).
+- Runtime Policy-v1 PR #29 — two PENDING-event recovery blockers:
+  1. failed finalization/process crash can strand an idempotency key in PENDING indefinitely;
+  2. a mirror arriving while canonical processing is PENDING is not registered as an alias, so fail-open mirror copies can become undeletable/unlinked.
+  Coordinator comments on those PRs define the required regression fixes.
+
+W11 must not start until G03 and G08 are corrected, accepted, and merged. W13/W14/W15 should not treat #29 as frozen until its recovery blockers are fixed and #29 is accepted.
