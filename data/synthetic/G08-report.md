@@ -8,9 +8,9 @@
 - Near/minimal-pair candidates: **103**
 - Multi-message records: **276**
 - Multi-message proportion: **0.552000**
-- Explicit family count: **295**
+- Distinct explicit family groups after cleanup: **273**
 
-The canonical repository validator ran against the finalized dataset content in `service-ci` run **37024834160** and reported:
+The canonical repository validator ran against the finalized dataset content in `service-ci` run **#57 / 37038661004** and reported:
 
 ```text
 summary: records=500 errors=0 warnings=0 exact_duplicate_groups=0 near_candidates=103
@@ -90,7 +90,7 @@ Different speakers are not stitched into one person's intent except where Policy
 
 ## Families / minimal-pair coverage
 
-There are **295 explicit `family_id` groups**. The canonical validator found **103 advisory near/minimal-pair candidates** and no warning-level near contradictions.
+There are **273 distinct explicit `family_id` groups** after leakage-safe family consolidation. The canonical validator found **103 advisory near/minimal-pair candidates** and no warning-level near contradictions.
 
 Major contrast families include:
 
@@ -151,3 +151,27 @@ This worker guarantees uniqueness and policy consistency within G08 only. W11 st
 ## Scope / safety confirmation
 
 Only the owned synthetic JSONL and this report are part of the worker deliverable. No production chat data, secrets, model training, runtime/client code, policy files, golden-set files, deployment, live configuration, or production action is included.
+
+## Coordinator cleanup revision — 2026-10-02
+
+The coordinator performed an additional exact-message leakage/family audit after the original worker report.
+
+Cleanup on dataset commit `4d813eb9c413ade7593d34038e8b42fdfd4ec344`:
+
+- rewrote the **5** redundant same-profile/same-outcome exact sequence groups;
+- rewrote the two accepted-G01 collisions previously identified at `G08-0441` and `G08-0459`, preserving their platform-flip families with new wording;
+- reduced identical normalized message-sequence groups from **28 / 63 records** to **23 / 53 records**;
+- **0** redundant same-outcome exact message-sequence groups remain;
+- all **23** remaining exact-wording groups are intentional profile/context contrasts and each group now shares one `family_id`;
+- **0** exact normalized sequence collisions remain against accepted G01, G02, G04, G05, G06, G07, or G09;
+- **0** exact normalized sequence collisions were found against the frozen owner golden set;
+- action/label/channel distributions remain unchanged, with **276/500** multi-message records;
+- family consolidation leaves **273 distinct explicit family groups** across all 500 records.
+
+Exact dataset-commit `service-ci` run **#57 / 37038661004** completed successfully: Ruff, strict mypy, complexity checks, repository dataset validation, **87 pytest tests**, and wheel build all passed. The canonical G08 validator summary remained:
+
+```text
+summary: records=500 errors=0 warnings=0 exact_duplicate_groups=0 near_candidates=103
+```
+
+This cleanup changes leakage/diversity/family structure only; it does not change Policy-v1, unresolved-policy decisions, production data, runtime/client code, deployment, or the golden set.
