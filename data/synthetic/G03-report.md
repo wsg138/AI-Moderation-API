@@ -183,7 +183,7 @@ The canonical-style tables above contain the exact distributions. Action balance
 
 ### Family / minimal-pair coverage
 
-**223 explicit family IDs** are present. Families cover tolerated toxicity vs incident escalation, mutual banter vs withdrawn consent, criticism vs staff abuse, coordinated vs uncoordinated dogpiles, and /ignore vs stronger-target-filter behavior.
+All **500 records** have explicit family IDs across **204 distinct family groups** after leakage-safe family consolidation. Families cover tolerated toxicity vs incident escalation, mutual banter vs withdrawn consent, criticism vs staff abuse, coordinated vs uncoordinated dogpiles, and /ignore vs stronger-target-filter behavior.
 
 ### QA warnings and disposition
 
@@ -209,3 +209,26 @@ This package does not create cases that depend on Discord bot DMs, graphic first
 ### Known limitations
 
 This worker guarantees within-file uniqueness and checks leakage against the frozen golden set, but it cannot guarantee cross-worker semantic uniqueness. W11 still owns cross-worker exact/near-duplicate review and final split grouping. Relationship-control examples encode the relevant structured state in concise notes because the current generator schema has no dedicated relationship-state object.
+
+## Coordinator cleanup revision — 2026-10-02
+
+The coordinator performed an additional message-text-only duplicate/family audit after the original worker report.
+
+Cleanup on dataset commit `9cdc541d8d175caa13e51f78cf9e751694beef96`:
+
+- rewrote **53** redundant same-profile/same-outcome copies with genuinely different scenarios;
+- reduced identical normalized message-sequence groups from **74 / 170 records** to **39 / 82 records**;
+- **0** redundant same-outcome exact message-sequence groups remain;
+- all **39** remaining exact-wording groups are intentional policy/context contrasts and each group now shares one `family_id`;
+- **0** exact normalized message-sequence collisions were found against accepted G01, G02, G04, G05, G06, G07, or G09;
+- **0** exact normalized message-sequence collisions were found against the frozen owner golden set;
+- corpus distributions remain **200 ALLOW / 225 BLOCK / 75 REVIEW**, with **317/500** multi-message records;
+- family consolidation leaves **204 distinct explicit family groups** across all 500 records.
+
+Exact dataset-commit `service-ci` run **#58** completed successfully: Ruff, strict mypy, complexity checks, repository dataset validation, **87 pytest tests**, and wheel build all passed. The canonical G03 validator summary remained:
+
+```text
+summary: records=500 errors=0 warnings=0 exact_duplicate_groups=0 near_candidates=7
+```
+
+This cleanup changes diversity/family structure only; it does not change Policy-v1, unresolved-policy decisions, production data, runtime code, clients, deployment, or the golden set.
