@@ -39,7 +39,7 @@ The repository has been initialized and the worker system is live.
 - #14 W13 — RoseChat integration
 - #15 W14 — Discord integration
 - #16 W15 — EnthusiaStaff review GUI/workflow
-- #17 W16 — Deployment/supervisor/operations
+- #17 W16 — Deployment/supervisor/operations — **complete/merged**
 - #20 W17 — Dataset QA tooling — **complete/merged via PR #22**
 - #19 W01 follow-up — Reconcile runtime contract after Policy v1
 
@@ -113,3 +113,34 @@ PR #22 was coordinator-reviewed and merged on 2026-10-02.
 - No hosted Codacy status exists for this repository/PR; no Codacy result is claimed
 
 W02–W10 must use the merged dataset-QA tooling before opening their generator PRs. W11 still owns final deduplication decisions, accepted family grouping, and leakage-safe splitting.
+
+
+## W16 merge checkpoint
+
+W16 deployment/supervisor preparation is complete. No production deployment was performed.
+
+AI-Moderation-API:
+- PR #21 merged at `768a86bf95fee16e0b2a88fa23a3fa7c9926c110`.
+- PR #23 documentation follow-up rebased to current main and merged.
+- Final PR #23 head: `7b4e6147754d4ce9126d1966a0ff12de6ba8869d`.
+- PR #23 merge commit: `22123862c363ac90d631dfa00d51db1c9a261355`.
+- Exact-head service-ci #16: success.
+- Runtime secret guidance now explicitly requires Pterodactyl/process environment injection; dotenv files are not auto-loaded.
+
+enthusia-support-bot:
+- PR #6 supervisor companion is merged.
+- Final PR #6 head: `a8a7eb53e8e5255063f8facae3a3d66ff7627c21`.
+- Merge commit: `61e635f9147c11f0262ae157acb8b521582cc2c8`.
+- Exact-head Check workflow #695: success.
+- AI service is supervised as optional/non-critical with bounded backoff and health checks.
+- Critical Ticket Bot exits preserve a non-zero supervisor/container exit code.
+- AI liveness/readiness tests cover 200/200, 200/503, and failed liveness.
+
+Issue #17 is closed/completed.
+
+Production status:
+- no Pterodactyl restart;
+- no live package installation;
+- no AI service deployment;
+- no production-data mutation;
+- no secrets committed.
