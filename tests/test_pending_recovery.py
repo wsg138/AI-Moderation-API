@@ -306,6 +306,26 @@ def build_runtime(settings: Settings, classifier: BlockingClassifier) -> Moderat
     return ModerationRuntime(settings, store, context, classifier, advisory)
 
 
+def different_queue_mirror(
+    service: ModerationRuntime,
+    canonical: ModerationRequest,
+) -> ModerationRequest:
+    canonical_queue = service._queue_for(canonical)
+    for index in range(20):
+        candidate = moderation_request(
+            "discord-runtime",
+            canonical_id="runtime-canonical",
+            platform=Platform.DISCORD,
+            profile=ChannelProfile.DISCORD_GENERAL,
+            scope_id="guild",
+            channel_id="general",
+            sender_id=f"discord-player-{index}",
+        )
+        if service._queue_for(candidate) is not canonical_queue:
+            return candidate
+    raise AssertionError("could not find a different request shard")
+
+
 @pytest.mark.asyncio
 async def test_pending_mirror_fails_open_then_replays_after_canonical_finalizes(settings) -> None:
     configured = replace(
@@ -326,22 +346,7 @@ async def test_pending_mirror_fails_open_then_replays_after_canonical_finalizes(
         canonical_id="runtime-canonical",
         sender_id="minecraft-player",
     )
-    canonical_queue = service._queue_for(canonical)
-    mirror = None
-    for index in range(20):
-        candidate = moderation_request(
-            "discord-runtime",
-            canonical_id="runtime-canonical",
-            platform=Platform.DISCORD,
-            profile=ChannelProfile.DISCORD_GENERAL,
-            scope_id="guild",
-            channel_id="general",
-            sender_id=f"discord-player-{index}",
-        )
-        if service._queue_for(candidate) is not canonical_queue:
-            mirror = candidate
-            break
-    assert mirror is not None
+    mirror = different_queue_mirror(service, canonical)
 
     try:
         first_task = asyncio.create_task(service.submit(canonical, principal))
