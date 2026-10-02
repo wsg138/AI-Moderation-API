@@ -32,7 +32,7 @@ from .models import (
     StrikeRecommendation,
     SupportFlow,
 )
-from .storage import EventConflict, EventInProgress, ModerationStore, Reservation
+from .storage import EventConflict, EventNotFound, ModerationStore, Reservation
 
 
 class RequestQueueFull(RuntimeError):
@@ -167,7 +167,7 @@ class ModerationRuntime:
                 result = await self._process(job.request, job.principal)
                 if not job.future.done():
                     job.future.set_result(result)
-            except (EventConflict, EventInProgress) as exc:
+            except EventConflict as exc:
                 if not job.future.done():
                     job.future.set_exception(exc)
             except Exception:
@@ -197,9 +197,22 @@ class ModerationRuntime:
         reservation = await self._reserve_or_fail_open(request, principal, started)
         if isinstance(reservation, ModerationResponse):
             return reservation
+        if reservation.pending:
+            return await self._wait_for_pending(reservation.event_id, started)
         if reservation.replay:
             return await self._replay_or_fail_open(reservation.event_id, started)
-        return await self._classify_new(request, reservation.event_id, started)
+        if reservation.lease_token is None:
+            return self._fail_open(None, started, "reservation_ownership_missing")
+        effective_request = reservation.recovery_request or request
+        response = await self._classify_new(
+            effective_request,
+            reservation.event_id,
+            reservation.lease_token,
+            started,
+        )
+        if reservation.recovery_request is not None and response.event_id is not None:
+            return await self._replay_or_fail_open(reservation.event_id, started)
+        return response
 
     async def _reserve_or_fail_open(
         self,
@@ -214,6 +227,7 @@ class ModerationRuntime:
                 _request_fingerprint(request),
                 _canonical_fingerprint(request),
                 AdvisoryStatus.DISABLED,
+                self._settings.pending_stale_after_ms,
             )
         except (EventConflict, EventInProgress):
             raise
@@ -224,12 +238,19 @@ class ModerationRuntime:
         self,
         request: ModerationRequest,
         event_id: str,
+        lease_token: str,
         started: float,
     ) -> ModerationResponse:
         current = _context_message(request, event_id)
         prepared = await self._prepare_decision(current, started)
         prepared = await self._record_context_or_fail_open(current, prepared, started)
-        return await self._finalize_and_dispatch(request, current, prepared, started)
+        return await self._finalize_and_dispatch(
+            request,
+            current,
+            prepared,
+            lease_token,
+            started,
+        )
 
     async def _prepare_decision(
         self,
@@ -325,13 +346,19 @@ class ModerationRuntime:
         request: ModerationRequest,
         current: ContextMessage,
         prepared: _PreparedDecision,
+        lease_token: str,
         started: float,
     ) -> ModerationResponse:
         advisory_status = self._advisory.reserve()
         response = prepared.response.model_copy(
             update={"advisory_status": advisory_status, "latency_ms": _elapsed_ms(started)}
         )
-        saved = await self._save_decision(response, prepared, advisory_status)
+        saved = await self._save_decision(
+            response,
+            prepared,
+            advisory_status,
+            lease_token,
+        )
         if not saved:
             await self._remove_context_safely(current.event_id)
             return self._fail_open(None, started, "storage_finalize_error")
@@ -344,6 +371,7 @@ class ModerationRuntime:
         response: ModerationResponse,
         prepared: _PreparedDecision,
         advisory_status: AdvisoryStatus,
+        lease_token: str,
     ) -> bool:
         try:
             await self._store.finalize_event(
@@ -351,6 +379,7 @@ class ModerationRuntime:
                 prepared.evidence_event_ids,
                 prepared.related_event_ids,
                 prepared.incident_signal,
+                lease_token,
             )
             return True
         except Exception:
@@ -363,6 +392,25 @@ class ModerationRuntime:
             await self._context.remove(event_id)
         except Exception:
             self._context_ready = False
+
+    async def _wait_for_pending(
+        self,
+        event_id: str,
+        started: float,
+    ) -> ModerationResponse:
+        remaining = self._settings.request_timeout_ms / 1000 - (time.perf_counter() - started)
+        wait_seconds = max(0.0, min(0.05, remaining - 0.01))
+        deadline = time.perf_counter() + wait_seconds
+        while time.perf_counter() < deadline:
+            try:
+                response = await self._store.load_decision(event_id)
+                return response.model_copy(update={"idempotent_replay": True})
+            except EventNotFound:
+                await asyncio.sleep(0.005)
+            except Exception:
+                return self._fail_open(None, started, "storage_replay_error")
+        return self._fail_open(None, started, "event_in_progress")
+
 
     async def _replay_or_fail_open(self, event_id: str, started: float) -> ModerationResponse:
         try:
