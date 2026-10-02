@@ -114,8 +114,8 @@
 
 | Value | Count |
 |---|---:|
-| `false` | 3558 |
-| `true` | 942 |
+| `False` | 3558 |
+| `True` | 942 |
 
 ### Containment
 
