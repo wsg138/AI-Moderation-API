@@ -40,6 +40,7 @@ The repository has been initialized and the worker system is live.
 - #15 W14 — Discord integration
 - #16 W15 — EnthusiaStaff review GUI/workflow
 - #17 W16 — Deployment/supervisor/operations
+- #20 W17 — Dataset QA tooling — **complete/merged via PR #22**
 - #19 W01 follow-up — Reconcile runtime contract after Policy v1
 
 ## Gates
@@ -96,3 +97,19 @@ The merged runtime is a foundation, not the frozen Policy-v1 API contract. Follo
 - exempt-scope handling;
 - schema migrations;
 - final retroactive/related-message contract.
+
+
+## W17 merge checkpoint
+
+PR #22 was coordinator-reviewed and merged on 2026-10-02.
+
+- Final PR head: `90bc437a1de08ef89bf4dcf5e599e5327d188928`
+- Merge commit on `main`: `1c1e5de63b0952ce6b6bd52d68c1ccb741118605`
+- Exact-head service-ci run #14: success
+- 16 focused dataset-QA tests
+- CodeRabbit Unicode JSONL parsing finding fixed and resolved
+- Issue #20: closed/completed
+- No production data used and no policy decisions invented
+- No hosted Codacy status exists for this repository/PR; no Codacy result is claimed
+
+W02–W10 must use the merged dataset-QA tooling before opening their generator PRs. W11 still owns final deduplication decisions, accepted family grouping, and leakage-safe splitting.
