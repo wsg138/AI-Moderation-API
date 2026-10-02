@@ -359,9 +359,7 @@ def assign_partitions(
     partitions = {"train": [], "validation": [], "test": [], "frozen_adversarial": []}
     for root, items in groups.items():
         ids = [item.example_id for item in items]
-        if any(item in sensitive_ids for item in ids):
-            partition = "frozen_adversarial"
-        elif _frozen_by_hash(root, items):
+        if any(item in sensitive_ids for item in ids) or _frozen_by_hash(root, items):
             partition = "frozen_adversarial"
         else:
             partition = _ordinary_partition(root)
@@ -483,7 +481,8 @@ def distributions(examples: list[Example]) -> dict[str, object]:
     )
     result: dict[str, object] = {}
     for field in fields:
-        result[field] = dict(sorted(Counter(str(item.data.get(field)) for item in examples).items()))
+        counts = Counter(str(item.data.get(field)) for item in examples)
+        result[field] = dict(sorted(counts.items()))
     result["message_count"] = dict(
         sorted(Counter(str(len(item.data.get("messages", []))) for item in examples).items())
     )
