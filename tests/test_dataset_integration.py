@@ -5,7 +5,6 @@ from pathlib import Path
 
 from tools import dataset_integration
 
-
 ROOT = Path(".")
 MANIFEST = ROOT / "data/integration/W11-split-manifest.json"
 AUDIT = ROOT / "data/integration/W11-audit.json"
