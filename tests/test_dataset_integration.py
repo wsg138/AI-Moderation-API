@@ -16,30 +16,50 @@ def test_w11_generated_outputs_are_reproducible() -> None:
     assert dataset_integration.check_outputs(ROOT, outputs) == []
 
 
+def _partition_by_id(partitions: dict[str, list[str]]) -> dict[str, str]:
+    return {
+        example_id: name
+        for name, ids in partitions.items()
+        for example_id in ids
+    }
+
+
+def _assert_group_isolation(
+    groups: list[dict[str, object]],
+    partition_by_id: dict[str, str],
+) -> None:
+    for group in groups:
+        ids = group["example_ids"]
+        assert isinstance(ids, list)
+        group_partitions = {partition_by_id[str(item)] for item in ids}
+        assert group_partitions == {group["partition"]}
+
+
+def _assert_cross_source_isolation(
+    partition_by_id: dict[str, str],
+    rows: list[dict[str, object]],
+) -> None:
+    for row in rows:
+        assert partition_by_id[str(row["left"])] == partition_by_id[str(row["right"])]
+
+
 def test_w11_split_manifest_preserves_family_and_partition_isolation() -> None:
     manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
     partitions = manifest["partitions"]
-    sets = {name: set(ids) for name, ids in partitions.items()}
+    all_ids = [example_id for ids in partitions.values() for example_id in ids]
 
     assert manifest["records"] == 4500
-    assert sum(len(ids) for ids in sets.values()) == 4500
-    assert len(set().union(*sets.values())) == 4500
+    assert len(all_ids) == 4500
+    assert len(set(all_ids)) == 4500
 
-    for left_name, left_ids in sets.items():
-        for right_name, right_ids in sets.items():
-            if left_name < right_name:
-                assert left_ids.isdisjoint(right_ids)
-
-    partition_by_id = {
-        example_id: name for name, ids in sets.items() for example_id in ids
-    }
-    for group in manifest["groups"]:
-        group_partitions = {partition_by_id[item] for item in group["example_ids"]}
-        assert group_partitions == {group["partition"]}
+    partition_by_id = _partition_by_id(partitions)
+    _assert_group_isolation(manifest["groups"], partition_by_id)
 
     audit = json.loads(AUDIT.read_text(encoding="utf-8"))
-    for row in audit["cross_source_near_candidates"]:
-        assert partition_by_id[row["left"]] == partition_by_id[row["right"]]
+    _assert_cross_source_isolation(
+        partition_by_id,
+        audit["cross_source_near_candidates"],
+    )
 
 
 def test_w11_audit_has_no_redundant_exact_or_unresolved_cross_worker_conflict() -> None:
