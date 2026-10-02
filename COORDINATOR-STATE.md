@@ -416,7 +416,15 @@ Observed target heads when packets were prepared:
 - support-bot `main`: `61e635f9147c11f0262ae157acb8b521582cc2c8`;
 - EnthusiaStaff `main`: `24d2ab5f60c097ee303f5c9342a9503f44e8b821`.
 
-Those observations are not branch locks; every worker must re-read live GitHub immediately before branching.
+Those observations were used to stage the initial launch branches. Workers must still re-read live GitHub before their first product commit and reconcile any upstream movement.
+
+Launch branches staged:
+- W12: `w12/model-training` in AI-Moderation-API at packet-amended base `5f25155bd9ef34ac75a527736876dbf56afd9bc8`;
+- W13: `w13/rosechat-client` in Enthusia-RoseChat from `0425b7d2c2252f8287af93c12d13e1e4c5e686f4`;
+- W14: `w14/discord-client` in enthusia-support-bot from `61e635f9147c11f0262ae157acb8b521582cc2c8`;
+- W15: `w15/staff-review-gui` in EnthusiaStaff from `24d2ab5f60c097ee303f5c9342a9503f44e8b821`.
+
+No product commits existed on W13-W15 at branch creation.
 
 Production status remains unchanged:
 - no AI moderation service deployment;
