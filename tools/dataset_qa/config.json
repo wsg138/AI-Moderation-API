@@ -1,0 +1,62 @@
+{
+  "required_fields": [
+    "example_id",
+    "policy_version",
+    "source",
+    "domain",
+    "difficulty",
+    "platform_hint",
+    "messages",
+    "target_index",
+    "label",
+    "action",
+    "reason_codes",
+    "notes"
+  ],
+  "message_required_fields": ["speaker", "offset_ms", "text"],
+  "labels": [
+    "SAFE",
+    "GAMEPLAY_VIOLENCE",
+    "LOW_LEVEL_HARASSMENT",
+    "SEVERE_HARASSMENT",
+    "REAL_WORLD_THREAT",
+    "SELF_HARM_INSTRUCTION",
+    "SELF_HARM_INTENT",
+    "HATE",
+    "SEXUAL_MINOR",
+    "DANGEROUS_REAL_WORLD_INSTRUCTIONS",
+    "AMBIGUOUS_REVIEW"
+  ],
+  "actions": ["ALLOW", "REVIEW", "BLOCK"],
+  "reason_codes": [
+    "minecraft_gameplay_explicit",
+    "real_world_location",
+    "real_world_time",
+    "explicit_real_world_cue",
+    "targeted_violence",
+    "split_message_context",
+    "self_harm_instruction",
+    "self_harm_disclosure",
+    "identity_target",
+    "sexual_minor",
+    "dangerous_instruction_request",
+    "quoted_or_condemned",
+    "low_severity_insult",
+    "obfuscated_evasion",
+    "insufficient_context"
+  ],
+  "id_ranges": {
+    "G01": [1, 500],
+    "G02": [1, 500],
+    "G03": [1, 500],
+    "G04": [1, 500],
+    "G05": [1, 500],
+    "G06": [1, 500],
+    "G07": [1, 500],
+    "G08": [1, 500],
+    "G09": [1, 500]
+  },
+  "family_id_pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,79}$",
+  "near_duplicate_threshold": 0.92,
+  "near_contradiction_threshold": 0.985
+}

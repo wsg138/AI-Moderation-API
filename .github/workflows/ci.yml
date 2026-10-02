@@ -9,8 +9,11 @@ on:
       - "service/**"
       - "tests/**"
       - "tools/**"
+      - "data/synthetic/**"
       - "docs/API-CONTRACT.md"
       - "docs/DEPLOYMENT.md"
+      - "docs/DATASET-QA.md"
+      - "docs/DATASET-SCHEMA.md"
   push:
     branches: [main]
     paths:
@@ -20,8 +23,11 @@ on:
       - "service/**"
       - "tests/**"
       - "tools/**"
+      - "data/synthetic/**"
       - "docs/API-CONTRACT.md"
       - "docs/DEPLOYMENT.md"
+      - "docs/DATASET-QA.md"
+      - "docs/DATASET-SCHEMA.md"
 
 permissions:
   contents: read
@@ -48,6 +54,14 @@ jobs:
         run: mypy
       - name: Complexity limits
         run: python tools/check_complexity.py
+      - name: Dataset QA
+        shell: bash
+        run: |
+          shopt -s nullglob
+          files=(data/synthetic/*.jsonl)
+          for file in "${files[@]}"; do
+            python -m tools.dataset_qa validate "$file"
+          done
       - name: Tests
         run: pytest
       - name: Build wheel
