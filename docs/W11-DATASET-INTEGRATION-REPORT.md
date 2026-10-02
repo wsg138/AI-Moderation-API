@@ -8,7 +8,7 @@
 - Near candidates (>= 0.75): **2722**
 - Cross-source near candidates: **27**
 - Decision-contrast lexical candidates: **68**
-- High-similarity cross-worker contrasts reviewed: **12**
+- Cross-worker differing-decision pairs reviewed: **12**
 - Unresolved cross-worker contradictions: **0**
 - Golden near/exact candidates: **1**
 - Golden-sensitive (>= 0.88): **0**
@@ -19,6 +19,24 @@
 - validation: **385**
 - test: **410**
 - frozen_adversarial: **436**
+
+## Cross-worker near-pair policy review
+
+| Pair | Similarity | Disposition | Policy source |
+|---|---:|---|---|
+| `G01-0285 ↔ G08-0460` | 0.8 | `intentional_policy_contrast` | policy/POLICY-v1.md §6 |
+| `G01-0287 ↔ G08-0459` | 0.8 | `intentional_policy_contrast` | policy/POLICY-v1.md §6 |
+| `G01-0287 ↔ G08-0461` | 0.807018 | `intentional_policy_contrast` | policy/POLICY-v1.md §6 |
+| `G01-0295 ↔ G08-0456` | 0.756757 | `intentional_policy_contrast` | policy/POLICY-v1.md §6 |
+| `G01-0296 ↔ G08-0444` | 0.765957 | `intentional_policy_contrast` | policy/POLICY-v1.md §6 |
+| `G01-0315 ↔ G08-0444` | 0.75 | `intentional_policy_contrast` | policy/POLICY-v1.md §6 |
+| `G06-0136 ↔ G09-0356` | 0.847458 | `intentional_policy_contrast` | policy/POLICY-v1.md §11 |
+| `G06-0157 ↔ G09-0355` | 0.805556 | `intentional_policy_contrast` | policy/POLICY-v1.md §11 |
+| `G06-0176 ↔ G09-0356` | 0.774194 | `intentional_policy_contrast` | policy/POLICY-v1.md §11 |
+| `G06-0256 ↔ G09-0388` | 0.918919 | `intentional_policy_contrast` | policy/POLICY-v1.md §11 |
+| `G08-0333 ↔ G09-0355` | 0.782609 | `intentional_policy_contrast` | policy/POLICY-v1.md §11 |
+| `G08-0469 ↔ G09-0355` | 0.75 | `intentional_policy_contrast` | policy/POLICY-v1.md §11 |
+
 
 ## Whole-corpus distributions
 
