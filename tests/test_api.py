@@ -213,3 +213,13 @@ def test_unready_classifier_is_forced_fail_open(settings, rose_headers) -> None:
     assert response.status_code == 200
     assert body["action"] == "ALLOW"
     assert body["fallback_state"] == "classifier_not_ready"
+
+
+def test_unknown_request_fields_are_rejected(settings, rose_headers) -> None:
+    app = create_app(settings=settings, classifier=SplitThreatClassifier())
+    body = payload("unknown-field", "hello")
+    body["internal_admin_override"] = True
+    with TestClient(app) as client:
+        response = client.post("/v1/moderate", headers=rose_headers, json=body)
+
+    assert response.status_code == 422

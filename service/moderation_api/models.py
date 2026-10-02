@@ -107,6 +107,7 @@ class AdvisoryEvidence(ApiModel):
     categories: dict[str, bool] = Field(default_factory=dict)
     error_code: str | None = None
     latency_ms: int | None = None
+    disagrees_with_local: bool | None = None
 
 
 class EventDetails(ApiModel):

@@ -77,3 +77,29 @@ async def test_finalize_persists_advisory_queue_saturation(tmp_path) -> None:
     assert event.advisory is not None
     assert event.advisory.status is AdvisoryStatus.QUEUE_SATURATED
     assert event.advisory.error_code == "advisory_queue_saturated"
+
+
+@pytest.mark.asyncio
+async def test_advisory_disagreement_is_persisted(tmp_path) -> None:
+    store = ModerationStore(tmp_path / "disagreement.sqlite3")
+    await store.initialize()
+    reservation = await store.reserve_event(
+        request(), "rosechat", "disagreement-fingerprint", AdvisoryStatus.DISABLED
+    )
+    await store.finalize_event(response(reservation.event_id, "draft", Action.ALLOW))
+    from moderation_api.models import AdvisoryEvidence
+
+    await store.save_advisory(
+        reservation.event_id,
+        AdvisoryEvidence(
+            status=AdvisoryStatus.COMPLETE,
+            model="omni-moderation-latest",
+            flagged=True,
+            scores={"violence": 0.9},
+            categories={"violence": True},
+        ),
+    )
+
+    event = await store.get_event(reservation.event_id)
+    assert event.advisory is not None
+    assert event.advisory.disagrees_with_local is True

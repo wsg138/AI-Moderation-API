@@ -37,7 +37,7 @@ Explicit replies are favored when present. The classifier receives the current m
 
 SQLite stores raw moderation events, structured decision evidence, OpenAI advisory results, and human reviews. The default database path is under `runtime-data/`, which is gitignored. Nothing automatically exports production records to GitHub.
 
-Decision evidence stores action/label, scores, rule hits, reason codes, related IDs, model/policy versions, latency, and degradation state. It does not store hidden chain-of-thought.
+Decision evidence stores action/label, scores, rule hits, reason codes, related IDs, model/policy versions, latency, and degradation state. Advisory evidence stores the OpenAI model/scores plus a coarse disagreement marker comparing OpenAI `flagged` with the local message action. It does not store hidden chain-of-thought.
 
 `GET /v1/events/{event_id}` requires `review:read`. `POST /v1/reviews` requires `review:write`. Both return explicit public response models rather than raw database rows.
 

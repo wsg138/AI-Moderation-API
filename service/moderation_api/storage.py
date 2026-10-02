@@ -85,6 +85,7 @@ CREATE TABLE IF NOT EXISTS advisory_results (
   categories_json TEXT NOT NULL DEFAULT '{}',
   error_code TEXT,
   latency_ms INTEGER,
+  disagrees_with_local INTEGER,
   updated_at TEXT NOT NULL
 );
 CREATE TABLE IF NOT EXISTS reviews (
@@ -375,7 +376,8 @@ class ModerationStore:
             cursor = connection.execute(
                 """UPDATE advisory_results SET
                   status=?, model=?, flagged=?, scores_json=?, categories_json=?,
-                  error_code=?, latency_ms=?, updated_at=? WHERE event_id=?""",
+                  error_code=?, latency_ms=?, disagrees_with_local=?, updated_at=?
+                  WHERE event_id=?""",
                 (
                     evidence.status.value,
                     evidence.model,
@@ -384,12 +386,30 @@ class ModerationStore:
                     _json(evidence.categories),
                     evidence.error_code,
                     evidence.latency_ms,
+                    self._advisory_disagreement(connection, event_id, evidence),
                     _utc_now(),
                     event_id,
                 ),
             )
             if cursor.rowcount != 1:
                 raise EventNotFound(event_id)
+
+    def _advisory_disagreement(
+        self,
+        connection: sqlite3.Connection,
+        event_id: str,
+        evidence: AdvisoryEvidence,
+    ) -> int | None:
+        if evidence.flagged is None:
+            return None
+        row = connection.execute(
+            "SELECT action FROM moderation_events WHERE event_id=?",
+            (event_id,),
+        ).fetchone()
+        if row is None or row["action"] is None:
+            return None
+        local_flagged = row["action"] != Action.ALLOW.value
+        return int(bool(evidence.flagged) != local_flagged)
 
 
 _DECISION_SELECT = """
@@ -404,7 +424,8 @@ _EVENT_SELECT = """
 SELECT e.*, d.*, a.status AS advisory_status, a.model AS advisory_model,
        a.flagged AS advisory_flagged, a.scores_json AS advisory_scores_json,
        a.categories_json AS advisory_categories_json, a.error_code AS advisory_error_code,
-       a.latency_ms AS advisory_latency_ms
+       a.latency_ms AS advisory_latency_ms,
+       a.disagrees_with_local AS advisory_disagrees_with_local
 FROM moderation_events e
 JOIN decision_evidence d ON d.event_id = e.event_id
 LEFT JOIN advisory_results a ON a.event_id = e.event_id
@@ -439,6 +460,11 @@ def _event_details_from_rows(row: sqlite3.Row, reviews: list[sqlite3.Row]) -> Ev
         categories=json.loads(row["advisory_categories_json"] or "{}"),
         error_code=row["advisory_error_code"],
         latency_ms=row["advisory_latency_ms"],
+        disagrees_with_local=(
+            None
+            if row["advisory_disagrees_with_local"] is None
+            else bool(row["advisory_disagrees_with_local"])
+        ),
     )
     return EventDetails(
         event_id=row["event_id"],
