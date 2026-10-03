@@ -129,6 +129,8 @@ def _parity_report(
     model: Any,
     validation: list[Any],
     metadata_path: Path,
+    *,
+    require_exact_predictions: bool = True,
 ) -> dict[str, Any]:
     metadata = _load_manifest(metadata_path)
     texts = [example.serialized for example in validation]
@@ -153,12 +155,12 @@ def _parity_report(
     max_delta = max(item["max_abs_probability_delta"] for item in heads.values())
     total_mismatches = sum(item["prediction_mismatches"] for item in heads.values())
     passed = total_mismatches == 0 and max_delta <= 1e-4
-    if not passed:
+    if require_exact_predictions and not passed:
         raise RuntimeError(
             f"sklearn/ONNX parity failed: mismatches={total_mismatches} max_delta={max_delta}"
         )
     return {
-        "passed": True,
+        "passed": passed,
         "tolerance": 1e-4,
         "heads": heads,
         "max_abs_probability_delta": max_delta,
@@ -351,7 +353,18 @@ def main() -> None:
     quantized_manifest: dict[str, Any] | None = None
     if quantized_path is not None:
         # Compare quantized ONNX predictions against the same frozen sklearn baseline.
-        quantized_parity = _parity_report(model, validation, quantized_path)
+        quantized_parity = _parity_report(
+            model,
+            validation,
+            quantized_path,
+            require_exact_predictions=False,
+        )
+        quantization["selected"] = bool(quantized_parity["passed"])
+        quantization["selection_reason"] = (
+            "quantized bundle preserves exact validation predictions within parity tolerance"
+            if quantized_parity["passed"]
+            else "quantized bundle changes validation predictions; retain selected FP32 bundle"
+        )
         quantized_benchmark = _benchmark_bundle(quantized_path)
         quantized_manifest = _copy_manifest_to_reports(
             quantized_path,
