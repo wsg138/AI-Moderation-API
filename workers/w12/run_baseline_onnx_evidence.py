@@ -305,7 +305,10 @@ def _benchmark_bundle(metadata_path: Path) -> dict[str, Any]:
     runtime = asyncio.run(_benchmark_async(classifier))
     steady = process.memory_info().rss / (1024 * 1024)
     metadata = _load_manifest(metadata_path)
-    artifact_bytes = int(metadata["vectorizer"]["bytes"]) + sum(\n        int(head["bytes"]) for head in metadata["heads"].values()\n    )\n    return {
+    artifact_bytes = int(metadata["vectorizer"]["bytes"]) + sum(
+        int(head["bytes"]) for head in metadata["heads"].values()
+    )
+    return {
         "health": health,
         "cold_load_seconds": cold_load,
         "rss_before_mb": before,
