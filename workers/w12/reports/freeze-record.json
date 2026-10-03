@@ -8,8 +8,8 @@
   },
   "final_selection": {
     "completed_by_validation_only_evidence": true,
-    "evidence_workflow_run_id": 37145995076,
-    "evidence_head_sha": "546513f8d89de931c92ff1e6f4f195e84c519225",
+    "evidence_workflow_run_id": 37157150269,
+    "evidence_head_sha": "b2df8afab52699a43c27192dc61cf44adb2287a9",
     "selected_candidate_changed_after_heldout_observation": false,
     "preprocessing_changed_after_heldout_observation": false,
     "thresholds_changed_after_heldout_observation": false,
@@ -35,19 +35,23 @@
   },
   "contamination_statement": "Training used W11 train only and candidate selection/calibration used validation only. Frozen test, frozen_adversarial, and owner_golden were opened before the mandatory second encoder comparison completed. The second encoder was subsequently trained on train and evaluated on validation only; the selected baseline, model parameters, preprocessing, and threshold behavior did not change. Those held-out results were not used to choose the final candidate and remain the one-time acceptance evidence for this unchanged model version. Any future candidate, model, preprocessing, or threshold change must treat the already-observed held-outs as development evidence and use a new/versioned unseen acceptance set.",
   "selected_onnx_evidence": {
-    "workflow_run_id": 37145995076,
-    "metadata_sha256": "b3ac4e9869f0857fbc7cb30e52b5340f40c5ff16f2eb234ca4dbe839ae21d5be",
+    "workflow_run_id": 37157150269,
+    "metadata_sha256": "f3489e5fffb54303f34ee4f9bef672b211556ee6a6a0d2f2994d3e1c6e7dd1df",
     "sklearn_onnx_prediction_mismatches": 0,
-    "max_abs_probability_delta": 1.7372870320109257e-7,
-    "runtime_artifact_bytes": 1295438,
-    "p50_ms": 0.5123350000530991,
-    "p95_ms": 0.5594340000243392,
-    "p99_ms": 0.8904869999923903,
-    "rss_attributable_mb": 0.875,
+    "max_abs_probability_delta": 1.6771714006491578e-7,
+    "runtime_artifact_bytes": 1022836,
+    "p50_ms": 0.23008799999502116,
+    "p95_ms": 0.24844499998266656,
+    "p99_ms": 0.2706880000005185,
+    "rss_attributable_mb": 0.46875,
     "quantization": {
       "attempted": true,
-      "supported": false,
-      "error": "ValueError: Failed to find proper ai.onnx domain"
+      "supported": true,
+      "selected": false,
+      "metadata_sha256": "4b5fec4fa0992620fd18bde46122b5824e3fca8f80b3829265f3927763f0c695",
+      "prediction_mismatches": 4,
+      "max_abs_probability_delta": 0.027912365454849986,
+      "decision": "retain exact-parity FP32 bundle"
     }
   },
   "freeze_status": "final_selected_candidate_unchanged_after_required_validation_comparison"
