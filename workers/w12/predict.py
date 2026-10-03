@@ -6,11 +6,9 @@ from pathlib import Path
 
 import torch
 from torch.utils.data import DataLoader
-from transformers import BertTokenizer
-
 from .baseline import load_baseline
 from .dataset import ModerationExample
-from .train_encoder import CANDIDATES, ModerationDataset, MultiTaskBert
+from .train_encoder import CANDIDATES, ModerationDataset, MultiTaskBert, load_candidate_tokenizer
 
 ARTIFACT_DIR = Path(__file__).resolve().parent / "artifacts"
 
@@ -30,9 +28,9 @@ def predict_encoder(
 ) -> tuple[dict[str, list[int]], list[float]]:
     cfg = CANDIDATES[candidate]
     local_dir = cfg["local_dir"]
-    tokenizer = BertTokenizer(str(local_dir / "vocab.txt"), do_lower_case=True)
+    tokenizer = load_candidate_tokenizer(candidate)
     device = torch.device("cpu")
-    model = MultiTaskBert(cfg["hf_id"], local_dir).to(device)
+    model = MultiTaskBert(cfg["hf_id"], local_dir, cfg["revision"]).to(device)
     ckpt = torch.load(ARTIFACT_DIR / f"{candidate}-seed{seed}.pt", map_location=device)
     model.load_state_dict(ckpt)
     model.eval()
