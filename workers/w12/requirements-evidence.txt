@@ -1,0 +1,10 @@
+# Reproducible W12 evidence environment (CPU only).
+# Production runtime dependencies remain separate until selected-artifact measurements are accepted.
+numpy==2.5.3
+scikit-learn==1.9.1
+torch==2.14.1
+transformers==5.18.0
+onnx==1.23.0
+onnxruntime==1.30.0
+skl2onnx==1.20.0
+psutil==7.2.2
