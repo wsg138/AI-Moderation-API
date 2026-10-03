@@ -1,0 +1,84 @@
+name: w12-evidence
+
+on:
+  push:
+    branches: [w12/model-training]
+    paths:
+      - ".github/workflows/w12-evidence.yml"
+      - "workers/w12/train_encoder.py"
+      - "workers/w12/predict.py"
+      - "workers/w12/run_validation_candidate.py"
+      - "workers/w12/run_baseline_onnx_evidence.py"
+      - "workers/w12/export_baseline_onnx.py"
+      - "workers/w12/requirements-evidence.txt"
+
+permissions:
+  contents: read
+
+jobs:
+  baseline-onnx:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: workers/w12/requirements-evidence.txt
+      - name: Install pinned W12 evidence dependencies
+        run: |
+          python -m pip install --disable-pip-version-check -r workers/w12/requirements-evidence.txt
+          python -m pip install --disable-pip-version-check -e .
+      - name: Generate selected baseline ONNX evidence
+        run: python -m workers.w12.run_baseline_onnx_evidence
+      - name: Record exact environment
+        run: python -m pip freeze > workers/w12/reports/requirements-evidence-freeze.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: w12-baseline-onnx-${{ github.sha }}
+          retention-days: 30
+          if-no-files-found: error
+          path: |
+            workers/w12/artifacts/onnx/
+            workers/w12/reports/onnx-baseline-evidence.json
+            workers/w12/reports/baseline-tfidf-onnx-metadata.json
+            workers/w12/reports/baseline-tfidf-int8-onnx-metadata.json
+            workers/w12/reports/requirements-evidence-freeze.txt
+
+  bert-mini-validation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: workers/w12/requirements-evidence.txt
+      - name: Install pinned W12 evidence dependencies
+        run: |
+          python -m pip install --disable-pip-version-check -r workers/w12/requirements-evidence.txt
+          python -m pip install --disable-pip-version-check -e .
+      - name: Train second pretrained candidate on W11 train only
+        run: >
+          python -m workers.w12.train_encoder
+          --candidate bert-mini
+          --seed 42
+          --epochs 5
+          --batch-size 16
+          --lr 3e-5
+      - name: Evaluate second candidate on validation only
+        run: python -m workers.w12.run_validation_candidate --candidate bert-mini --seed 42
+      - name: Record exact environment
+        run: python -m pip freeze > workers/w12/reports/requirements-evidence-freeze.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: w12-bert-mini-${{ github.sha }}
+          retention-days: 30
+          if-no-files-found: error
+          path: |
+            workers/w12/artifacts/bert-mini-seed42.pt
+            workers/w12/artifacts/bert-mini-seed42-history.json
+            workers/w12/reports/val-bert-mini-seed42.json
+            workers/w12/reports/requirements-evidence-freeze.txt
