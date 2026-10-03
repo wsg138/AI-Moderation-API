@@ -178,20 +178,22 @@ def _write_constant_onnx(path: Path, probabilities: list[float]) -> None:
     onnx.save(model, path)
 
 
-def _write_fixture_bundle(tmp_path: Path) -> OnnxClassifierConfig:
-    definitions = {
-        "label": (["SAFE", "REAL_WORLD_THREAT"], [0.1, 0.9]),
-        "action": (["ALLOW", "BLOCK", "REVIEW"], [0.05, 0.9, 0.05]),
-        "review_priority": (["NONE", "NORMAL", "URGENT"], [0.05, 0.15, 0.8]),
-        "strike": (["false", "true"], [0.1, 0.9]),
-        "containment": (["NONE", "MUTE"], [0.95, 0.05]),
-        "support_flow": (
-            ["NONE", "SELF_HARM_CHECK", "TARGET_SAFETY_CHECK"],
-            [0.9, 0.05, 0.05],
-        ),
-    }
+_FIXTURE_HEADS = {
+    "label": (["SAFE", "REAL_WORLD_THREAT"], [0.1, 0.9]),
+    "action": (["ALLOW", "BLOCK", "REVIEW"], [0.05, 0.9, 0.05]),
+    "review_priority": (["NONE", "NORMAL", "URGENT"], [0.05, 0.15, 0.8]),
+    "strike": (["false", "true"], [0.1, 0.9]),
+    "containment": (["NONE", "MUTE"], [0.95, 0.05]),
+    "support_flow": (
+        ["NONE", "SELF_HARM_CHECK", "TARGET_SAFETY_CHECK"],
+        [0.9, 0.05, 0.05],
+    ),
+}
+
+
+def _write_fixture_heads(tmp_path: Path) -> dict[str, object]:
     heads: dict[str, object] = {}
-    for head, (classes, probabilities) in definitions.items():
+    for head, (classes, probabilities) in _FIXTURE_HEADS.items():
         model_path = tmp_path / f"baseline-tfidf-{head}.onnx"
         _write_constant_onnx(model_path, probabilities)
         heads[head] = {
@@ -203,24 +205,27 @@ def _write_fixture_bundle(tmp_path: Path) -> OnnxClassifierConfig:
             "classes": classes,
             "class_ids": list(range(len(classes))),
         }
+    return heads
 
-    vectorizer_path = tmp_path / "baseline-tfidf-vectorizer.json"
-    vectorizer_path.write_text(
-        json.dumps(
-            {
-                "schema_version": 1,
-                "terms": ["school"],
-                "idf": [1.0],
-                "lowercase": True,
-                "ngram_range": [1, 2],
-                "sublinear_tf": True,
-                "norm": "l2",
-                "token_pattern": r"(?u)\\b\\w\\w+\\b",
-            }
-        )
-        + "\\n",
-        encoding="utf-8",
-    )
+
+def _write_fixture_vectorizer(tmp_path: Path) -> Path:
+    path = tmp_path / "baseline-tfidf-vectorizer.json"
+    payload = {
+        "schema_version": 1,
+        "terms": ["school"],
+        "idf": [1.0],
+        "lowercase": True,
+        "ngram_range": [1, 2],
+        "sublinear_tf": True,
+        "norm": "l2",
+        "token_pattern": r"(?u)\\b\\w\\w+\\b",
+    }
+    path.write_text(json.dumps(payload) + "\n", encoding="utf-8")
+    return path
+
+
+def _write_fixture_bundle(tmp_path: Path) -> OnnxClassifierConfig:
+    vectorizer_path = _write_fixture_vectorizer(tmp_path)
     metadata = {
         "schema_version": 2,
         "candidate": "baseline-tfidf",
@@ -234,7 +239,7 @@ def _write_fixture_bundle(tmp_path: Path) -> OnnxClassifierConfig:
             "feature_count": 1,
         },
         "target_opset": 17,
-        "heads": heads,
+        "heads": _write_fixture_heads(tmp_path),
     }
     metadata_path = tmp_path / "baseline-tfidf-metadata.json"
     metadata_path.write_text(json.dumps(metadata, indent=2) + "\n", encoding="utf-8")
@@ -243,7 +248,6 @@ def _write_fixture_bundle(tmp_path: Path) -> OnnxClassifierConfig:
         expected_metadata_sha256=_sha256(metadata_path),
         timeout_ms=500,
     )
-
 
 def test_onnx_classifier_not_ready_without_metadata(tmp_path):
     cfg = OnnxClassifierConfig(
