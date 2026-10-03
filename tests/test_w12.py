@@ -155,7 +155,7 @@ def _write_constant_onnx(path: Path, probabilities: list[float]) -> None:
     import onnx
     from onnx import TensorProto, helper
 
-    input_info = helper.make_tensor_value_info("input", TensorProto.STRING, [None, 1])
+    input_info = helper.make_tensor_value_info("features", TensorProto.FLOAT, [None, 1])
     output_info = helper.make_tensor_value_info(
         "probabilities", TensorProto.FLOAT, [1, len(probabilities)]
     )
@@ -198,19 +198,41 @@ def _write_fixture_bundle(tmp_path: Path) -> OnnxClassifierConfig:
             "path": model_path.name,
             "sha256": _sha256(model_path),
             "bytes": model_path.stat().st_size,
-            "input_name": "input",
+            "input_name": "features",
             "probabilities_output": "probabilities",
             "classes": classes,
             "class_ids": list(range(len(classes))),
         }
 
+    vectorizer_path = tmp_path / "baseline-tfidf-vectorizer.json"
+    vectorizer_path.write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "terms": ["school"],
+                "idf": [1.0],
+                "lowercase": True,
+                "ngram_range": [1, 2],
+                "sublinear_tf": True,
+                "norm": "l2",
+                "token_pattern": r"(?u)\\b\\w\\w+\\b",
+            }
+        )
+        + "\\n",
+        encoding="utf-8",
+    )
     metadata = {
-        "schema_version": 1,
+        "schema_version": 2,
         "candidate": "baseline-tfidf",
         "model_version": "w12-fixture-v1",
         "seed": 42,
         "serialization": "w12-v1",
-        "locale": "C",
+        "vectorizer": {
+            "path": vectorizer_path.name,
+            "sha256": _sha256(vectorizer_path),
+            "bytes": vectorizer_path.stat().st_size,
+            "feature_count": 1,
+        },
         "target_opset": 17,
         "heads": heads,
     }
@@ -262,6 +284,7 @@ async def test_selected_baseline_bundle_loads_and_infers(tmp_path):
     health = classifier.health()
     assert health["ready"] is True
     assert health["heads_loaded"] == 6
+    assert health["feature_count"] == 1
     assert health["mode"] == "onnx-baseline-tfidf"
 
     result = await classifier.classify(_make_input())
