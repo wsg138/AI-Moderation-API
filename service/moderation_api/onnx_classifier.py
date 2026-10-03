@@ -175,11 +175,14 @@ class OnnxClassifier:
                 input_name = raw_head.get("input_name")
                 probabilities_output = raw_head.get("probabilities_output")
                 raw_classes = raw_head.get("classes")
-                if not all(
-                    isinstance(value, str) and value
-                    for value in (relative_path, expected_sha, input_name, probabilities_output)
-                ):
-                    raise ValueError(f"invalid artifact metadata for head {head_name}")
+                if not isinstance(relative_path, str) or not relative_path:
+                    raise ValueError(f"invalid artifact path for head {head_name}")
+                if not isinstance(expected_sha, str) or not expected_sha:
+                    raise ValueError(f"invalid artifact checksum for head {head_name}")
+                if not isinstance(input_name, str) or not input_name:
+                    raise ValueError(f"invalid input name for head {head_name}")
+                if not isinstance(probabilities_output, str) or not probabilities_output:
+                    raise ValueError(f"invalid probability output for head {head_name}")
                 if not isinstance(raw_classes, list) or not raw_classes:
                     raise ValueError(f"missing class metadata for head {head_name}")
                 if not all(isinstance(value, str) and value for value in raw_classes):
