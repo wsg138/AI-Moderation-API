@@ -4,6 +4,8 @@ on:
   pull_request:
     paths:
       - ".github/workflows/ci.yml"
+      - ".github/workflows/w12-evidence.yml"
+      - "workers/w12/**"
       - "pyproject.toml"
       - "deployment/**"
       - "service/**"
@@ -20,6 +22,8 @@ on:
     branches: [main]
     paths:
       - ".github/workflows/ci.yml"
+      - ".github/workflows/w12-evidence.yml"
+      - "workers/w12/**"
       - "pyproject.toml"
       - "deployment/**"
       - "service/**"
@@ -52,6 +56,8 @@ jobs:
         run: python -m pip install --disable-pip-version-check -r deployment/requirements-runtime.lock
       - name: Install service and development checks
         run: python -m pip install --disable-pip-version-check -e '.[dev]'
+      - name: Install W12 ONNX fixture-test dependencies
+        run: python -m pip install --disable-pip-version-check -e '.[w12-inference-test]'
       - name: Ruff
         run: ruff check .
       - name: Mypy
