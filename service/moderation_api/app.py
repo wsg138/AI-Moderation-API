@@ -16,7 +16,6 @@ from .classifier import LocalClassifier, StubClassifier
 from .config import Settings
 from .context import RollingContextStore
 from .migrations import LATEST_SCHEMA_VERSION
-from .onnx_classifier import OnnxClassifier, OnnxClassifierConfig
 from .models import (
     CorrectionAuthority,
     CorrectionRejectRequest,
@@ -28,6 +27,7 @@ from .models import (
     ModerationResponse,
     ReviewQueueResponse,
 )
+from .onnx_classifier import OnnxClassifier, OnnxClassifierConfig
 from .runtime import ModerationRuntime, ProcessingTimeout, RequestQueueFull
 from .storage import (
     DecisionConflict,
