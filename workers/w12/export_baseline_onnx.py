@@ -1,4 +1,4 @@
-"""Export the selected W12 TF-IDF baseline as safe metadata + six ONNX heads."""
+"""Export the selected W12 TF-IDF baseline as safe metadata + standard-op ONNX heads."""
 
 from __future__ import annotations
 
@@ -7,10 +7,10 @@ import json
 import time
 from pathlib import Path
 
-import skl2onnx
+import numpy as np
+import onnx
 import sklearn
-from skl2onnx import convert_sklearn
-from skl2onnx.common.data_types import FloatTensorType
+from onnx import TensorProto, helper, numpy_helper
 
 from .baseline import load_baseline
 
@@ -18,6 +18,7 @@ ARTIFACT_DIR = Path(__file__).resolve().parent / "artifacts"
 EXPORT_DIR = ARTIFACT_DIR / "onnx"
 MODEL_VERSION = "w12-baseline-tfidf-v1"
 METADATA_SCHEMA_VERSION = 2
+TARGET_OPSET = 17
 
 
 def sha256_of(path: Path) -> str:
@@ -58,28 +59,99 @@ def _export_vectorizer(model) -> dict[str, object]:
     }
 
 
-def _export_head(head_name: str, head, classes: list[str], feature_count: int) -> dict[str, object]:
-    onnx_model = convert_sklearn(
-        head,
-        name=f"baseline-{head_name}",
-        initial_types=[("features", FloatTensorType([None, feature_count]))],
-        options={id(head): {"zipmap": False}},
-        target_opset=17,
-    )
-    output_names = [value.name for value in onnx_model.graph.output]
-    if len(output_names) < 2:
-        raise RuntimeError(f"unexpected ONNX outputs for {head_name}: {output_names}")
+def _binary_probability_nodes(logits_name: str) -> list[onnx.NodeProto]:
+    return [
+        helper.make_node("Sigmoid", [logits_name], ["positive_probability"]),
+        helper.make_node(
+            "Sub",
+            ["one", "positive_probability"],
+            ["negative_probability"],
+        ),
+        helper.make_node(
+            "Concat",
+            ["negative_probability", "positive_probability"],
+            ["probabilities"],
+            axis=1,
+        ),
+    ]
 
+
+def _multiclass_probability_nodes(logits_name: str) -> list[onnx.NodeProto]:
+    return [helper.make_node("Softmax", [logits_name], ["probabilities"], axis=1)]
+
+
+def _standard_logistic_graph(head_name: str, head, feature_count: int) -> onnx.ModelProto:
+    coefficients = np.asarray(head.coef_, dtype=np.float32)
+    intercept = np.asarray(head.intercept_, dtype=np.float32)
+    if coefficients.ndim != 2 or coefficients.shape[1] != feature_count:
+        raise RuntimeError(f"unexpected coefficient shape for {head_name}: {coefficients.shape}")
+
+    class_count = len(head.classes_)
+    expected_rows = 1 if class_count == 2 else class_count
+    if coefficients.shape[0] != expected_rows or intercept.shape != (expected_rows,):
+        raise RuntimeError(
+            f"unexpected logistic shape for {head_name}: "
+            f"coef={coefficients.shape} intercept={intercept.shape} classes={class_count}"
+        )
+
+    input_info = helper.make_tensor_value_info(
+        "features",
+        TensorProto.FLOAT,
+        [None, feature_count],
+    )
+    output_info = helper.make_tensor_value_info(
+        "probabilities",
+        TensorProto.FLOAT,
+        [None, class_count],
+    )
+    weights = numpy_helper.from_array(coefficients.T.copy(), name="weights")
+    bias = numpy_helper.from_array(intercept.copy(), name="bias")
+    nodes = [
+        helper.make_node("MatMul", ["features", "weights"], ["linear"]),
+        helper.make_node("Add", ["linear", "bias"], ["logits"]),
+    ]
+    initializers = [weights, bias]
+    if class_count == 2:
+        initializers.append(
+            numpy_helper.from_array(np.asarray([1.0], dtype=np.float32), name="one")
+        )
+        nodes.extend(_binary_probability_nodes("logits"))
+    else:
+        nodes.extend(_multiclass_probability_nodes("logits"))
+
+    graph = helper.make_graph(
+        nodes,
+        f"baseline-{head_name}",
+        [input_info],
+        [output_info],
+        initializer=initializers,
+    )
+    model = helper.make_model(
+        graph,
+        opset_imports=[helper.make_operatorsetid("", TARGET_OPSET)],
+        producer_name="enthusia-w12-standard-logistic-export",
+    )
+    onnx.checker.check_model(model)
+    return model
+
+
+def _export_head(
+    head_name: str,
+    head,
+    classes: list[str],
+    feature_count: int,
+) -> dict[str, object]:
+    onnx_model = _standard_logistic_graph(head_name, head, feature_count)
     path = EXPORT_DIR / f"baseline-tfidf-{head_name}.onnx"
-    path.write_bytes(onnx_model.SerializeToString())
+    onnx.save(onnx_model, path)
     class_ids = [int(value) for value in head.classes_.tolist()]
     class_names = [classes[class_id] for class_id in class_ids]
     return {
         "path": path.name,
         "sha256": sha256_of(path),
         "bytes": path.stat().st_size,
-        "input_name": onnx_model.graph.input[0].name,
-        "probabilities_output": output_names[-1],
+        "input_name": "features",
+        "probabilities_output": "probabilities",
         "classes": class_names,
         "class_ids": class_ids,
     }
@@ -111,9 +183,10 @@ def export_baseline_onnx() -> dict[str, object]:
             "w12-v1: [PROFILE=profile] + [A@+offsetms] speaker markers + [TARGET]"
         ),
         "vectorizer": vectorizer,
-        "target_opset": 17,
+        "target_opset": TARGET_OPSET,
+        "export_backend": "standard-onnx-logistic-regression",
         "sklearn_version": sklearn.__version__,
-        "skl2onnx_version": skl2onnx.__version__,
+        "onnx_version": onnx.__version__,
         "heads": outputs,
         "export_command": "python -m workers.w12.export_baseline_onnx",
         "exported_at_unix": time.time(),
