@@ -6,6 +6,7 @@ from pathlib import Path
 
 import torch
 from torch.utils.data import DataLoader
+
 from .baseline import load_baseline
 from .dataset import ModerationExample
 from .train_encoder import CANDIDATES, ModerationDataset, MultiTaskBert, load_candidate_tokenizer
