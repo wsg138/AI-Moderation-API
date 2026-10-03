@@ -13,6 +13,50 @@ from typing import Any
 _TOKEN_PATTERN = re.compile(r"(?u)\b\w\w+\b")
 
 
+def _read_object(path: Path) -> dict[str, Any]:
+    parsed = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(parsed, dict):
+        raise ValueError("vectorizer metadata must be an object")
+    return parsed
+
+
+def _terms(parsed: dict[str, Any]) -> tuple[str, ...]:
+    raw = parsed.get("terms")
+    if not isinstance(raw, list) or not raw:
+        raise ValueError("vectorizer terms are missing")
+    if not all(isinstance(term, str) and term for term in raw):
+        raise ValueError("vectorizer terms are invalid")
+    return tuple(raw)
+
+
+def _idf(parsed: dict[str, Any], size: int) -> tuple[float, ...]:
+    raw = parsed.get("idf")
+    if not isinstance(raw, list) or len(raw) != size:
+        raise ValueError("vectorizer idf is invalid")
+    if not all(isinstance(value, (int, float)) for value in raw):
+        raise ValueError("vectorizer idf values are invalid")
+    return tuple(float(value) for value in raw)
+
+
+def _ngram_range(parsed: dict[str, Any]) -> tuple[int, int]:
+    raw = parsed.get("ngram_range")
+    if not isinstance(raw, list) or len(raw) != 2:
+        raise ValueError("vectorizer ngram_range is invalid")
+    if not all(isinstance(value, int) for value in raw):
+        raise ValueError("vectorizer ngram_range is invalid")
+    minimum, maximum = raw
+    if minimum < 1 or maximum < minimum:
+        raise ValueError("vectorizer ngram_range is invalid")
+    return minimum, maximum
+
+
+def _require_l2(parsed: dict[str, Any]) -> str:
+    norm = parsed.get("norm")
+    if norm != "l2":
+        raise ValueError("only l2 TF-IDF normalization is supported")
+    return norm
+
+
 @dataclass(frozen=True, slots=True)
 class TfidfRuntimeVectorizer:
     """Reproduces the selected sklearn TfidfVectorizer without sklearn/pickle."""
@@ -28,41 +72,17 @@ class TfidfRuntimeVectorizer:
 
     @classmethod
     def from_file(cls, path: Path) -> TfidfRuntimeVectorizer:
-        parsed = json.loads(path.read_text(encoding="utf-8"))
-        if not isinstance(parsed, dict):
-            raise ValueError("vectorizer metadata must be an object")
-        raw_terms = parsed.get("terms")
-        raw_idf = parsed.get("idf")
-        raw_ngram = parsed.get("ngram_range")
-        if not isinstance(raw_terms, list) or not raw_terms:
-            raise ValueError("vectorizer terms are missing")
-        if not all(isinstance(term, str) and term for term in raw_terms):
-            raise ValueError("vectorizer terms are invalid")
-        if not isinstance(raw_idf, list) or len(raw_idf) != len(raw_terms):
-            raise ValueError("vectorizer idf is invalid")
-        if not all(isinstance(value, (int, float)) for value in raw_idf):
-            raise ValueError("vectorizer idf values are invalid")
-        if (
-            not isinstance(raw_ngram, list)
-            or len(raw_ngram) != 2
-            or not all(isinstance(value, int) for value in raw_ngram)
-        ):
-            raise ValueError("vectorizer ngram_range is invalid")
-        ngram_min, ngram_max = raw_ngram
-        if ngram_min < 1 or ngram_max < ngram_min:
-            raise ValueError("vectorizer ngram_range is invalid")
-        norm = parsed.get("norm")
-        if norm != "l2":
-            raise ValueError("only l2 TF-IDF normalization is supported")
-        terms = tuple(raw_terms)
+        parsed = _read_object(path)
+        terms = _terms(parsed)
+        ngram_min, ngram_max = _ngram_range(parsed)
         return cls(
             terms=terms,
-            idf=tuple(float(value) for value in raw_idf),
+            idf=_idf(parsed, len(terms)),
             lowercase=parsed.get("lowercase") is True,
             ngram_min=ngram_min,
             ngram_max=ngram_max,
             sublinear_tf=parsed.get("sublinear_tf") is True,
-            norm=norm,
+            norm=_require_l2(parsed),
             _vocabulary={term: index for index, term in enumerate(terms)},
         )
 
@@ -71,16 +91,22 @@ class TfidfRuntimeVectorizer:
         return len(self.terms)
 
     def transform(self, text: str, np: Any) -> Any:
-        normalized = text.lower() if self.lowercase else text
-        tokens = _TOKEN_PATTERN.findall(normalized)
+        tokens = _TOKEN_PATTERN.findall(text.lower() if self.lowercase else text)
+        counts = self._count_ngrams(tokens)
+        row = np.zeros((1, self.feature_count), dtype=np.float32)
+        squared_sum = self._fill_row(row, counts)
+        if squared_sum > 0.0:
+            row /= math.sqrt(squared_sum)
+        return row
+
+    def _count_ngrams(self, tokens: list[str]) -> Counter[str]:
         counts: Counter[str] = Counter()
         for size in range(self.ngram_min, self.ngram_max + 1):
-            if size > len(tokens):
-                break
-            for start in range(0, len(tokens) - size + 1):
+            for start in range(0, max(0, len(tokens) - size + 1)):
                 counts[" ".join(tokens[start : start + size])] += 1
+        return counts
 
-        row = np.zeros((1, self.feature_count), dtype=np.float32)
+    def _fill_row(self, row: Any, counts: Counter[str]) -> float:
         squared_sum = 0.0
         for term, count in counts.items():
             index = self._vocabulary.get(term)
@@ -90,7 +116,4 @@ class TfidfRuntimeVectorizer:
             value = tf * self.idf[index]
             row[0, index] = value
             squared_sum += value * value
-
-        if squared_sum > 0.0:
-            row /= math.sqrt(squared_sum)
-        return row
+        return squared_sum
