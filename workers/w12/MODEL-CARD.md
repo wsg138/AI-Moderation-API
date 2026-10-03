@@ -2,129 +2,195 @@
 
 ## Model identity
 
-- **Provisional validation-selected candidate:** baseline-tfidf
-- **Final W12 selection status:** incomplete until a second pretrained encoder finishes
+- **Selected candidate:** baseline-tfidf
 - **Model version:** w12-baseline-tfidf-v1
 - **Policy version:** v1
 - **Training date:** 2026-10-03
-- **Training hardware:** CPU-only (2 vCPU, 7GB RAM, no GPU)
+- **Selection data:** W11 train + validation only
+- **Production deployment:** not authorized / not performed
 
 ## Candidates compared
 
-| Candidate | Architecture | Val Acc | Val Macro F1 | License |
-|-----------|-------------|---------|--------------|---------|
-| **baseline-tfidf** | TF-IDF (1-2gram, 30k) + LogisticRegression | **91.9%** | **0.844** | BSD-3 |
-| bert-tiny | prajjwal1/bert-tiny (2L/128H, 4.4M) | 67.8% | 0.443 | MIT |
-| bert-mini | google/bert_uncased_L-4_H-512_A-8 (4L/512H, 11M) | incomplete | — | Apache-2.0 |
+| Candidate | Architecture | Immutable source | Val Acc | Val Macro F1 | Gameplay BLOCK FP | Threat BLOCK recall | License |
+|---|---|---|---:|---:|---:|---:|---|
+| **baseline-tfidf** | TF-IDF (1–2 gram, 30k cap) + LogisticRegression heads | repository training code / seed 42 | **91.9%** | **0.844** | **1.8%** | 92.7% | scikit-learn BSD-3 |
+| bert-tiny | 2L / 128H BERT | `prajjwal1/bert-tiny@6f75de8b60a9f8a2fdf7b69cbd86d9e64bcb3837` | 67.8% | 0.443 | 9.1% | **96.4%** | MIT |
+| bert-mini | 4L / 256H BERT | `google/bert_uncased_L-4_H-256_A-4@387825ce42dbb39b87911cdf8e383ee3b25184f8` | 85.7% | 0.753 | 5.5% | **96.4%** | Apache-2.0 |
 
-**Selection rationale:** Baseline decisively outperformed bert-tiny on validation-only
-aggregate metrics and critical slices. `bert-mini` was attempted but did not finish.
-Therefore the baseline is only the provisional validation-selected candidate; the W12
-acceptance requirement of two completed pretrained encoders has not yet been met.
+**Selection rationale:** the baseline is selected from validation-only evidence. It has the best
+label accuracy and macro F1 and, critically for normal Minecraft use, the lowest gameplay
+BLOCK false-positive rate. Both encoders improve real-world-threat recall by about 3.6
+percentage points, but at materially higher gameplay false-positive cost. No frozen test,
+frozen-adversarial, or owner-golden result was used to choose the final candidate.
 
 ## W11 split consumption
 
-- train: 3,269 (ONLY partition used for fitting)
-- validation: 385 (ONLY partition used for tuning/calibration/selection)
-- test: 410 (frozen, single run after freeze)
-- frozen_adversarial: 436 (frozen, single run after freeze)
-- owner_golden: 52 fixtures (21 fully-labeled for classifier; acceptance only)
+- train: 3,269 — fitting only;
+- validation: 385 — candidate selection, calibration measurement, and threshold rationale only;
+- test: 410 — frozen held-out, opened once;
+- frozen_adversarial: 436 — frozen held-out, opened once;
+- owner_golden: 52 fixtures, 21 fully labeled for classifier metrics — acceptance only.
 
-**Evaluation-protocol status:** Train/validation separation was preserved, but the
-test, frozen-adversarial, and owner-golden sets were opened before the mandatory
-second encoder comparison finished. Those observed held-outs must not be used for
-tuning. If candidate, preprocessing, thresholds, or configuration changes, a new
-versioned unseen acceptance set is required for an unbiased final acceptance claim.
+The mandatory second encoder comparison was completed after the held-outs had already been
+observed. The selected candidate, preprocessing, argmax/0.5 behavior, and model parameters
+did **not** change after that observation. Final selection was made from train/validation
+evidence only. The already-observed held-outs must not be used for any later tuning; if the
+candidate, preprocessing, thresholds, or model configuration changes, a new/versioned unseen
+acceptance set is required.
 
-## Validation results (n=385, tuning partition)
+## Selected baseline validation results
 
-- Label accuracy: 91.9%, macro F1: 0.844, weighted F1: 0.918
-- Block precision: 94.3%, Block recall: 92.7%
-- Calibration: ECE=0.168, Brier=0.078 (uncalibrated; fail-open runtime handles uncertainty)
+Validation n=385:
 
-### Critical policy slices (validation)
+- Label accuracy: 91.9%
+- Label macro F1: 0.844
+- Label weighted F1: 0.921
+- Runtime BLOCK precision: 94.3%
+- Runtime BLOCK recall: 92.7%
+- Calibration: ECE 0.168, Brier 0.078
+- Threshold behavior: unchanged argmax / source-action mapping; no post-held-out retuning
 
-| Slice | n | Block FP rate | Block recall |
-|-------|---|---------------|--------------|
-| minecraft_gameplay | 55 | **1.8%** | — |
-| real_world_threat | 55 | — | **92.7%** |
-| kys_self_harm_instruction | 20 | — | **95.0%** |
-| self_harm_disclosure | 20 | 0.0% | — |
-| slur | 25 | — | 92.0% |
-| sexual_minor | 27 | — | **100%** |
+### Critical validation slices
 
-## Final held-out evaluation (single run after freeze)
+| Slice | n | BLOCK FP rate | BLOCK recall |
+|---|---:|---:|---:|
+| Minecraft gameplay | 55 | **1.8%** | — |
+| Real-world threat | 55 | — | **92.7%** |
+| `kys` / self-harm instruction | 20 | — | **95.0%** |
+| Self-harm disclosure | 20 | 0.0% | — |
+| Slur/hate slice | 25 | — | 92.0% |
+| Sexual/minor slice | 27 | — | **100%** |
 
-### Test (n=410, frozen)
+BERT Mini's validation comparison is intentionally recorded because it is the mandatory
+second encoder: 85.7% label accuracy, 0.753 macro F1, 92.7% BLOCK precision/recall,
+5.45% gameplay BLOCK FP, 96.36% real-world-threat BLOCK recall, ECE 0.035, Brier 0.047.
+
+## Frozen held-out evidence
+
+These are the original one-time results for the unchanged selected baseline.
+
+### Test (n=410)
+
 - Label macro F1: 0.828
-- Block recall: 90.0%, Block precision: (see report)
-- Gameplay FP rate: **0.0%**
+- BLOCK recall: 90.0%
+- Minecraft gameplay BLOCK FP: 0.0%
 
 ### Frozen adversarial (n=436)
+
 - Label macro F1: 0.790
-- Block recall: 93.5%
-- Gameplay FP rate: 9.5% (adversarial examples are designed to be hard)
+- BLOCK recall: 93.5%
+- Minecraft gameplay BLOCK FP: 9.5%
 
-### Owner golden (n=21 fully-labeled)
-- Label accuracy: 76.2%, macro F1: 0.271
-- Block recall: 75.0%
-- Note: Small sample; macro F1 volatile. BLACKMAIL failed (zero training examples).
-  31 partial/policy fixtures excluded from classifier metrics.
+### Owner golden (21 fully labeled fixtures)
 
-## ONNX export
+- Label accuracy: 76.2%
+- Label macro F1: 0.271
+- BLOCK recall: 75.0%
+- BLACKMAIL remains unsupported because the training set contains zero BLACKMAIL examples.
 
-- Selected baseline format: six per-head string-input ONNX models plus one checksum manifest.
-- Export now forces the ONNX `StringNormalizer` locale to portable `C` instead of relying
-  on the failing backend-default locale seen on the training host.
-- The runtime adapter consumes this exact six-head manifest format; it no longer assumes a
-  BERT tokenizer or a single encoder artifact.
-- **Acceptance evidence still outstanding:** regenerate the selected bundle, record its real
-  SHA-256/size manifest, validate sklearn↔ONNX parity, compare quantized/non-quantized
-  artifacts, and benchmark actual ONNX Runtime inference.
-- There is currently no approved durable model-binary publication destination; do not invent one.
+The held-out/golden results are not a license to tune this version. Any semantic model,
+preprocessing, or threshold change requires fresh/versioned unseen acceptance evidence.
 
-## CPU benchmark status
+## Selected runtime artifact
 
-The existing `benchmark-baseline.json` measurements were taken through the sklearn model,
-not the selected ONNX bundle. They are useful diagnostics only and are **not** W12 ONNX
-acceptance evidence. Actual selected-bundle ONNX load/RSS/p50/p95/p99/throughput and
-quantized-vs-nonquantized measurements remain required before acceptance.
+The production adapter uses a safe JSON representation of the frozen TF-IDF transform plus
+six numeric-input ONNX LogisticRegression heads. It does **not** load pickle in production,
+does not need a Hugging Face tokenizer, and performs no network download at startup.
+
+Evidence workflow: `w12-evidence`, run `37145995076`, head
+`546513f8d89de931c92ff1e6f4f195e84c519225`.
+
+- Metadata SHA-256: `b3ac4e9869f0857fbc7cb30e52b5340f40c5ff16f2eb234ca4dbe839ae21d5be`
+- TF-IDF vectorizer: 7,157 features, 219,161 bytes,
+  SHA-256 `1afabd1ac09b70826c1c322f8bbe36c279eff1212ea3e5cd73c6272fd9ed1db1`
+- Six ONNX heads + vectorizer total: 1,295,438 bytes
+- sklearn ↔ production ONNX parity on all 385 validation examples:
+  0 prediction mismatches; maximum absolute probability delta
+  `1.7372870320109257e-7` at tolerance `1e-4`
+- Runtime health loaded all six heads and the exact vectorizer checksum successfully.
+
+### CPU benchmark
+
+GitHub hosted Ubuntu 24.04, Python 3.12.14, 4 vCPU x86-64, ONNX Runtime 1.30.0:
+
+| Metric | Result |
+|---|---:|
+| Cold load | 19.3 ms |
+| Attributable RSS | 0.875 MB |
+| p50 | 0.512 ms |
+| p95 | 0.559 ms |
+| p99 | 0.890 ms |
+| Mean | 0.521 ms |
+| Batch-1 throughput | 1,963 req/s |
+
+This is comfortably within the 2 GB memory and bounded-latency deployment envelope. The
+benchmark host has four vCPUs rather than the target host's nominal two; latency therefore
+must not be treated as an exact production prediction, but the measured margin is large.
+
+### Quantization
+
+Dynamic QInt8 was attempted with ONNX Runtime 1.30.0. It is not supported for this exported
+`ai.onnx.ml` LinearClassifier graph; the quantizer returned
+`ValueError: Failed to find proper ai.onnx domain` before producing an int8 artifact.
+
+The launch packet requires dynamic/int8 comparison where supported. W12 therefore retains
+the measured FP32 bundle rather than changing the selected graph/model after held-out
+observation solely to force an int8 artifact.
+
+## Artifact storage
+
+Review artifacts are stored in GitHub Actions for 30 days:
+
+- baseline ONNX evidence artifact ID `11281729885`,
+  ZIP SHA-256 `bc599a3c320e8cb87533066b15d6a06d3ef55a80867a6397f909b1068ba0a448`;
+- BERT Mini validation artifact ID `11282161133`,
+  ZIP SHA-256 `ca3866600f8d7b95de1b5088dd7eac78cb8b13b322deadf2bf4c79a0289bffba`.
+
+No approved durable production model-binary destination has been designated. The repository
+contains reproducible training/export code plus the checksum/evidence summary; production
+rollout must define artifact distribution separately.
+
+## Runtime integration
+
+The service loads the W12 bundle only when both of these are configured:
+
+- `AI_MOD_ONNX_METADATA_PATH`
+- `AI_MOD_ONNX_METADATA_SHA256`
+
+Otherwise it remains in the existing stub/not-ready fail-open mode. Model load/checksum
+failure is not-ready; inference timeout/error is caught by the existing moderation runtime
+and fails open. Production inference dependencies are pinned separately from the training
+stack.
 
 ## Known limitations
 
 1. Synthetic training data only; no production chat used.
-2. Near-duplicate detection in W11 was lexical, not semantic.
-3. **BLACKMAIL has zero training examples** — will not be detected.
-4. DOXXING (10) and GROOMING (20) severely underrepresented.
-5. Containment duration sparse; adapter returns None, preserves review.
-6. Structured memory not in training; adapter is conservative.
-7. Calibration poor (ECE 0.168) — model is overconfident. Fail-open runtime mitigates.
-8. Adversarial gameplay FP 9.5% — adversarial examples are hard by design.
-9. The mandatory second pretrained encoder comparison is incomplete.
-10. Held-out/golden results have already been observed; they must not influence retuning.
-11. Actual selected-bundle ONNX parity/quantization/benchmark evidence is still pending.
-12. AI does not own bans or final punishments.
+2. W11 near-duplicate detection was lexical, not embedding-based.
+3. **BLACKMAIL has zero training examples** and is not learned by this classifier.
+4. DOXXING and GROOMING are underrepresented.
+5. Containment duration is sparse; the adapter returns `None` rather than inventing policy.
+6. Structured memory is not represented as supervised model input.
+7. Baseline calibration is imperfect (ECE 0.168).
+8. Frozen adversarial gameplay BLOCK FP is 9.5%.
+9. The original held-outs are now permanently off-limits for tuning this model version.
+10. Dynamic int8 quantization is unsupported by the selected exported graph.
+11. Review artifact retention is temporary; production binary distribution is unresolved.
+12. AI does not own bans or final punishment decisions.
 
 ## Reproduction
 
 ```bash
-# Train baseline
+# Baseline fitting
 python -m workers.w12.baseline
 
-# Evaluate on validation
-python -c "from workers.w12.dataset import load_partition; ..."
+# Second encoder training (train only)
+python -m workers.w12.train_encoder --candidate bert-mini --seed 42 --epochs 5 --batch-size 16 --lr 3e-5
 
-# Freeze and run held-out (ONCE)
-python -m workers.w12.freeze_eval --candidate baseline --seed 42 \
-  --freeze-record workers/w12/reports/freeze-record.json
+# Second encoder validation (validation only)
+python -m workers.w12.run_validation_candidate --candidate bert-mini --seed 42
 
-# Export to ONNX
-python -m workers.w12.export_baseline_onnx
+# Selected baseline ONNX export + validation-only parity/benchmark evidence
+python -m workers.w12.run_baseline_onnx_evidence
 ```
 
-## Files
-
-- Training code: `workers/w12/`
-- Reports: `workers/w12/reports/`
-- Runtime adapter: `service/moderation_api/onnx_classifier.py`
-- Tests: `tests/test_w12.py`
+See `workers/w12/reports/evidence-summary.json` for compact machine-readable evidence.
