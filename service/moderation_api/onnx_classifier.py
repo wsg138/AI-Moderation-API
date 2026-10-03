@@ -33,25 +33,16 @@ _METADATA_SCHEMA_VERSION = 1
 
 
 def serialize_input(item: ClassificationInput) -> str:
-    """Serialize runtime context with the same structural contract as W12 training.
-
-    Synthetic training examples use abstract speaker markers (A, B, ...), relative
-    millisecond offsets, one channel profile marker, and one TARGET marker. Runtime
-    identities are therefore mapped to first-seen abstract speaker markers instead
-    of leaking player IDs into model input.
-    """
+    """Serialize runtime context with the same structural contract as W12 training."""
     messages = [*list(item.context)[-20:], item.current]
     parts = [f"[PROFILE={item.current.channel_profile.value}]"]
-    if not messages:
-        return "\n".join(parts)
-
     base_time = messages[0].occurred_at
     speakers: dict[str, str] = {}
     for message in messages:
-        speaker = speakers.get(message.sender_id)
-        if speaker is None:
-            speaker = _speaker_marker(len(speakers))
-            speakers[message.sender_id] = speaker
+        speaker = speakers.setdefault(
+            message.sender_id,
+            _speaker_marker(len(speakers)),
+        )
         offset_ms = max(0, round((message.occurred_at - base_time).total_seconds() * 1000))
         target = " [TARGET]" if message is item.current else ""
         parts.append(f"[{speaker}@+{offset_ms}ms]{target} {message.text}")
@@ -76,6 +67,38 @@ def _bounded(value: float) -> float:
     return max(0.0, min(1.0, value))
 
 
+def _verified_metadata_sha(path: Path, expected_sha256: str) -> str:
+    if not path.is_file():
+        raise ValueError(f"model metadata missing: {path}")
+    actual = _sha256_of(path)
+    if actual.lower() != expected_sha256.lower():
+        raise ValueError("model metadata checksum mismatch")
+    return actual
+
+
+def _read_metadata(path: Path) -> dict[str, Any]:
+    parsed = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(parsed, dict):
+        raise ValueError("model metadata must be an object")
+    return parsed
+
+
+def _required_text(mapping: dict[str, Any], key: str, context: str) -> str:
+    value = mapping.get(key)
+    if not isinstance(value, str) or not value:
+        raise ValueError(f"invalid {key} for {context}")
+    return value
+
+
+def _parse_classes(raw_head: dict[str, Any], head_name: str) -> tuple[str, ...]:
+    raw_classes = raw_head.get("classes")
+    if not isinstance(raw_classes, list) or not raw_classes:
+        raise ValueError(f"missing class metadata for head {head_name}")
+    if not all(isinstance(value, str) and value for value in raw_classes):
+        raise ValueError(f"invalid class metadata for head {head_name}")
+    return tuple(raw_classes)
+
+
 @dataclass(frozen=True, slots=True)
 class OnnxClassifierConfig:
     metadata_path: Path
@@ -98,11 +121,90 @@ class OnnxClassifierConfig:
 
 
 @dataclass(frozen=True, slots=True)
+class _HeadSpec:
+    relative_path: str
+    expected_sha256: str
+    input_name: str
+    probabilities_output: str
+    classes: tuple[str, ...]
+
+
+@dataclass(frozen=True, slots=True)
 class _LoadedHead:
     session: Any
     input_name: str
     probabilities_output: str
     classes: tuple[str, ...]
+
+
+def _parse_manifest(parsed: dict[str, Any]) -> tuple[str, dict[str, Any]]:
+    schema_version = parsed.get("schema_version")
+    if schema_version != _METADATA_SCHEMA_VERSION:
+        raise ValueError(f"unsupported model metadata schema: {schema_version}")
+    if parsed.get("candidate") != "baseline-tfidf":
+        raise ValueError("model metadata candidate is not baseline-tfidf")
+    model_version = _required_text(parsed, "model_version", "model metadata")
+    raw_heads = parsed.get("heads")
+    if not isinstance(raw_heads, dict):
+        raise ValueError("model metadata missing heads")
+    return model_version, raw_heads
+
+
+def _head_spec(raw_heads: dict[str, Any], head_name: str) -> _HeadSpec:
+    raw_head = raw_heads.get(head_name)
+    if not isinstance(raw_head, dict):
+        raise ValueError(f"missing metadata for head {head_name}")
+    return _HeadSpec(
+        relative_path=_required_text(raw_head, "path", f"head {head_name}"),
+        expected_sha256=_required_text(raw_head, "sha256", f"head {head_name}"),
+        input_name=_required_text(raw_head, "input_name", f"head {head_name}"),
+        probabilities_output=_required_text(
+            raw_head,
+            "probabilities_output",
+            f"head {head_name}",
+        ),
+        classes=_parse_classes(raw_head, head_name),
+    )
+
+
+def _verified_model_path(root: Path, head_name: str, spec: _HeadSpec) -> Path:
+    model_path = (root / spec.relative_path).resolve()
+    if not model_path.is_relative_to(root):
+        raise ValueError(f"artifact path escapes metadata directory for {head_name}")
+    if not model_path.is_file():
+        raise ValueError(f"model artifact missing for {head_name}: {model_path}")
+    if _sha256_of(model_path).lower() != spec.expected_sha256.lower():
+        raise ValueError(f"model artifact checksum mismatch for {head_name}")
+    return model_path
+
+
+def _load_head(root: Path, head_name: str, raw_heads: dict[str, Any], ort: Any) -> _LoadedHead:
+    spec = _head_spec(raw_heads, head_name)
+    model_path = _verified_model_path(root, head_name, spec)
+    session = ort.InferenceSession(
+        str(model_path),
+        providers=["CPUExecutionProvider"],
+    )
+    session_inputs = {item.name for item in session.get_inputs()}
+    session_outputs = {item.name for item in session.get_outputs()}
+    if spec.input_name not in session_inputs:
+        raise ValueError(f"input {spec.input_name} absent from {head_name} artifact")
+    if spec.probabilities_output not in session_outputs:
+        raise ValueError(
+            f"output {spec.probabilities_output} absent from {head_name} artifact"
+        )
+    return _LoadedHead(
+        session=session,
+        input_name=spec.input_name,
+        probabilities_output=spec.probabilities_output,
+        classes=spec.classes,
+    )
+
+
+def _import_inference_modules() -> tuple[Any, Any]:
+    np: Any = importlib.import_module("numpy")
+    ort: Any = importlib.import_module("onnxruntime")
+    return np, ort
 
 
 class OnnxClassifier:
@@ -119,110 +221,28 @@ class OnnxClassifier:
         self._load()
 
     def _load(self) -> None:
-        metadata_path = self._config.metadata_path
-        if not metadata_path.is_file():
-            self._error = f"model metadata missing: {metadata_path}"
-            return
-
-        actual_metadata_sha = _sha256_of(metadata_path)
-        if actual_metadata_sha.lower() != self._config.expected_metadata_sha256:
-            self._error = "model metadata checksum mismatch"
-            return
-
         try:
-            parsed = json.loads(metadata_path.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError) as exc:
-            self._error = f"model metadata invalid: {exc}"
-            return
-        if not isinstance(parsed, dict):
-            self._error = "model metadata must be an object"
-            return
-
-        schema_version = parsed.get("schema_version")
-        if schema_version != _METADATA_SCHEMA_VERSION:
-            self._error = f"unsupported model metadata schema: {schema_version}"
-            return
-        if parsed.get("candidate") != "baseline-tfidf":
-            self._error = "model metadata candidate is not baseline-tfidf"
-            return
-
-        model_version = parsed.get("model_version")
-        raw_heads = parsed.get("heads")
-        if not isinstance(model_version, str) or not model_version:
-            self._error = "model metadata missing model_version"
-            return
-        if not isinstance(raw_heads, dict):
-            self._error = "model metadata missing heads"
-            return
-
-        try:
-            np: Any = importlib.import_module("numpy")
-            ort: Any = importlib.import_module("onnxruntime")
-        except ImportError as exc:
-            self._error = f"missing inference dependency: {exc}"
-            return
-
-        root = metadata_path.parent.resolve()
-        loaded: dict[str, _LoadedHead] = {}
-        try:
-            for head_name in HEAD_NAMES:
-                raw_head = raw_heads.get(head_name)
-                if not isinstance(raw_head, dict):
-                    raise ValueError(f"missing metadata for head {head_name}")
-
-                relative_path = raw_head.get("path")
-                expected_sha = raw_head.get("sha256")
-                input_name = raw_head.get("input_name")
-                probabilities_output = raw_head.get("probabilities_output")
-                raw_classes = raw_head.get("classes")
-                if not isinstance(relative_path, str) or not relative_path:
-                    raise ValueError(f"invalid artifact path for head {head_name}")
-                if not isinstance(expected_sha, str) or not expected_sha:
-                    raise ValueError(f"invalid artifact checksum for head {head_name}")
-                if not isinstance(input_name, str) or not input_name:
-                    raise ValueError(f"invalid input name for head {head_name}")
-                if not isinstance(probabilities_output, str) or not probabilities_output:
-                    raise ValueError(f"invalid probability output for head {head_name}")
-                if not isinstance(raw_classes, list) or not raw_classes:
-                    raise ValueError(f"missing class metadata for head {head_name}")
-                if not all(isinstance(value, str) and value for value in raw_classes):
-                    raise ValueError(f"invalid class metadata for head {head_name}")
-
-                model_path = (root / relative_path).resolve()
-                if not model_path.is_relative_to(root):
-                    raise ValueError(f"artifact path escapes metadata directory for {head_name}")
-                if not model_path.is_file():
-                    raise ValueError(f"model artifact missing for {head_name}: {model_path}")
-                if _sha256_of(model_path).lower() != expected_sha.lower():
-                    raise ValueError(f"model artifact checksum mismatch for {head_name}")
-
-                session = ort.InferenceSession(
-                    str(model_path),
-                    providers=["CPUExecutionProvider"],
-                )
-                session_inputs = {item.name for item in session.get_inputs()}
-                session_outputs = {item.name for item in session.get_outputs()}
-                if input_name not in session_inputs:
-                    raise ValueError(f"input {input_name} absent from {head_name} artifact")
-                if probabilities_output not in session_outputs:
-                    raise ValueError(
-                        f"output {probabilities_output} absent from {head_name} artifact"
-                    )
-                loaded[head_name] = _LoadedHead(
-                    session=session,
-                    input_name=input_name,
-                    probabilities_output=probabilities_output,
-                    classes=tuple(raw_classes),
-                )
-        except Exception as exc:  # noqa: BLE001 - fail closed at load, runtime then fails open
+            metadata_path = self._config.metadata_path
+            actual_sha = _verified_metadata_sha(
+                metadata_path,
+                self._config.expected_metadata_sha256,
+            )
+            model_version, raw_heads = _parse_manifest(_read_metadata(metadata_path))
+            np, ort = _import_inference_modules()
+            root = metadata_path.parent.resolve()
+            loaded = {
+                head_name: _load_head(root, head_name, raw_heads, ort)
+                for head_name in HEAD_NAMES
+            }
+        except Exception as exc:  # noqa: BLE001 - invalid model means fail-open not-ready
             self._error = f"model load failed: {exc}"
             self._heads.clear()
             return
 
         self._np = np
         self._heads = loaded
-        self._metadata_sha256 = actual_metadata_sha
-        self._model_version = f"{model_version}+{actual_metadata_sha[:12]}"
+        self._metadata_sha256 = actual_sha
+        self._model_version = f"{model_version}+{actual_sha[:12]}"
         self._ready = True
 
     def health(self) -> dict[str, object]:
@@ -247,45 +267,62 @@ class OnnxClassifier:
         except TimeoutError as exc:
             raise TimeoutError("onnx inference exceeded timeout") from exc
 
+    def _infer_head(
+        self,
+        head_name: str,
+        input_tensor: Any,
+    ) -> tuple[str, float, dict[str, float]]:
+        np = self._np
+        if np is None:
+            raise RuntimeError("onnx classifier not ready")
+        loaded = self._heads[head_name]
+        outputs = loaded.session.run(
+            [loaded.probabilities_output],
+            {loaded.input_name: input_tensor},
+        )
+        probabilities = np.asarray(outputs[0], dtype=float).reshape(-1)
+        if len(probabilities) != len(loaded.classes):
+            raise ValueError(
+                f"{head_name} probability count {len(probabilities)} "
+                f"does not match class count {len(loaded.classes)}"
+            )
+        best_index = int(np.argmax(probabilities))
+        scores = {
+            f"{head_name}:{class_name}": _bounded(float(probabilities[index]))
+            for index, class_name in enumerate(loaded.classes)
+        }
+        return (
+            loaded.classes[best_index],
+            _bounded(float(probabilities[best_index])),
+            scores,
+        )
+
     def _infer(self, text: str) -> ClassificationResult:
         np = self._np
         if np is None or self._model_version is None:
             raise RuntimeError("onnx classifier not ready")
-
-        predicted: dict[str, str] = {}
-        scores: dict[str, float] = {}
-        selected_scores: dict[str, float] = {}
         input_tensor = np.asarray([[text]], dtype=object)
-
-        for head_name in HEAD_NAMES:
-            loaded = self._heads[head_name]
-            outputs = loaded.session.run(
-                [loaded.probabilities_output],
-                {loaded.input_name: input_tensor},
-            )
-            probabilities = np.asarray(outputs[0], dtype=float).reshape(-1)
-            if len(probabilities) != len(loaded.classes):
-                raise ValueError(
-                    f"{head_name} probability count {len(probabilities)} "
-                    f"does not match class count {len(loaded.classes)}"
-                )
-            best_index = int(np.argmax(probabilities))
-            class_name = loaded.classes[best_index]
-            predicted[head_name] = class_name
-            selected_scores[head_name] = _bounded(float(probabilities[best_index]))
-            for class_index, value in enumerate(probabilities):
-                scores[f"{head_name}:{loaded.classes[class_index]}"] = _bounded(float(value))
-
-        source_action = predicted["action"]
+        predictions = {
+            name: self._infer_head(name, input_tensor)
+            for name in HEAD_NAMES
+        }
+        scores = {
+            key: value
+            for _, _, head_scores in predictions.values()
+            for key, value in head_scores.items()
+        }
+        predicted = {name: result[0] for name, result in predictions.items()}
+        confidence = predictions["label"][1]
         message_action = (
-            MessageAction.BLOCK if source_action == "BLOCK" else MessageAction.ALLOW
+            MessageAction.BLOCK
+            if predicted["action"] == "BLOCK"
+            else MessageAction.ALLOW
         )
         strike = (
             StrikeRecommendation.STRIKE
             if predicted["strike"].lower() == "true"
             else StrikeRecommendation.NONE
         )
-
         return ClassificationResult(
             message_action=message_action,
             semantic_label=Label(predicted["label"]),
@@ -295,7 +332,7 @@ class OnnxClassifier:
             containment_duration_seconds=None,
             support_flow=SupportFlow(predicted["support_flow"]),
             scores=scores,
-            confidence=selected_scores["label"],
+            confidence=confidence,
             rule_hits=(),
             reason_codes=("onnx_local_classifier",),
             related_message_ids=(),
