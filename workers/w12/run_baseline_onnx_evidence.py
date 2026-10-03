@@ -23,7 +23,6 @@ import onnxruntime as ort
 import psutil
 import skl2onnx
 import sklearn
-
 from moderation_api.models import (
     ChannelProfile,
     ClassificationInput,
