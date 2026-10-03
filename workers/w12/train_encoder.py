@@ -6,7 +6,7 @@ model selection only.
 
 Candidates:
   - bert-tiny : prajjwal1/bert-tiny (MIT), 2 layers / 128 hidden
-  - bert-mini : google/bert_uncased_L-4_H-512_A-8 (Apache-2.0), 4 layers / 512 hidden
+  - bert-mini : google/bert_uncased_L-4_H-256_A-4 (Apache-2.0), 4 layers / 256 hidden
 """
 
 from __future__ import annotations
@@ -43,11 +43,13 @@ CANDIDATES = {
     "bert-tiny": {
         "local_dir": MODELS_DIR / "bert-tiny",
         "hf_id": "prajjwal1/bert-tiny",
+        "revision": "6f75de8b60a9f8a2fdf7b69cbd86d9e64bcb3837",
         "license": "MIT",
     },
     "bert-mini": {
         "local_dir": MODELS_DIR / "bert-mini",
-        "hf_id": "google/bert_uncased_L-4_H-512_A-8",
+        "hf_id": "google/bert_uncased_L-4_H-256_A-4",
+        "revision": "387825ce42dbb39b87911cdf8e383ee3b25184f8",
         "license": "Apache-2.0",
     },
 }
@@ -93,11 +95,17 @@ class ModerationDataset(Dataset):
 
 
 class MultiTaskBert(nn.Module):
-    def __init__(self, encoder_name: str, local_dir: Path | None = None):
+    def __init__(
+        self,
+        encoder_name: str,
+        local_dir: Path | None = None,
+        revision: str | None = None,
+    ):
         super().__init__()
-        # Load from local dir to avoid network at training time
-        src = str(local_dir) if local_dir and (local_dir / "config.json").exists() else encoder_name
-        self.encoder = AutoModel.from_pretrained(src, local_files_only=local_dir is not None)
+        if local_dir and (local_dir / "config.json").exists():
+            self.encoder = AutoModel.from_pretrained(str(local_dir), local_files_only=True)
+        else:
+            self.encoder = AutoModel.from_pretrained(encoder_name, revision=revision)
         hidden = self.encoder.config.hidden_size
         self.dropout = nn.Dropout(0.1)
         self.heads = nn.ModuleDict({name: nn.Linear(hidden, n) for name, n in HEADS.items()})
@@ -131,6 +139,18 @@ def evaluate(model: nn.Module, loader: DataLoader, device: torch.device) -> dict
     }
 
 
+def load_candidate_tokenizer(candidate: str) -> BertTokenizer:
+    cfg = CANDIDATES[candidate]
+    local_dir = cfg["local_dir"]
+    if (local_dir / "vocab.txt").exists():
+        return BertTokenizer(str(local_dir / "vocab.txt"), do_lower_case=True)
+    return BertTokenizer.from_pretrained(
+        cfg["hf_id"],
+        revision=cfg["revision"],
+        do_lower_case=True,
+    )
+
+
 def train_candidate(
     candidate: str,
     seed: int = 42,
@@ -146,9 +166,7 @@ def train_candidate(
         cfg["local_dir"] if (cfg["local_dir"] / "config.json").exists() else None
     )
 
-    tokenizer = BertTokenizer(
-        str((local_dir or cfg["local_dir"]) / "vocab.txt"), do_lower_case=True
-    )
+    tokenizer = load_candidate_tokenizer(candidate)
     train_ex = load_partition("train")
     val_ex = load_partition("validation")
     print(f"[{candidate}] train={len(train_ex)} val={len(val_ex)}", flush=True)
@@ -163,7 +181,7 @@ def train_candidate(
         batch_size=batch_size,
     )
 
-    model = MultiTaskBert(cfg["hf_id"], local_dir).to(device)
+    model = MultiTaskBert(cfg["hf_id"], local_dir, cfg["revision"]).to(device)
     optimizer = torch.optim.AdamW(model.parameters(), lr=lr)
     criterion = nn.CrossEntropyLoss()
 
@@ -205,6 +223,9 @@ def train_candidate(
         "candidate": candidate,
         "seed": seed,
         "best_val_label_acc": best_val,
+        "hf_id": cfg["hf_id"],
+        "revision": cfg["revision"],
+        "license": cfg["license"],
         "checkpoint": str(ckpt_path),
         "history": history,
     }
