@@ -131,6 +131,9 @@ def _standard_logistic_graph(head_name: str, head, feature_count: int) -> onnx.M
         opset_imports=[helper.make_operatorsetid("", TARGET_OPSET)],
         producer_name="enthusia-w12-standard-logistic-export",
     )
+    # ONNX 1.23 emits IR v14, while the measured ORT 1.30 runtime supports through v13.
+    # IR v10 is sufficient for the standard ops used by this frozen logistic graph.
+    model.ir_version = 10
     onnx.checker.check_model(model)
     return model
 
