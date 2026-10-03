@@ -1,0 +1,105 @@
+{
+  "evidence_source": {
+    "workflow": "w12-evidence",
+    "run_id": 37145995076,
+    "head_sha": "546513f8d89de931c92ff1e6f4f195e84c519225",
+    "scope": "train + validation only; no frozen test, frozen adversarial, or owner golden data opened",
+    "baseline_artifact": {
+      "artifact_id": 11281729885,
+      "zip_sha256": "bc599a3c320e8cb87533066b15d6a06d3ef55a80867a6397f909b1068ba0a448",
+      "expires_at": "2026-11-02T18:57:11Z"
+    },
+    "bert_mini_artifact": {
+      "artifact_id": 11282161133,
+      "zip_sha256": "ca3866600f8d7b95de1b5088dd7eac78cb8b13b322deadf2bf4c79a0289bffba",
+      "expires_at": "2026-11-02T19:04:06Z"
+    }
+  },
+  "candidate_comparison": {
+    "selected": "baseline-tfidf",
+    "selection_basis": "validation only",
+    "baseline_tfidf": {
+      "label_accuracy": 0.9194805194805195,
+      "label_macro_f1": 0.844142072225929,
+      "block_precision": 0.9431818181818182,
+      "block_recall": 0.9273743016759777,
+      "minecraft_gameplay_block_false_positive_rate": 0.01818181818181818,
+      "real_world_threat_block_recall": 0.9272727272727272
+    },
+    "bert_tiny": {
+      "hf_id": "prajjwal1/bert-tiny",
+      "revision": "6f75de8b60a9f8a2fdf7b69cbd86d9e64bcb3837",
+      "license": "MIT",
+      "label_accuracy": 0.6779220779220779,
+      "label_macro_f1": 0.44332455705004725,
+      "minecraft_gameplay_block_false_positive_rate": 0.09090909090909091,
+      "real_world_threat_block_recall": 0.9636363636363636
+    },
+    "bert_mini": {
+      "hf_id": "google/bert_uncased_L-4_H-256_A-4",
+      "revision": "387825ce42dbb39b87911cdf8e383ee3b25184f8",
+      "license": "Apache-2.0",
+      "label_accuracy": 0.8571428571428571,
+      "label_macro_f1": 0.7531715391772652,
+      "block_precision": 0.9273743016759777,
+      "block_recall": 0.9273743016759777,
+      "minecraft_gameplay_block_false_positive_rate": 0.05454545454545454,
+      "real_world_threat_block_recall": 0.9636363636363636,
+      "calibration_ece": 0.03498696932424002,
+      "calibration_brier": 0.04692347130211027
+    },
+    "rationale": "baseline-tfidf has the strongest validation label accuracy/macro-F1 and the lowest Minecraft gameplay BLOCK false-positive rate. bert-mini and bert-tiny have higher real-world-threat recall, but both trade that for worse gameplay false positives; no held-out result was used to make this final selection."
+  },
+  "selected_onnx_bundle": {
+    "model_version": "w12-baseline-tfidf-v1",
+    "metadata_sha256": "b3ac4e9869f0857fbc7cb30e52b5340f40c5ff16f2eb234ca4dbe839ae21d5be",
+    "vectorizer": {
+      "sha256": "1afabd1ac09b70826c1c322f8bbe36c279eff1212ea3e5cd73c6272fd9ed1db1",
+      "bytes": 219161,
+      "feature_count": 7157
+    },
+    "heads": {
+      "label": {"sha256": "33a8e61819deb8be1f2846dc074746e5d430a54db2b026103ed022da58f630f7", "bytes": 608910},
+      "action": {"sha256": "53d8cf56a156647172b4d426cfa63c760bc8d2126dd59c0c575b6556f3ad8835", "bytes": 107823},
+      "review_priority": {"sha256": "591bcdc6658e4f7d3ac8ff2e0aace44126c8e162b4af1ef6b8af993b95da94af", "bytes": 107832},
+      "strike": {"sha256": "795d66df5aa7b811043088ec9b3ed94327ae008424a198f0af340833e8f09917", "bytes": 71939},
+      "containment": {"sha256": "b9fab8b022f1781c9b8c63891644075986062aaa498aa523173e270903114afd", "bytes": 71944},
+      "support_flow": {"sha256": "958ad9fe4511c335b0dee8db72963149518b5ae7690df627158c8b00797f5dbf", "bytes": 107829}
+    },
+    "total_runtime_artifact_bytes": 1295438,
+    "parity": {
+      "validation_examples": 385,
+      "total_prediction_mismatches": 0,
+      "max_abs_probability_delta": 1.7372870320109257e-7,
+      "tolerance": 0.0001
+    },
+    "benchmark": {
+      "environment": "GitHub hosted Ubuntu 24.04, Python 3.12.14, 4 vCPU x86_64",
+      "cold_load_seconds": 0.01925299999999197,
+      "rss_attributable_mb": 0.875,
+      "latency_ms": {
+        "p50": 0.5123350000530991,
+        "p95": 0.5594340000243392,
+        "p99": 0.8904869999923903,
+        "mean": 0.5213602624984048,
+        "n": 240
+      },
+      "throughput_batch1_per_sec": 1963.065800346971
+    },
+    "quantization": {
+      "attempted": true,
+      "supported": false,
+      "backend": "onnxruntime dynamic QInt8",
+      "error": "ValueError: Failed to find proper ai.onnx domain",
+      "decision": "retain measured FP32 bundle; do not substitute a different graph/model after held-out observation solely to obtain an int8 artifact"
+    }
+  },
+  "runtime_dependencies_measured": {
+    "numpy": "2.5.3",
+    "onnxruntime": "1.30.0"
+  },
+  "artifact_storage": {
+    "review": "GitHub Actions artifacts retained for 30 days",
+    "production": "no approved durable production model-binary destination has been designated"
+  }
+}
