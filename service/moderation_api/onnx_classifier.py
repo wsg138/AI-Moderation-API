@@ -1,9 +1,8 @@
 """W12 runtime adapter for the selected baseline TF-IDF ONNX bundle.
 
-The selected W12 baseline exports one string-input ONNX model per policy head.
-This adapter loads that exact bundle from a checksum-pinned metadata manifest.
-It performs no network access and stays not-ready on any artifact/dependency
-problem so the existing moderation runtime can fail open.
+The selected W12 baseline stores the fitted TF-IDF transform as safe JSON and
+exports six numeric-input ONNX logistic-regression heads. This avoids pickle and
+backend-specific ONNX string tokenization while preserving the trained model.
 """
 
 from __future__ import annotations
@@ -27,9 +26,10 @@ from .models import (
     StrikeRecommendation,
     SupportFlow,
 )
+from .tfidf_runtime import TfidfRuntimeVectorizer
 
 HEAD_NAMES = ("label", "action", "review_priority", "strike", "containment", "support_flow")
-_METADATA_SCHEMA_VERSION = 1
+_METADATA_SCHEMA_VERSION = 2
 
 
 def serialize_input(item: ClassificationInput) -> str:
@@ -39,10 +39,7 @@ def serialize_input(item: ClassificationInput) -> str:
     base_time = messages[0].occurred_at
     speakers: dict[str, str] = {}
     for message in messages:
-        speaker = speakers.setdefault(
-            message.sender_id,
-            _speaker_marker(len(speakers)),
-        )
+        speaker = speakers.setdefault(message.sender_id, _speaker_marker(len(speakers)))
         offset_ms = max(0, round((message.occurred_at - base_time).total_seconds() * 1000))
         target = " [TARGET]" if message is item.current else ""
         parts.append(f"[{speaker}@+{offset_ms}ms]{target} {message.text}")
@@ -65,6 +62,17 @@ def _sha256_of(path: Path) -> str:
 
 def _bounded(value: float) -> float:
     return max(0.0, min(1.0, value))
+
+
+def _verified_file(root: Path, relative_path: str, expected_sha256: str, context: str) -> Path:
+    path = (root / relative_path).resolve()
+    if not path.is_relative_to(root):
+        raise ValueError(f"{context} path escapes metadata directory")
+    if not path.is_file():
+        raise ValueError(f"{context} artifact missing: {path}")
+    if _sha256_of(path).lower() != expected_sha256.lower():
+        raise ValueError(f"{context} checksum mismatch")
+    return path
 
 
 def _verified_metadata_sha(path: Path, expected_sha256: str) -> str:
@@ -137,7 +145,7 @@ class _LoadedHead:
     classes: tuple[str, ...]
 
 
-def _parse_manifest(parsed: dict[str, Any]) -> tuple[str, dict[str, Any]]:
+def _parse_manifest(parsed: dict[str, Any]) -> tuple[str, dict[str, Any], dict[str, Any]]:
     schema_version = parsed.get("schema_version")
     if schema_version != _METADATA_SCHEMA_VERSION:
         raise ValueError(f"unsupported model metadata schema: {schema_version}")
@@ -145,9 +153,12 @@ def _parse_manifest(parsed: dict[str, Any]) -> tuple[str, dict[str, Any]]:
         raise ValueError("model metadata candidate is not baseline-tfidf")
     model_version = _required_text(parsed, "model_version", "model metadata")
     raw_heads = parsed.get("heads")
+    raw_vectorizer = parsed.get("vectorizer")
     if not isinstance(raw_heads, dict):
         raise ValueError("model metadata missing heads")
-    return model_version, raw_heads
+    if not isinstance(raw_vectorizer, dict):
+        raise ValueError("model metadata missing vectorizer")
+    return model_version, raw_heads, raw_vectorizer
 
 
 def _head_spec(raw_heads: dict[str, Any], head_name: str) -> _HeadSpec:
@@ -159,32 +170,18 @@ def _head_spec(raw_heads: dict[str, Any], head_name: str) -> _HeadSpec:
         expected_sha256=_required_text(raw_head, "sha256", f"head {head_name}"),
         input_name=_required_text(raw_head, "input_name", f"head {head_name}"),
         probabilities_output=_required_text(
-            raw_head,
-            "probabilities_output",
-            f"head {head_name}",
+            raw_head, "probabilities_output", f"head {head_name}"
         ),
         classes=_parse_classes(raw_head, head_name),
     )
 
 
-def _verified_model_path(root: Path, head_name: str, spec: _HeadSpec) -> Path:
-    model_path = (root / spec.relative_path).resolve()
-    if not model_path.is_relative_to(root):
-        raise ValueError(f"artifact path escapes metadata directory for {head_name}")
-    if not model_path.is_file():
-        raise ValueError(f"model artifact missing for {head_name}: {model_path}")
-    if _sha256_of(model_path).lower() != spec.expected_sha256.lower():
-        raise ValueError(f"model artifact checksum mismatch for {head_name}")
-    return model_path
-
-
 def _load_head(root: Path, head_name: str, raw_heads: dict[str, Any], ort: Any) -> _LoadedHead:
     spec = _head_spec(raw_heads, head_name)
-    model_path = _verified_model_path(root, head_name, spec)
-    session = ort.InferenceSession(
-        str(model_path),
-        providers=["CPUExecutionProvider"],
+    model_path = _verified_file(
+        root, spec.relative_path, spec.expected_sha256, f"head {head_name}"
     )
+    session = ort.InferenceSession(str(model_path), providers=["CPUExecutionProvider"])
     session_inputs = {item.name for item in session.get_inputs()}
     session_outputs = {item.name for item in session.get_outputs()}
     if spec.input_name not in session_inputs:
@@ -201,6 +198,17 @@ def _load_head(root: Path, head_name: str, raw_heads: dict[str, Any], ort: Any) 
     )
 
 
+def _load_vectorizer(root: Path, raw: dict[str, Any]) -> TfidfRuntimeVectorizer:
+    relative_path = _required_text(raw, "path", "vectorizer")
+    expected_sha = _required_text(raw, "sha256", "vectorizer")
+    vectorizer_path = _verified_file(root, relative_path, expected_sha, "vectorizer")
+    vectorizer = TfidfRuntimeVectorizer.from_file(vectorizer_path)
+    expected_features = raw.get("feature_count")
+    if not isinstance(expected_features, int) or expected_features != vectorizer.feature_count:
+        raise ValueError("vectorizer feature count mismatch")
+    return vectorizer
+
+
 def _import_inference_modules() -> tuple[Any, Any]:
     np: Any = importlib.import_module("numpy")
     ort: Any = importlib.import_module("onnxruntime")
@@ -215,6 +223,7 @@ class OnnxClassifier:
         self._ready = False
         self._error: str | None = None
         self._heads: dict[str, _LoadedHead] = {}
+        self._vectorizer: TfidfRuntimeVectorizer | None = None
         self._metadata_sha256: str | None = None
         self._model_version: str | None = None
         self._np: Any = None
@@ -224,12 +233,14 @@ class OnnxClassifier:
         try:
             metadata_path = self._config.metadata_path
             actual_sha = _verified_metadata_sha(
-                metadata_path,
-                self._config.expected_metadata_sha256,
+                metadata_path, self._config.expected_metadata_sha256
             )
-            model_version, raw_heads = _parse_manifest(_read_metadata(metadata_path))
+            model_version, raw_heads, raw_vectorizer = _parse_manifest(
+                _read_metadata(metadata_path)
+            )
             np, ort = _import_inference_modules()
             root = metadata_path.parent.resolve()
+            vectorizer = _load_vectorizer(root, raw_vectorizer)
             loaded = {
                 head_name: _load_head(root, head_name, raw_heads, ort)
                 for head_name in HEAD_NAMES
@@ -237,10 +248,12 @@ class OnnxClassifier:
         except Exception as exc:  # noqa: BLE001 - invalid model means fail-open not-ready
             self._error = f"model load failed: {exc}"
             self._heads.clear()
+            self._vectorizer = None
             return
 
         self._np = np
         self._heads = loaded
+        self._vectorizer = vectorizer
         self._metadata_sha256 = actual_sha
         self._model_version = f"{model_version}+{actual_sha[:12]}"
         self._ready = True
@@ -252,11 +265,19 @@ class OnnxClassifier:
             "model_version": self._model_version,
             "metadata_sha256": self._metadata_sha256,
             "heads_loaded": len(self._heads),
+            "feature_count": (
+                self._vectorizer.feature_count if self._vectorizer is not None else 0
+            ),
             **({"error": self._error} if self._error else {}),
         }
 
     async def classify(self, item: ClassificationInput) -> ClassificationResult:
-        if not self._ready or self._np is None or self._model_version is None:
+        if (
+            not self._ready
+            or self._np is None
+            or self._model_version is None
+            or self._vectorizer is None
+        ):
             raise RuntimeError("onnx classifier not ready")
         text = serialize_input(item)
         try:
@@ -270,7 +291,7 @@ class OnnxClassifier:
     def _infer_head(
         self,
         head_name: str,
-        input_tensor: Any,
+        feature_tensor: Any,
     ) -> tuple[str, float, dict[str, float]]:
         np = self._np
         if np is None:
@@ -278,7 +299,7 @@ class OnnxClassifier:
         loaded = self._heads[head_name]
         outputs = loaded.session.run(
             [loaded.probabilities_output],
-            {loaded.input_name: input_tensor},
+            {loaded.input_name: feature_tensor},
         )
         probabilities = np.asarray(outputs[0], dtype=float).reshape(-1)
         if len(probabilities) != len(loaded.classes):
@@ -299,11 +320,12 @@ class OnnxClassifier:
 
     def _infer(self, text: str) -> ClassificationResult:
         np = self._np
-        if np is None or self._model_version is None:
+        vectorizer = self._vectorizer
+        if np is None or vectorizer is None or self._model_version is None:
             raise RuntimeError("onnx classifier not ready")
-        input_tensor = np.asarray([[text]], dtype=object)
+        feature_tensor = vectorizer.transform(text, np)
         predictions = {
-            name: self._infer_head(name, input_tensor)
+            name: self._infer_head(name, feature_tensor)
             for name in HEAD_NAMES
         }
         scores = {
@@ -312,11 +334,8 @@ class OnnxClassifier:
             for key, value in head_scores.items()
         }
         predicted = {name: result[0] for name, result in predictions.items()}
-        confidence = predictions["label"][1]
         message_action = (
-            MessageAction.BLOCK
-            if predicted["action"] == "BLOCK"
-            else MessageAction.ALLOW
+            MessageAction.BLOCK if predicted["action"] == "BLOCK" else MessageAction.ALLOW
         )
         strike = (
             StrikeRecommendation.STRIKE
@@ -332,7 +351,7 @@ class OnnxClassifier:
             containment_duration_seconds=None,
             support_flow=SupportFlow(predicted["support_flow"]),
             scores=scores,
-            confidence=confidence,
+            confidence=predictions["label"][1],
             rule_hits=(),
             reason_codes=("onnx_local_classifier",),
             related_message_ids=(),
