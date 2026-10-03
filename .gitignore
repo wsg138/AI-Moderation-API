@@ -39,3 +39,7 @@ build/
 # OS/editor noise
 .DS_Store
 Thumbs.db
+.venv/
+.pip-tmp/
+workers/w12/artifacts/
+workers/w12/models/

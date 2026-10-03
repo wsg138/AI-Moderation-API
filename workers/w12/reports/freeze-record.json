@@ -1,0 +1,26 @@
+{
+  "calibration": {
+    "fitted_on": "validation only",
+    "validation_brier": 0.0,
+    "validation_ece": 0.168
+  },
+  "candidate": "baseline",
+  "candidate_description": "TF-IDF (1-2gram, 30k max_features, sublinear_tf, min_df=2) + LogisticRegression (C=1.0, balanced class_weight, max_iter=2000)",
+  "code_commit_sha": "TBD",
+  "contamination_statement": "Held-out partitions (test, frozen_adversarial, owner_golden) have NEVER been used for training, tuning, calibration, threshold selection, or candidate choice. This freeze record was created BEFORE running held-out evaluation.",
+  "frozen_at": "2026-10-03T06:47:00Z",
+  "seed": 42,
+  "selection_rationale": "Baseline decisively outperformed bert-tiny on validation: 91.9% vs 67.8% label accuracy, 0.844 vs 0.443 macro F1. Critical slices: gameplay BLOCK FP rate 1.8% vs 9.1% (5x better), threat recall 92.7% vs 96.4% (bert-tiny slightly better but at unacceptable FP cost). bert-mini training incomplete due to compute/time constraints (killed after 22min, 2 CPU host). Selection based on complete product risk profile, not aggregate F1 alone.",
+  "serialization": "workers/w12/dataset.py::serialize_messages v1 ([PROFILE=], [SPEAKER@+offsetms], [TARGET] markers)",
+  "thresholds": {
+    "block_threshold": 0.5,
+    "note": "Default argmax thresholds. Calibration measured on validation only (ECE=0.168). Asymmetric threshold tuning deferred \u2014 fail-open runtime handles uncertainty."
+  },
+  "w11_split": {
+    "algorithm": "w11-v2",
+    "frozen_adversarial": 436,
+    "test": 410,
+    "train": 3269,
+    "validation": 385
+  }
+}
