@@ -11,9 +11,16 @@ on:
       - "workers/w12/run_baseline_onnx_evidence.py"
       - "workers/w12/export_baseline_onnx.py"
       - "workers/w12/requirements-evidence.txt"
+      - "service/moderation_api/onnx_classifier.py"
+      - "service/moderation_api/tfidf_runtime.py"
+      - "tests/test_w12.py"
 
 permissions:
   contents: read
+
+concurrency:
+  group: w12-evidence-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   baseline-onnx:
