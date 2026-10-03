@@ -20,8 +20,10 @@ from typing import Any
 
 import numpy as np
 import onnxruntime as ort
+from onnxruntime.quantization import QuantType, quantize_dynamic
 import psutil
 import skl2onnx
+import sklearn
 
 from moderation_api.models import (
     ChannelProfile,
@@ -32,8 +34,6 @@ from moderation_api.models import (
 )
 from moderation_api.onnx_classifier import OnnxClassifier, OnnxClassifierConfig
 from moderation_api.tfidf_runtime import TfidfRuntimeVectorizer
-from onnxruntime.quantization import QuantType, quantize_dynamic
-import sklearn
 
 from .baseline import ARTIFACT_DIR, save_baseline, train_baseline
 from .dataset import load_partition
