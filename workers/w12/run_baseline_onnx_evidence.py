@@ -33,6 +33,7 @@ from moderation_api.models import (
     Platform,
 )
 from moderation_api.onnx_classifier import OnnxClassifier, OnnxClassifierConfig
+from moderation_api.tfidf_runtime import TfidfRuntimeVectorizer
 
 from .baseline import ARTIFACT_DIR, save_baseline, train_baseline
 from .dataset import load_partition
@@ -108,7 +109,9 @@ def _session_probabilities(
     root: Path,
     texts: list[str],
 ) -> dict[str, np.ndarray]:
-    tensor = np.asarray([[text] for text in texts], dtype=object)
+    vectorizer_meta = metadata["vectorizer"]
+    vectorizer = TfidfRuntimeVectorizer.from_file(root / vectorizer_meta["path"])
+    tensor = np.vstack([vectorizer.transform(text, np) for text in texts])
     output: dict[str, np.ndarray] = {}
     for head_name, head in metadata["heads"].items():
         session = ort.InferenceSession(
@@ -302,8 +305,7 @@ def _benchmark_bundle(metadata_path: Path) -> dict[str, Any]:
     runtime = asyncio.run(_benchmark_async(classifier))
     steady = process.memory_info().rss / (1024 * 1024)
     metadata = _load_manifest(metadata_path)
-    artifact_bytes = sum(int(head["bytes"]) for head in metadata["heads"].values())
-    return {
+    artifact_bytes = int(metadata["vectorizer"]["bytes"]) + sum(\n        int(head["bytes"]) for head in metadata["heads"].values()\n    )\n    return {
         "health": health,
         "cold_load_seconds": cold_load,
         "rss_before_mb": before,
