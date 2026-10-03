@@ -16,6 +16,7 @@ from .classifier import LocalClassifier, StubClassifier
 from .config import Settings
 from .context import RollingContextStore
 from .migrations import LATEST_SCHEMA_VERSION
+from .onnx_classifier import OnnxClassifier, OnnxClassifierConfig
 from .models import (
     CorrectionAuthority,
     CorrectionRejectRequest,
@@ -48,7 +49,7 @@ def create_app(
     config = settings or Settings.from_env()
     store = ModerationStore(config.database_path)
     context = _build_context(config)
-    local_classifier = classifier or StubClassifier()
+    local_classifier = classifier or _build_local_classifier()
     advisory, advisory_enabled = _build_advisory(config, store, advisory_client)
     runtime = ModerationRuntime(config, store, context, local_classifier, advisory)
     authenticator = Authenticator(config.clients)
@@ -71,6 +72,15 @@ def create_app(
     _register_reviews(app, store, review_read_auth, review_write_auth)
     return app
 
+
+
+def _build_local_classifier() -> LocalClassifier:
+    """Load the configured W12 ONNX bundle, otherwise preserve fail-open stub mode."""
+    try:
+        config = OnnxClassifierConfig.from_env()
+    except (RuntimeError, ValueError):
+        return StubClassifier()
+    return OnnxClassifier(config)
 
 def _build_context(settings: Settings) -> RollingContextStore:
     return RollingContextStore(
