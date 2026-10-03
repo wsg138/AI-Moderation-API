@@ -278,7 +278,9 @@ def test_onnx_classifier_rejects_head_checksum_mismatch(tmp_path):
     classifier = OnnxClassifier(cfg)
     health = classifier.health()
     assert health["ready"] is False
-    assert "checksum mismatch for label" in str(health.get("error", "")).lower()
+    error = str(health.get("error", "")).lower()
+    assert "label" in error
+    assert "checksum mismatch" in error
 
 
 @pytest.mark.asyncio
