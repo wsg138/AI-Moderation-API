@@ -7,8 +7,8 @@ import json
 import time
 from pathlib import Path
 
-import sklearn
 import skl2onnx
+import sklearn
 from skl2onnx import convert_sklearn
 from skl2onnx.common.data_types import StringTensorType
 
