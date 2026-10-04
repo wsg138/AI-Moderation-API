@@ -187,16 +187,28 @@ def _head_spec(raw_heads: dict[str, Any], head_name: str) -> _HeadSpec:
     )
 
 
-def _load_head(root: Path, head_name: str, raw_heads: dict[str, Any], ort: Any) -> _LoadedHead:
+def _load_head(
+    root: Path,
+    head_name: str,
+    raw_heads: dict[str, Any],
+    ort: Any,
+    feature_count: int,
+) -> _LoadedHead:
     spec = _head_spec(raw_heads, head_name)
     model_path = _verified_file(
         root, spec.relative_path, spec.expected_sha256, f"head {head_name}"
     )
     session = ort.InferenceSession(str(model_path), providers=["CPUExecutionProvider"])
-    session_inputs = {item.name for item in session.get_inputs()}
+    session_inputs = {item.name: item for item in session.get_inputs()}
     session_outputs = {item.name for item in session.get_outputs()}
-    if spec.input_name not in session_inputs:
+    model_input = session_inputs.get(spec.input_name)
+    if model_input is None:
         raise ValueError(f"input {spec.input_name} absent from {head_name} artifact")
+    shape = model_input.shape
+    if len(shape) != 2 or shape[1] != feature_count:
+        raise ValueError(
+            f"{head_name} feature dimension is incompatible with vectorizer"
+        )
     if spec.probabilities_output not in session_outputs:
         raise ValueError(
             f"output {spec.probabilities_output} absent from {head_name} artifact"
@@ -253,7 +265,13 @@ class OnnxClassifier:
             root = metadata_path.parent.resolve()
             vectorizer = _load_vectorizer(root, raw_vectorizer)
             loaded = {
-                head_name: _load_head(root, head_name, raw_heads, ort)
+                head_name: _load_head(
+                    root,
+                    head_name,
+                    raw_heads,
+                    ort,
+                    vectorizer.feature_count,
+                )
                 for head_name in HEAD_NAMES
             }
         except Exception as exc:  # noqa: BLE001 - invalid model means fail-open not-ready

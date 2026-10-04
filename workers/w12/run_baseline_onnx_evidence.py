@@ -216,6 +216,18 @@ def _message(
     )
 
 
+def _single_message_input() -> ClassificationInput:
+    start = datetime(2026, 10, 3, 12, 0, tzinfo=UTC)
+    current = _message(
+        event_id="bench-single",
+        sender="player-a",
+        offset_ms=0,
+        text="irl at your school tomorrow",
+        start=start,
+    )
+    return ClassificationInput(current=current, context=(), memory=MemorySnapshot())
+
+
 def _representative_input() -> ClassificationInput:
     start = datetime(2026, 10, 3, 12, 0, tzinfo=UTC)
     prior = (
@@ -250,8 +262,10 @@ def _percentile(values: list[float], fraction: float) -> float:
     return ordered[index]
 
 
-async def _benchmark_async(classifier: OnnxClassifier) -> dict[str, Any]:
-    item = _representative_input()
+async def _benchmark_item(
+    classifier: OnnxClassifier,
+    item: ClassificationInput,
+) -> dict[str, Any]:
     for _ in range(20):
         await classifier.classify(item)
     timings: list[float] = []
@@ -272,6 +286,16 @@ async def _benchmark_async(classifier: OnnxClassifier) -> dict[str, Any]:
             "n": len(timings),
         },
         "throughput_batch1_per_sec": 120 / throughput_elapsed,
+    }
+
+
+async def _benchmark_async(classifier: OnnxClassifier) -> dict[str, Any]:
+    return {
+        "single_message": await _benchmark_item(classifier, _single_message_input()),
+        "representative_multi_message": await _benchmark_item(
+            classifier,
+            _representative_input(),
+        ),
     }
 
 

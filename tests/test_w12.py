@@ -346,6 +346,31 @@ def test_onnx_classifier_rejects_head_checksum_mismatch(tmp_path):
     assert "checksum mismatch" in error
 
 
+def test_onnx_classifier_rejects_head_vectorizer_shape_mismatch(tmp_path):
+    cfg = _write_fixture_bundle(tmp_path)
+    vectorizer_path = tmp_path / "baseline-tfidf-vectorizer.json"
+    vectorizer = json.loads(vectorizer_path.read_text(encoding="utf-8"))
+    vectorizer["terms"] = ["school", "tomorrow"]
+    vectorizer["idf"] = [1.0, 1.0]
+    vectorizer_path.write_text(json.dumps(vectorizer) + "\n", encoding="utf-8")
+
+    metadata = json.loads(cfg.metadata_path.read_text(encoding="utf-8"))
+    metadata["vectorizer"]["sha256"] = _sha256(vectorizer_path)
+    metadata["vectorizer"]["bytes"] = vectorizer_path.stat().st_size
+    metadata["vectorizer"]["feature_count"] = 2
+    cfg.metadata_path.write_text(json.dumps(metadata, indent=2) + "\n", encoding="utf-8")
+
+    classifier = OnnxClassifier(
+        OnnxClassifierConfig(
+            metadata_path=cfg.metadata_path,
+            expected_metadata_sha256=_sha256(cfg.metadata_path),
+        )
+    )
+    health = classifier.health()
+    assert health["ready"] is False
+    assert "feature dimension" in str(health.get("error", "")).lower()
+
+
 @pytest.mark.asyncio
 async def test_selected_baseline_bundle_loads_and_infers(tmp_path):
     cfg = _write_fixture_bundle(tmp_path)
