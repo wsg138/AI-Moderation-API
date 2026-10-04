@@ -10,13 +10,14 @@ from pathlib import Path
 import numpy as np
 import onnx
 import sklearn
+from moderation_api.model_serialization import SERIALIZATION_VERSION
 from onnx import TensorProto, helper, numpy_helper
 
 from .baseline import load_baseline
 
 ARTIFACT_DIR = Path(__file__).resolve().parent / "artifacts"
 EXPORT_DIR = ARTIFACT_DIR / "onnx"
-MODEL_VERSION = "w12-baseline-tfidf-v1"
+MODEL_VERSION = "w12-baseline-tfidf-v2"
 METADATA_SCHEMA_VERSION = 2
 TARGET_OPSET = 17
 
@@ -182,8 +183,10 @@ def export_baseline_onnx() -> dict[str, object]:
         "candidate": "baseline-tfidf",
         "model_version": MODEL_VERSION,
         "seed": model.seed,
+        "serialization_version": SERIALIZATION_VERSION,
         "serialization": (
-            "w12-v1: [PROFILE=profile] + [A@+offsetms] speaker markers + [TARGET]"
+            "w12-v2: canonical first-seen speaker aliases; target/current = 0ms; "
+            "prior offsets are target-relative; post-target messages excluded"
         ),
         "vectorizer": vectorizer,
         "target_opset": TARGET_OPSET,

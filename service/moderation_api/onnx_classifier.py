@@ -16,7 +16,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from .model_serialization import ModelMessage, serialize_model_input
+from .model_serialization import SERIALIZATION_VERSION, ModelMessage, serialize_model_input
 from .models import (
     ClassificationInput,
     ClassificationResult,
@@ -158,6 +158,10 @@ def _parse_manifest(parsed: dict[str, Any]) -> tuple[str, dict[str, Any], dict[s
         raise ValueError(f"unsupported model metadata schema: {schema_version}")
     if parsed.get("candidate") != "baseline-tfidf":
         raise ValueError("model metadata candidate is not baseline-tfidf")
+    if parsed.get("serialization_version") != SERIALIZATION_VERSION:
+        raise ValueError(
+            "model serialization version does not match runtime preprocessing"
+        )
     model_version = _required_text(parsed, "model_version", "model metadata")
     raw_heads = parsed.get("heads")
     raw_vectorizer = parsed.get("vectorizer")

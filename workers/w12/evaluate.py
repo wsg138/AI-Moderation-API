@@ -379,7 +379,11 @@ def _acceptance_failures(
     dimensions = (
         ("label", LABELS, lambda example: LABEL_TO_ID[example.label]),
         ("action", ACTIONS, lambda example: ACTION_TO_ID[example.action]),
-        ("review_priority", REVIEW_PRIORITIES, lambda example: REVIEW_TO_ID[example.review_priority]),
+        (
+            "review_priority",
+            REVIEW_PRIORITIES,
+            lambda example: REVIEW_TO_ID[example.review_priority],
+        ),
         ("strike", ["false", "true"], lambda example: 1 if example.strike else 0),
         ("containment", CONTAINMENTS, lambda example: CONTAINMENT_TO_ID[example.containment]),
         ("support_flow", SUPPORT_FLOWS, lambda example: SUPPORT_TO_ID[example.support_flow]),

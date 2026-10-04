@@ -275,9 +275,10 @@ def _write_fixture_bundle(tmp_path: Path) -> OnnxClassifierConfig:
     metadata = {
         "schema_version": 2,
         "candidate": "baseline-tfidf",
-        "model_version": "w12-fixture-v1",
+        "model_version": "w12-fixture-v2",
         "seed": 42,
-        "serialization": "w12-v1",
+        "serialization_version": "w12-v2",
+        "serialization": "canonical W12 v2 fixture",
         "vectorizer": {
             "path": vectorizer_path.name,
             "sha256": _sha256(vectorizer_path),
@@ -318,6 +319,22 @@ def test_onnx_classifier_rejects_metadata_checksum_mismatch(tmp_path):
     assert "metadata checksum" in str(health.get("error", "")).lower()
 
 
+def test_onnx_classifier_rejects_wrong_serialization_version(tmp_path):
+    cfg = _write_fixture_bundle(tmp_path)
+    metadata = json.loads(cfg.metadata_path.read_text(encoding="utf-8"))
+    metadata["serialization_version"] = "w12-v1"
+    cfg.metadata_path.write_text(json.dumps(metadata, indent=2) + "\n", encoding="utf-8")
+    classifier = OnnxClassifier(
+        OnnxClassifierConfig(
+            metadata_path=cfg.metadata_path,
+            expected_metadata_sha256=_sha256(cfg.metadata_path),
+        )
+    )
+    health = classifier.health()
+    assert health["ready"] is False
+    assert "serialization version" in str(health.get("error", "")).lower()
+
+
 def test_onnx_classifier_rejects_head_checksum_mismatch(tmp_path):
     cfg = _write_fixture_bundle(tmp_path)
     (tmp_path / "baseline-tfidf-label.onnx").write_bytes(b"tampered")
@@ -346,7 +363,7 @@ async def test_selected_baseline_bundle_loads_and_infers(tmp_path):
     assert result.strike_recommendation.value == "STRIKE"
     assert result.containment.value == "NONE"
     assert result.support_flow.value == "NONE"
-    assert result.model_version.startswith("w12-fixture-v1+")
+    assert result.model_version.startswith("w12-fixture-v2+")
     assert result.scores["action:BLOCK"] == pytest.approx(0.9)
     assert result.confidence == pytest.approx(0.9)
 

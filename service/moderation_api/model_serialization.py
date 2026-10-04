@@ -13,6 +13,9 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 
 
+SERIALIZATION_VERSION = "w12-v2"
+
+
 @dataclass(frozen=True, slots=True)
 class ModelMessage:
     speaker_key: str

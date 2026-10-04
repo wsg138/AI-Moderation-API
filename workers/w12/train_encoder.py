@@ -19,7 +19,7 @@ from pathlib import Path
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader, Dataset
-from transformers import AutoModel, BertTokenizer
+from transformers import BertModel, BertTokenizer
 
 from .dataset import (
     ACTION_TO_ID,
@@ -103,9 +103,9 @@ class MultiTaskBert(nn.Module):
     ):
         super().__init__()
         if local_dir and (local_dir / "config.json").exists():
-            self.encoder = AutoModel.from_pretrained(str(local_dir), local_files_only=True)
+            self.encoder = BertModel.from_pretrained(str(local_dir), local_files_only=True)
         else:
-            self.encoder = AutoModel.from_pretrained(encoder_name, revision=revision)
+            self.encoder = BertModel.from_pretrained(encoder_name, revision=revision)
         hidden = self.encoder.config.hidden_size
         self.dropout = nn.Dropout(0.1)
         self.heads = nn.ModuleDict({name: nn.Linear(hidden, n) for name, n in HEADS.items()})

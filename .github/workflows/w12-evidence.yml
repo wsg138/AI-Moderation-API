@@ -125,6 +125,7 @@ jobs:
           path: |
             workers/w12/artifacts/onnx/
             workers/w12/reports/onnx-baseline-evidence.json
+            workers/w12/reports/val-baseline-tfidf.json
             workers/w12/reports/baseline-tfidf-onnx-metadata.json
             workers/w12/reports/baseline-tfidf-int8-onnx-metadata.json
             workers/w12/reports/requirements-evidence-freeze.txt
