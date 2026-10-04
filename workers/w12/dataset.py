@@ -5,14 +5,9 @@ train IDs. Validation is the only tuning partition. Test / frozen adversarial /
 owner golden are acceptance-only and must never be used for fitting,
 calibration, threshold selection, or candidate choice.
 
-The serializer exposes ONLY legitimate runtime information:
-- channel profile
-- ordered message sequence with speaker boundaries
-- target (current) message marker
-- relative timing offsets
-
-It MUST NOT expose answer/editorial metadata (labels, actions, notes,
-reason codes, domain, difficulty, example IDs, family IDs, etc.).
+Only runtime-realizable fields are serialized. Evaluation metadata such as
+reason codes, difficulty, example IDs, and family IDs is retained separately
+for slice reporting and never enters model input.
 """
 
 from __future__ import annotations
@@ -21,15 +16,13 @@ import json
 from dataclasses import dataclass
 from pathlib import Path
 
+from moderation_api.model_serialization import ModelMessage, serialize_model_input
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DATA_DIR = REPO_ROOT / "data"
 INTEGRATION_DIR = DATA_DIR / "integration"
 SYNTHETIC_DIR = DATA_DIR / "synthetic"
 EVAL_DIR = DATA_DIR / "eval"
-
-# ---------------------------------------------------------------------------
-# Label vocabularies (must match service/moderation_api/models.py Label enum)
-# ---------------------------------------------------------------------------
 
 LABELS = [
     "SAFE",
@@ -65,8 +58,6 @@ CONTAINMENT_TO_ID = {name: i for i, name in enumerate(CONTAINMENTS)}
 SUPPORT_FLOWS = ["NONE", "SELF_HARM_CHECK", "TARGET_SAFETY_CHECK"]
 SUPPORT_TO_ID = {name: i for i, name in enumerate(SUPPORT_FLOWS)}
 
-# Runtime binary visibility: dataset BLOCK -> runtime BLOCK,
-# dataset ALLOW/REVIEW -> runtime ALLOW.
 RUNTIME_BLOCK_ID = 1
 RUNTIME_ALLOW_ID = 0
 
@@ -82,35 +73,32 @@ class ModerationExample:
     containment: str
     containment_duration_seconds: int | None
     support_flow: str
-    # Slice metadata (NOT serialized to model input; used for evaluation only)
     channel_profile: str
     platform_hint: str
     domain: str
+    difficulty: str
+    reason_codes: tuple[str, ...]
+    family_id: str | None
 
 
 def serialize_messages(channel_profile: str, messages: list[dict], target_index: int) -> str:
-    """Leakage-safe serialization of a message sequence.
-
-    Only structural/runtime information is emitted. Never call this with
-    label/action/notes/reason/domain/difficulty/example_id fields.
-    """
-    parts = [f"[PROFILE={channel_profile}]"]
-    for i, msg in enumerate(messages):
-        speaker = str(msg.get("speaker", "?"))
-        offset = int(msg.get("offset_ms", 0))
-        text = str(msg.get("text", ""))
-        marker = " [TARGET]" if i == target_index else ""
-        parts.append(f"[{speaker}@+{offset}ms]{marker} {text}")
-    return "\n".join(parts)
+    """Serialize runtime fields only, using the shared canonical W12 contract."""
+    model_messages = [
+        ModelMessage(
+            speaker_key=str(message.get("speaker", "?")),
+            offset_ms=int(message.get("offset_ms", 0)),
+            text=str(message.get("text", "")),
+        )
+        for message in messages
+    ]
+    return serialize_model_input(channel_profile, model_messages, target_index)
 
 
-def _record_to_example(record: dict) -> ModerationExample:
-    messages = record["messages"]
-    target_index = int(record["target_index"])
+def _record_to_example(record: dict, family_id: str | None = None) -> ModerationExample:
     return ModerationExample(
         example_id=record["example_id"],
         serialized=serialize_messages(
-            record["channel_profile"], messages, target_index
+            record["channel_profile"], record["messages"], int(record["target_index"])
         ),
         label=record["label"],
         action=record["action"],
@@ -122,59 +110,76 @@ def _record_to_example(record: dict) -> ModerationExample:
         channel_profile=record["channel_profile"],
         platform_hint=record.get("platform_hint", ""),
         domain=record.get("domain", ""),
+        difficulty=record.get("difficulty", ""),
+        reason_codes=tuple(record.get("reason_codes", ())),
+        family_id=family_id or record.get("family_id"),
     )
 
 
 def is_fully_labeled(record: dict) -> bool:
-    """Check if a record has all classifier dimensions specified."""
+    """Check whether all classifier dimensions have owner/source labels."""
     return all(
-        record.get(k) is not None
-        for k in ("label", "action", "review_priority", "containment", "support_flow")
+        record.get(key) is not None
+        for key in ("label", "action", "review_priority", "containment", "support_flow", "strike")
     )
 
 
 def load_split_manifest() -> dict:
-    with open(INTEGRATION_DIR / "W11-split-manifest.json") as f:
-        return json.load(f)
+    with open(INTEGRATION_DIR / "W11-split-manifest.json") as handle:
+        return json.load(handle)
 
 
 def load_adversarial_manifest() -> dict:
-    with open(INTEGRATION_DIR / "W11-adversarial-eval-manifest.json") as f:
-        return json.load(f)
+    with open(INTEGRATION_DIR / "W11-adversarial-eval-manifest.json") as handle:
+        return json.load(handle)
+
+
+def _family_map(manifest: dict) -> dict[str, str]:
+    return {
+        example_id: group["group_id"]
+        for group in manifest.get("groups", [])
+        for example_id in group["example_ids"]
+    }
 
 
 def load_records_by_id() -> dict[str, dict]:
-    """Load all synthetic records indexed by example_id."""
+    """Load all accepted synthetic records indexed by example_id."""
     records: dict[str, dict] = {}
     for path in sorted(SYNTHETIC_DIR.glob("*.jsonl")):
-        with open(path) as f:
-            for line in f:
+        with open(path) as handle:
+            for line in handle:
                 line = line.strip()
-                if not line:
-                    continue
-                record = json.loads(line)
-                records[record["example_id"]] = record
+                if line:
+                    record = json.loads(line)
+                    records[record["example_id"]] = record
     return records
+
+
+def _partition_ids(partition: str, manifest: dict) -> list[str]:
+    if partition == "frozen_adversarial":
+        adversarial = load_adversarial_manifest()
+        return list(adversarial.get("example_ids", adversarial.get("frozen_adversarial", [])))
+    partitions = manifest.get("partitions", {})
+    if partition not in partitions:
+        raise ValueError(f"unknown W11 partition: {partition}")
+    return list(partitions[partition])
 
 
 def load_partition(
     partition: str, records_by_id: dict[str, dict] | None = None
 ) -> list[ModerationExample]:
-    """Load one W11 partition. partition in {train, validation, test, frozen_adversarial}."""
+    """Load one accepted W11 partition without changing membership or families."""
     manifest = load_split_manifest()
-    if partition == "frozen_adversarial":
-        manifest = load_adversarial_manifest()
-        ids = manifest.get("example_ids", manifest.get("frozen_adversarial", []))
-    else:
-        ids = manifest["partitions"][partition]
+    ids = _partition_ids(partition, manifest)
     if records_by_id is None:
         records_by_id = load_records_by_id()
+    families = _family_map(manifest)
     examples = []
     for example_id in ids:
         record = records_by_id.get(example_id)
         if record is None:
             raise KeyError(f"W11 manifest references unknown example {example_id}")
-        examples.append(_record_to_example(record))
+        examples.append(_record_to_example(record, families.get(example_id)))
     return examples
 
 
@@ -182,8 +187,8 @@ def load_owner_golden() -> list[dict]:
     """Load owner golden fixtures (acceptance only — never train on these)."""
     path = EVAL_DIR / "owner-policy-v1.jsonl"
     records = []
-    with open(path) as f:
-        for line in f:
+    with open(path) as handle:
+        for line in handle:
             line = line.strip()
             if line:
                 records.append(json.loads(line))

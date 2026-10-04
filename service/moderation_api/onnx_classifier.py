@@ -16,6 +16,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from .model_serialization import ModelMessage, serialize_model_input
 from .models import (
     ClassificationInput,
     ClassificationResult,
@@ -33,23 +34,29 @@ _METADATA_SCHEMA_VERSION = 2
 
 
 def serialize_input(item: ClassificationInput) -> str:
-    """Serialize runtime context with the same structural contract as W12 training."""
-    messages = [*list(item.context)[-20:], item.current]
-    parts = [f"[PROFILE={item.current.channel_profile.value}]"]
-    base_time = messages[0].occurred_at
-    speakers: dict[str, str] = {}
-    for message in messages:
-        speaker = speakers.setdefault(message.sender_id, _speaker_marker(len(speakers)))
-        offset_ms = max(0, round((message.occurred_at - base_time).total_seconds() * 1000))
-        target = " [TARGET]" if message is item.current else ""
-        parts.append(f"[{speaker}@+{offset_ms}ms]{target} {message.text}")
-    return "\n".join(parts)
-
-
-def _speaker_marker(index: int) -> str:
-    if 0 <= index < 26:
-        return chr(ord("A") + index)
-    return f"S{index}"
+    """Serialize runtime context with the exact shared W12 training contract."""
+    current_time = item.current.occurred_at
+    prior = list(item.context)[-20:]
+    messages = [
+        ModelMessage(
+            speaker_key=message.sender_id,
+            offset_ms=round((message.occurred_at - current_time).total_seconds() * 1000),
+            text=message.text,
+        )
+        for message in prior
+    ]
+    messages.append(
+        ModelMessage(
+            speaker_key=item.current.sender_id,
+            offset_ms=0,
+            text=item.current.text,
+        )
+    )
+    return serialize_model_input(
+        item.current.channel_profile.value,
+        messages,
+        len(messages) - 1,
+    )
 
 
 def _sha256_of(path: Path) -> str:

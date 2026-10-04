@@ -32,6 +32,7 @@ from workers.w12.dataset import (
     load_split_manifest,
     serialize_messages,
 )
+from workers.w12.evaluate import SLICES, slice_predicate
 
 
 def test_split_manifest_counts():
@@ -87,6 +88,38 @@ def test_partitions_load():
     assert len(val) == 385
     assert all(example.serialized for example in train)
 
+def test_canonical_training_serialization_excludes_future_and_normalizes_speakers():
+    messages = [
+        {"speaker": "B", "offset_ms": -1200, "text": "prior"},
+        {"speaker": "A", "offset_ms": 0, "text": "current"},
+        {"speaker": "SYSTEM", "offset_ms": 500, "text": "future response"},
+    ]
+    serialized = serialize_messages("minecraft_public", messages, 1)
+    assert serialized == (
+        "[PROFILE=minecraft_public]\n"
+        "[A@-1200ms] prior\n"
+        "[B@+0ms] [TARGET] current"
+    )
+    assert "future response" not in serialized
+    assert "SYSTEM" not in serialized
+
+
+def test_train_records_do_not_serialize_post_target_future_messages():
+    example = next(item for item in load_partition("train") if item.example_id == "G04-0461")
+    assert "I've been having thoughts about not wanting to be alive" in example.serialized
+    assert "Are you safe right now" not in example.serialized
+    assert "no, I'm safe right now" not in example.serialized
+
+
+def test_required_validation_slices_are_non_empty():
+    validation = load_partition("validation")
+    counts = {
+        name: sum(slice_predicate(example, name) for example in validation)
+        for name in SLICES
+    }
+    assert all(count > 0 for count in counts.values()), counts
+
+
 
 def _message(
     *,
@@ -140,11 +173,24 @@ def test_serialize_input_matches_training_shape():
     serialized = serialize_input(_make_input())
     assert serialized == (
         "[PROFILE=minecraft_public]\n"
-        "[A@+0ms] im gonna get you\n"
-        "[B@+800ms] [TARGET] irl at your school tomorrow"
+        "[A@-800ms] im gonna get you\n"
+        "[B@+0ms] [TARGET] irl at your school tomorrow"
     )
     assert "player-a" not in serialized
     assert "player-b" not in serialized
+
+def test_runtime_and_training_serializers_match_same_logical_sequence():
+    runtime = serialize_input(_make_input())
+    training = serialize_messages(
+        "minecraft_public",
+        [
+            {"speaker": "B", "offset_ms": -800, "text": "im gonna get you"},
+            {"speaker": "A", "offset_ms": 0, "text": "irl at your school tomorrow"},
+        ],
+        1,
+    )
+    assert runtime == training
+
 
 
 def _sha256(path: Path) -> str:
