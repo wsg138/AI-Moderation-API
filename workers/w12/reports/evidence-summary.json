@@ -1,29 +1,32 @@
 {
   "evidence_source": {
     "workflow": "w12-evidence",
-    "run_id": 37225843627,
-    "head_sha": "3aac90ca8d0d57ca2174a852f961c6b753e7205d",
+    "run_id": 37320175852,
+    "head_sha": "2abf7bebff42de41063428ac647cfee80cbe1739",
     "scope": "W11 train + validation only; original test/frozen-adversarial/owner-golden excluded from v2 selection",
     "artifacts": {
       "baseline_validation": {
-        "artifact_id": 11311728142,
-        "zip_sha256": "23386236e43f6c3e3b0ff1e034782ed7516502b3de703faae0775e940cc3d797",
-        "expires_at": "2026-11-03T18:50:25Z"
+        "artifact_id": 11349104683,
+        "zip_sha256": "48bbb3954e44d4283b2b2446f3e7884fb013b6a70cbba41aeb58d2544dd87750",
+        "expires_at": "2026-11-04T13:55:46Z",
+        "report_sha256": "0a632226f70fae92e4ab02eb2b252a186a7e05ebe8f3e47974d2cd79e3e5b613"
       },
       "baseline_onnx": {
-        "artifact_id": 11311807878,
-        "zip_sha256": "0fc9e21da1486d496800fd11b6c084b5d449e269204de56be0cac29535a4d87e",
-        "expires_at": "2026-11-03T18:50:39Z"
+        "artifact_id": 11349359710,
+        "zip_sha256": "d3a7312c7b6360e65e944efe20b1f7754635476e94c640d90f22c6032114477d",
+        "expires_at": "2026-11-04T13:55:20Z"
       },
       "bert_tiny": {
-        "artifact_id": 11311629011,
-        "zip_sha256": "b99e1ef2aaefa3864f98acda12d55a8554beac01564d8325a5c9feecdd0adb69",
-        "expires_at": "2026-11-03T18:51:52Z"
+        "artifact_id": 11348849745,
+        "zip_sha256": "e06a0d9a0ace534423df35ec2817f222fd8a89c9893b9d471ad3c118e0ea97e3",
+        "expires_at": "2026-11-04T13:57:36Z",
+        "report_sha256": "2ecb5d223cb1d567e83296368a9503e0fe9d96f549d58d4f197ec8a604c45ea3"
       },
       "bert_mini": {
-        "artifact_id": 11312028066,
-        "zip_sha256": "41eb6d4123b17e789bb1802e97138b8b55bca3829cefe4847ba1d6d9eb61e1e3",
-        "expires_at": "2026-11-03T18:57:19Z"
+        "artifact_id": 11351065305,
+        "zip_sha256": "afbfcb47c06119a9cdbd4b3ce7f2d48622b1c2aaecaad3cdf7cd279023879925",
+        "expires_at": "2026-11-04T14:02:35Z",
+        "report_sha256": "d01a36136041cbaa4d5ee3ffdff173d244df12a43b25bc921ec0764e936b744e"
       }
     }
   },
@@ -78,7 +81,7 @@
   "selected_onnx_bundle": {
     "model_version": "w12-baseline-tfidf-v2",
     "serialization_version": "w12-v2",
-    "metadata_sha256": "aca804fd0bdedd7414be7dbeaecb777c68e2ebfdf299660a6920fce240e111c2",
+    "metadata_sha256": "529880d0c97bb4ee50050b22cf8a61f88fa05bbb153e2f97f76d81e0e2a4f126",
     "vectorizer": {
       "sha256": "6b2d2e3a6c915adabbc3ac17ae72fe058a6bb8d4ee76c29601558bbfb6a5ee6d",
       "bytes": 216544,
@@ -93,28 +96,28 @@
     },
     "benchmark": {
       "environment": "GitHub hosted Ubuntu x86-64 / Python 3.12 / 4 reported CPUs",
-      "cold_load_seconds": 0.013850628000000142,
-      "rss_attributable_mb": 1.0390625,
+      "cold_load_seconds": 0.031882521,
+      "rss_attributable_mb": 0.9921875,
       "single_message_latency_ms": {
-        "p50": 0.5526349999911417,
-        "p95": 0.6474630000070647,
-        "p99": 1.006144000001541,
+        "p50": 0.5513390000260188,
+        "p95": 0.5985770000052071,
+        "p99": 0.8123060000002624,
         "n": 240
       },
       "representative_multi_message_latency_ms": {
-        "p50": 0.5822399999999561,
-        "p95": 0.795700000026045,
-        "p99": 2.563270999985434,
+        "p50": 0.5689710000069681,
+        "p95": 0.6037260000084643,
+        "p99": 0.6301149999785594,
         "n": 240
       },
-      "representative_multi_message_throughput_batch1_per_sec": 1797.6026452077112
+      "representative_multi_message_throughput_batch1_per_sec": 1837.9543641442488
     }
   },
   "quantization": {
     "attempted": true,
     "selected": false,
     "backend": "onnxruntime dynamic QInt8",
-    "metadata_sha256": "09e1e9c1886a85d88261c38113fc3c4785bafc09bedcedc04507973abda87e81",
+    "metadata_sha256": "d4fb525be175a0bb3592a65349fdf010378c7498d1f72f8763e6b79ea6e08997",
     "runtime_artifact_bytes": 420811,
     "validation_prediction_mismatches": 3,
     "max_abs_probability_delta": 0.02604693601774083,
