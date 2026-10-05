@@ -1,119 +1,129 @@
 {
   "evidence_source": {
     "workflow": "w12-evidence",
-    "run_id": 37157150269,
-    "head_sha": "b2df8afab52699a43c27192dc61cf44adb2287a9",
-    "scope": "train + validation only; no frozen test, frozen adversarial, or owner golden data opened",
-    "baseline_artifact": {
-      "artifact_id": 11286343154,
-      "zip_sha256": "2f72512864b52ccb531b17248017489e6354de138c332e2c8718f1028ae305dc",
-      "expires_at": "2026-11-02T22:05:57Z"
-    },
-    "bert_mini_artifact": {
-      "artifact_id": 11286348459,
-      "zip_sha256": "5560f47553758314f2debf68a22709ea70a10b22a995d8ff3d6d1104f93bb78e",
-      "expires_at": "2026-11-02T22:10:50Z"
+    "run_id": 37225843627,
+    "head_sha": "3aac90ca8d0d57ca2174a852f961c6b753e7205d",
+    "scope": "W11 train + validation only; original test/frozen-adversarial/owner-golden excluded from v2 selection",
+    "artifacts": {
+      "baseline_validation": {
+        "artifact_id": 11311728142,
+        "zip_sha256": "23386236e43f6c3e3b0ff1e034782ed7516502b3de703faae0775e940cc3d797",
+        "expires_at": "2026-11-03T18:50:25Z"
+      },
+      "baseline_onnx": {
+        "artifact_id": 11311807878,
+        "zip_sha256": "0fc9e21da1486d496800fd11b6c084b5d449e269204de56be0cac29535a4d87e",
+        "expires_at": "2026-11-03T18:50:39Z"
+      },
+      "bert_tiny": {
+        "artifact_id": 11311629011,
+        "zip_sha256": "b99e1ef2aaefa3864f98acda12d55a8554beac01564d8325a5c9feecdd0adb69",
+        "expires_at": "2026-11-03T18:51:52Z"
+      },
+      "bert_mini": {
+        "artifact_id": 11312028066,
+        "zip_sha256": "41eb6d4123b17e789bb1802e97138b8b55bca3829cefe4847ba1d6d9eb61e1e3",
+        "expires_at": "2026-11-03T18:57:19Z"
+      }
     }
+  },
+  "preprocessing": {
+    "serialization_version": "w12-v2",
+    "speakers": "canonical first-appearance aliases",
+    "target_time": "0 ms",
+    "prior_timing": "target-relative",
+    "future_messages": "excluded",
+    "runtime_training_parity": "shared serializer"
   },
   "candidate_comparison": {
     "selected": "baseline-tfidf",
     "selection_basis": "validation only",
     "baseline_tfidf": {
-      "label_accuracy": 0.9194805194805195,
-      "label_macro_f1": 0.844142072225929,
-      "block_precision": 0.9431818181818182,
-      "block_recall": 0.9273743016759777,
-      "minecraft_gameplay_block_false_positive_rate": 0.01818181818181818,
-      "real_world_threat_block_recall": 0.9272727272727272
-    },
-    "bert_tiny": {
-      "hf_id": "prajjwal1/bert-tiny",
-      "revision": "6f75de8b60a9f8a2fdf7b69cbd86d9e64bcb3837",
-      "license": "MIT",
-      "label_accuracy": 0.6779220779220779,
-      "label_macro_f1": 0.44332455705004725,
-      "minecraft_gameplay_block_false_positive_rate": 0.09090909090909091,
-      "real_world_threat_block_recall": 0.9636363636363636
+      "label_accuracy": 0.9142857142857143,
+      "label_macro_f1": 0.8281258599860339,
+      "block_precision": 0.9375,
+      "block_recall": 0.9217877094972067,
+      "minecraft_gameplay_block_false_positive_rate": 0.03571428571428571,
+      "real_world_threat_block_recall": 0.9090909090909091,
+      "calibration_ece": 0.16288780821650672,
+      "calibration_brier": 0.07907764342004127
     },
     "bert_mini": {
       "hf_id": "google/bert_uncased_L-4_H-256_A-4",
       "revision": "387825ce42dbb39b87911cdf8e383ee3b25184f8",
       "license": "Apache-2.0",
-      "label_accuracy": 0.8571428571428571,
-      "label_macro_f1": 0.7531715391772652,
-      "block_precision": 0.9273743016759777,
-      "block_recall": 0.9273743016759777,
-      "minecraft_gameplay_block_false_positive_rate": 0.05454545454545454,
+      "label_accuracy": 0.8831168831168831,
+      "label_macro_f1": 0.776358371388446,
+      "block_precision": 0.9193548387096774,
+      "block_recall": 0.9553072625698324,
+      "minecraft_gameplay_block_false_positive_rate": 0.05952380952380952,
       "real_world_threat_block_recall": 0.9636363636363636,
-      "calibration_ece": 0.03498696932424002,
-      "calibration_brier": 0.04692347130211027
+      "calibration_ece": 0.04237224331137713,
+      "calibration_brier": 0.04573141801541434
     },
-    "rationale": "baseline-tfidf has the strongest validation label accuracy/macro-F1 and the lowest Minecraft gameplay BLOCK false-positive rate. bert-mini and bert-tiny have higher real-world-threat recall, but both trade that for worse gameplay false positives; no held-out result was used to make this final selection."
+    "bert_tiny": {
+      "hf_id": "prajjwal1/bert-tiny",
+      "revision": "6f75de8b60a9f8a2fdf7b69cbd86d9e64bcb3837",
+      "license": "MIT",
+      "label_accuracy": 0.6831168831168831,
+      "label_macro_f1": 0.462404313491213,
+      "block_precision": 0.8092783505154639,
+      "block_recall": 0.8770949720670391,
+      "minecraft_gameplay_block_false_positive_rate": 0.08333333333333333,
+      "real_world_threat_block_recall": 0.9636363636363636,
+      "calibration_ece": 0.0777600551846546,
+      "calibration_brier": 0.0946692524799915
+    }
   },
   "selected_onnx_bundle": {
-    "model_version": "w12-baseline-tfidf-v1",
-    "metadata_sha256": "f3489e5fffb54303f34ee4f9bef672b211556ee6a6a0d2f2994d3e1c6e7dd1df",
+    "model_version": "w12-baseline-tfidf-v2",
+    "serialization_version": "w12-v2",
+    "metadata_sha256": "aca804fd0bdedd7414be7dbeaecb777c68e2ebfdf299660a6920fce240e111c2",
     "vectorizer": {
-      "sha256": "1afabd1ac09b70826c1c322f8bbe36c279eff1212ea3e5cd73c6272fd9ed1db1",
-      "bytes": 219161,
-      "feature_count": 7157
+      "sha256": "6b2d2e3a6c915adabbc3ac17ae72fe058a6bb8d4ee76c29601558bbfb6a5ee6d",
+      "bytes": 216544,
+      "feature_count": 7073
     },
-    "heads": {
-      "label": {"sha256": "af91f6d594eb08b7c94b4d0dd76c98e7501d5ec064e97219528336c515acbede", "bytes": 487020},
-      "action": {"sha256": "537e3f6b770c2f6f2d80027a7f45a5c896dbc2c1df904d954382f4288ae32f0f", "bytes": 86173},
-      "review_priority": {"sha256": "216f9367a712a735e4f3cd15e2be83797ab986aa519a42fb74097d57b0d197fc", "bytes": 86182},
-      "strike": {"sha256": "4d4b4df7b62410c35e8686bf6416740fd91580c00b1800eecf4007fbf1b6a91d", "bytes": 29058},
-      "containment": {"sha256": "7f1177f59f4300253184a4ff39e605572f41890da391a37c724c99aaa889874d", "bytes": 29063},
-      "support_flow": {"sha256": "85354af4b7f8362e8be0dc402edbbe53ca4f9fc2ca9743aa981579f2025a9c1c", "bytes": 86179}
-    },
-    "total_runtime_artifact_bytes": 1022836,
+    "total_runtime_artifact_bytes": 1010811,
     "parity": {
       "validation_examples": 385,
       "total_prediction_mismatches": 0,
-      "max_abs_probability_delta": 1.6771714006491578e-7,
+      "max_abs_probability_delta": 1.8235273024913567e-7,
       "tolerance": 0.0001
     },
     "benchmark": {
-      "environment": "GitHub hosted Ubuntu 24.04, Python 3.12, x86_64",
-      "cold_load_seconds": 0.008154386000001068,
-      "rss_attributable_mb": 0.46875,
-      "latency_ms": {
-        "p50": 0.23008799999502116,
-        "p95": 0.24844499998266656,
-        "p99": 0.2706880000005185,
+      "environment": "GitHub hosted Ubuntu x86-64 / Python 3.12 / 4 reported CPUs",
+      "cold_load_seconds": 0.013850628000000142,
+      "rss_attributable_mb": 1.0390625,
+      "single_message_latency_ms": {
+        "p50": 0.5526349999911417,
+        "p95": 0.6474630000070647,
+        "p99": 1.006144000001541,
         "n": 240
       },
-      "throughput_batch1_per_sec": 4342.240015435882
+      "representative_multi_message_latency_ms": {
+        "p50": 0.5822399999999561,
+        "p95": 0.795700000026045,
+        "p99": 2.563270999985434,
+        "n": 240
+      },
+      "representative_multi_message_throughput_batch1_per_sec": 1797.6026452077112
     }
   },
   "quantization": {
     "attempted": true,
-    "supported": true,
     "selected": false,
     "backend": "onnxruntime dynamic QInt8",
-    "metadata_sha256": "4b5fec4fa0992620fd18bde46122b5824e3fca8f80b3829265f3927763f0c695",
-    "runtime_artifact_bytes": 425780,
-    "validation_prediction_mismatches": 4,
-    "max_abs_probability_delta": 0.027912365454849986,
-    "benchmark": {
-      "cold_load_seconds": 0.007985821999994869,
-      "rss_attributable_mb": 0.37890625,
-      "latency_ms": {
-        "p50": 0.18774299999790856,
-        "p95": 0.20391800001107185,
-        "p99": 0.22561100001894374,
-        "n": 240
-      },
-      "throughput_batch1_per_sec": 5339.899511101984
-    },
-    "decision": "reject int8 for this model version because it changes 4 validation predictions despite lower size and latency; retain the exact-parity FP32 bundle"
+    "metadata_sha256": "09e1e9c1886a85d88261c38113fc3c4785bafc09bedcedc04507973abda87e81",
+    "runtime_artifact_bytes": 420811,
+    "validation_prediction_mismatches": 3,
+    "max_abs_probability_delta": 0.02604693601774083,
+    "decision": "reject int8 for v2 because it changes validation predictions"
   },
-  "runtime_dependencies_measured": {
-    "numpy": "2.5.3",
-    "onnxruntime": "1.30.0"
-  },
-  "artifact_storage": {
-    "review": "GitHub Actions artifacts retained for 30 days",
-    "production": "no approved durable production model-binary destination has been designated"
+  "acceptance": {
+    "status": "AWAITING_FRESH_UNSEEN_W20_ACCEPTANCE",
+    "issue": 43,
+    "pr": 44,
+    "old_w11_heldout_status": "superseded development evidence because preprocessing changed after observation"
   }
 }
