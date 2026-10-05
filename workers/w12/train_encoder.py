@@ -21,7 +21,7 @@ import torch.nn as nn
 from torch.utils.data import DataLoader, Dataset
 from transformers import BertModel, BertTokenizer
 
-from .dataset import (
+from workers.w12.dataset import (
     ACTION_TO_ID,
     ACTIONS,
     CONTAINMENT_TO_ID,
