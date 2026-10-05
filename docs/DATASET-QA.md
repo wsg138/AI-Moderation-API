@@ -27,7 +27,7 @@ python -m tools.dataset_qa validate data/synthetic/G09-benign-hard-negatives.jso
 python -m tools.dataset_qa report data/synthetic/G09-benign-hard-negatives.jsonl --range G09:1-500 --format markdown --output G09-qa.md
 ```
 
-`--range auto` remains the default. It recognizes `G01` through `G09` from the filename or a single valid ID prefix and checks the configured `1..500` range. Use `--range none` only for partial fixtures or non-generator data.
+`--range auto` remains the default. It recognizes configured ID ranges from the filename or a single valid ID prefix. `G01` through `G09` remain the admitted synthetic-generator ranges; W21 reserves `G21-0001..G21-0500` for candidate-only adversarial/evasion development data under `data/candidates/`. Use `--range none` only for partial fixtures or non-generator data.
 
 Validation exits non-zero when errors exist. Warnings do not fail the command. Diagnostics use deterministic `file:line` output. `validate --format json` and `report --format json` are available for machine-readable consumers.
 

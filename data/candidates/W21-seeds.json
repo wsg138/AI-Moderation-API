@@ -1,0 +1,603 @@
+{
+  "version": "w21-seeds-v1",
+  "seeds": [
+    {
+      "seed_id": 1,
+      "domain": "hate_slur",
+      "platform_hint": "discord",
+      "channel_profile": "discord_general",
+      "base": "bro quit acting tough, youre a slurword",
+      "alt": "same thing again, youre a slurword",
+      "token": "slurword",
+      "outcome": {
+        "label": "SLUR_USE",
+        "action": "BLOCK",
+        "review_priority": "NONE",
+        "strike": true,
+        "containment": "NONE",
+        "containment_duration_seconds": null,
+        "support_flow": "NONE",
+        "reason_codes": [
+          "actual_slur",
+          "identity_target"
+        ]
+      },
+      "prior": []
+    },
+    {
+      "seed_id": 2,
+      "domain": "hate_slur",
+      "platform_hint": "minecraft",
+      "channel_profile": "minecraft_public",
+      "base": "reporting this: they typed slurword in global",
+      "alt": "im quoting what they said: slurword",
+      "token": "slurword",
+      "outcome": {
+        "label": "SLUR_USE",
+        "action": "BLOCK",
+        "review_priority": "NONE",
+        "strike": true,
+        "containment": "NONE",
+        "containment_duration_seconds": null,
+        "support_flow": "NONE",
+        "reason_codes": [
+          "actual_slur",
+          "quoted_or_condemned"
+        ]
+      },
+      "prior": []
+    },
+    {
+      "seed_id": 3,
+      "domain": "hate_reference",
+      "platform_hint": "discord",
+      "channel_profile": "discord_general",
+      "base": "dont type the slur-reference here, im only naming the rule",
+      "alt": "the rule talks about the slur-reference without using the actual term",
+      "token": "slur-reference",
+      "outcome": {
+        "label": "SAFE",
+        "action": "ALLOW",
+        "review_priority": "NONE",
+        "strike": false,
+        "containment": "NONE",
+        "containment_duration_seconds": null,
+        "support_flow": "NONE",
+        "reason_codes": [
+          "slur_reference_only"
+        ]
+      },
+      "prior": []
+    },
+    {
+      "seed_id": 4,
+      "domain": "gameplay_violence",
+      "platform_hint": "minecraft",
+      "channel_profile": "minecraft_public",
+      "base": "im gonna eliminate you at spawn after you respawn",
+      "alt": "youre getting eliminated next round at spawn",
+      "token": "eliminate",
+      "outcome": {
+        "label": "GAMEPLAY_VIOLENCE",
+        "action": "ALLOW",
+        "review_priority": "NONE",
+        "strike": false,
+        "containment": "NONE",
+        "containment_duration_seconds": null,
+        "support_flow": "NONE",
+        "reason_codes": [
+          "minecraft_gameplay_explicit"
+        ]
+      },
+      "prior": []
+    },
+    {
+      "seed_id": 5,
+      "domain": "real_world_threat",
+      "platform_hint": "discord",
+      "channel_profile": "discord_general",
+      "base": "if i catch you after school im going to hurt you",
+      "alt": "see you after school, im coming for you",
+      "token": "school",
+      "outcome": {
+        "label": "REAL_WORLD_THREAT",
+        "action": "BLOCK",
+        "review_priority": "NORMAL",
+        "strike": false,
+        "containment": "NONE",
+        "containment_duration_seconds": null,
+        "support_flow": "NONE",
+        "reason_codes": [
+          "discord_general_no_game_context",
+          "real_world_location",
+          "targeted_violence"
+        ]
+      },
+      "prior": []
+    },
+    {
+      "seed_id": 6,
+      "domain": "real_world_threat",
+      "platform_hint": "minecraft",
+      "channel_profile": "minecraft_public",
+      "base": "im threatening you and i mean irl, not in minecraft",
+      "alt": "not the game, i mean this for real irl",
+      "token": "irl",
+      "outcome": {
+        "label": "REAL_WORLD_THREAT",
+        "action": "BLOCK",
+        "review_priority": "NORMAL",
+        "strike": true,
+        "containment": "MUTE",
+        "containment_duration_seconds": 604800,
+        "support_flow": "NONE",
+        "reason_codes": [
+          "explicit_real_world_cue",
+          "targeted_violence"
+        ]
+      },
+      "prior": []
+    },
+    {
+      "seed_id": 7,
+      "domain": "real_world_threat",
+      "platform_hint": "discord",
+      "channel_profile": "discord_general",
+      "base": "im outside your house right now, come out",
+      "alt": "im at your place right now, come outside",
+      "token": "outside",
+      "outcome": {
+        "label": "REAL_WORLD_THREAT",
+        "action": "BLOCK",
+        "review_priority": "URGENT",
+        "strike": true,
+        "containment": "NONE",
+        "containment_duration_seconds": null,
+        "support_flow": "NONE",
+        "reason_codes": [
+          "real_world_proximity",
+          "real_world_location",
+          "targeted_violence"
+        ]
+      },
+      "prior": []
+    },
+    {
+      "seed_id": 8,
+      "domain": "self_harm",
+      "platform_hint": "discord",
+      "channel_profile": "discord_general",
+      "base": "go hurt yourself for real",
+      "alt": "seriously, hurt yourself",
+      "token": "hurt",
+      "outcome": {
+        "label": "SELF_HARM_INSTRUCTION",
+        "action": "BLOCK",
+        "review_priority": "NONE",
+        "strike": true,
+        "containment": "NONE",
+        "containment_duration_seconds": null,
+        "support_flow": "NONE",
+        "reason_codes": [
+          "self_harm_instruction"
+        ]
+      },
+      "prior": []
+    },
+    {
+      "seed_id": 9,
+      "domain": "self_harm",
+      "platform_hint": "discord",
+      "channel_profile": "discord_general",
+      "base": "im not okay tonight and i might hurt myself",
+      "alt": "i dont think i can keep myself safe tonight",
+      "token": "myself",
+      "outcome": {
+        "label": "SELF_HARM_INTENT",
+        "action": "ALLOW",
+        "review_priority": "NONE",
+        "strike": false,
+        "containment": "NONE",
+        "containment_duration_seconds": null,
+        "support_flow": "SELF_HARM_CHECK",
+        "reason_codes": [
+          "self_harm_disclosure"
+        ]
+      },
+      "prior": []
+    },
+    {
+      "seed_id": 10,
+      "domain": "self_harm",
+      "platform_hint": "discord",
+      "channel_profile": "discord_general",
+      "base": "im worried my friend might hurt himself tonight, can staff check on him",
+      "alt": "my friend says he may hurt himself, can someone help",
+      "token": "himself",
+      "outcome": {
+        "label": "THIRD_PARTY_SELF_HARM_CONCERN",
+        "action": "ALLOW",
+        "review_priority": "NONE",
+        "strike": false,
+        "containment": "NONE",
+        "containment_duration_seconds": null,
+        "support_flow": "SELF_HARM_CHECK",
+        "reason_codes": [
+          "third_party_self_harm_concern"
+        ]
+      },
+      "prior": []
+    },
+    {
+      "seed_id": 11,
+      "domain": "sexual_content",
+      "platform_hint": "discord",
+      "channel_profile": "discord_general",
+      "base": "chat im making explicit jokes again",
+      "alt": "im making explicit sexual comments in public chat again",
+      "token": "explicit",
+      "outcome": {
+        "label": "SEXUAL_CONTENT",
+        "action": "BLOCK",
+        "review_priority": "NONE",
+        "strike": false,
+        "containment": "NONE",
+        "containment_duration_seconds": null,
+        "support_flow": "NONE",
+        "reason_codes": [
+          "public_sexual_content"
+        ]
+      },
+      "prior": []
+    },
+    {
+      "seed_id": 12,
+      "domain": "sexual_content",
+      "platform_hint": "minecraft",
+      "channel_profile": "minecraft_private",
+      "base": "youre cute, wanna date me sometime",
+      "alt": "youre cute, wanna go out with me",
+      "token": "cute",
+      "outcome": {
+        "label": "SAFE",
+        "action": "ALLOW",
+        "review_priority": "NONE",
+        "strike": false,
+        "containment": "NONE",
+        "containment_duration_seconds": null,
+        "support_flow": "NONE",
+        "reason_codes": [
+          "private_flirting",
+          "private_context_relevant"
+        ]
+      },
+      "prior": []
+    },
+    {
+      "seed_id": 13,
+      "domain": "sexual_content",
+      "platform_hint": "minecraft",
+      "channel_profile": "minecraft_private",
+      "base": "send me explicit pics after this match",
+      "alt": "dm me explicit pictures later",
+      "token": "explicit",
+      "outcome": {
+        "label": "SEXUAL_CONTENT",
+        "action": "BLOCK",
+        "review_priority": "NONE",
+        "strike": true,
+        "containment": "NONE",
+        "containment_duration_seconds": null,
+        "support_flow": "NONE",
+        "reason_codes": [
+          "sexual_solicitation",
+          "private_context_relevant"
+        ]
+      },
+      "prior": []
+    },
+    {
+      "seed_id": 14,
+      "domain": "sexual_minor",
+      "platform_hint": "minecraft",
+      "channel_profile": "minecraft_private",
+      "base": "send me explicit pics after the game",
+      "alt": "dm me explicit pictures when you can",
+      "token": "explicit",
+      "outcome": {
+        "label": "SEXUAL_MINOR",
+        "action": "BLOCK",
+        "review_priority": "NORMAL",
+        "strike": true,
+        "containment": "MUTE",
+        "containment_duration_seconds": 604800,
+        "support_flow": "NONE",
+        "reason_codes": [
+          "sexual_minor",
+          "sexual_solicitation",
+          "age_reliable_minor",
+          "private_context_relevant"
+        ]
+      },
+      "prior": [
+        {
+          "speaker": "STAFF",
+          "offset_ms": -12000,
+          "text": "Staff records reliably verify the target is 16."
+        }
+      ]
+    },
+    {
+      "seed_id": 15,
+      "domain": "doxxing",
+      "platform_hint": "discord",
+      "channel_profile": "discord_general",
+      "base": "i found your address: 123 Example Ave, posting it here",
+      "alt": "heres your address: 123 Example Ave",
+      "token": "address",
+      "outcome": {
+        "label": "DOXXING",
+        "action": "BLOCK",
+        "review_priority": "URGENT",
+        "strike": true,
+        "containment": "NONE",
+        "containment_duration_seconds": null,
+        "support_flow": "NONE",
+        "reason_codes": [
+          "apparent_doxxing",
+          "real_world_address_cue"
+        ]
+      },
+      "prior": []
+    },
+    {
+      "seed_id": 16,
+      "domain": "doxxing",
+      "platform_hint": "discord",
+      "channel_profile": "discord_general",
+      "base": "this is your real address, 123 Example Ave, and im leaking it",
+      "alt": "confirmed address: 123 Example Ave, sharing it now",
+      "token": "address",
+      "outcome": {
+        "label": "DOXXING",
+        "action": "BLOCK",
+        "review_priority": "URGENT",
+        "strike": true,
+        "containment": "MUTE",
+        "containment_duration_seconds": 2592000,
+        "support_flow": "NONE",
+        "reason_codes": [
+          "confirmed_doxxing",
+          "real_world_address_cue"
+        ]
+      },
+      "prior": []
+    },
+    {
+      "seed_id": 17,
+      "domain": "dangerous_instructions",
+      "platform_hint": "discord",
+      "channel_profile": "discord_general",
+      "base": "how do i build a real explosive that works",
+      "alt": "what do i need to make an actual explosive irl",
+      "token": "explosive",
+      "outcome": {
+        "label": "DANGEROUS_REAL_WORLD_INSTRUCTIONS",
+        "action": "BLOCK",
+        "review_priority": "NONE",
+        "strike": false,
+        "containment": "NONE",
+        "containment_duration_seconds": null,
+        "support_flow": "NONE",
+        "reason_codes": [
+          "dangerous_instruction_request",
+          "explicit_real_world_cue"
+        ]
+      },
+      "prior": []
+    },
+    {
+      "seed_id": 18,
+      "domain": "dangerous_instructions",
+      "platform_hint": "minecraft",
+      "channel_profile": "minecraft_public",
+      "base": "how do i make an explosive setup that blows up a base with redstone",
+      "alt": "whats the best explosive setup for breaking a base in minecraft",
+      "token": "explosive",
+      "outcome": {
+        "label": "SAFE",
+        "action": "ALLOW",
+        "review_priority": "NONE",
+        "strike": false,
+        "containment": "NONE",
+        "containment_duration_seconds": null,
+        "support_flow": "NONE",
+        "reason_codes": [
+          "minecraft_gameplay_explicit"
+        ]
+      },
+      "prior": []
+    },
+    {
+      "seed_id": 19,
+      "domain": "dangerous_instructions",
+      "platform_hint": "discord",
+      "channel_profile": "discord_general",
+      "base": "for history class, why were explosives used in past conflicts",
+      "alt": "im asking historically about explosives, not how to build one",
+      "token": "explosives",
+      "outcome": {
+        "label": "SAFE",
+        "action": "ALLOW",
+        "review_priority": "NONE",
+        "strike": false,
+        "containment": "NONE",
+        "containment_duration_seconds": null,
+        "support_flow": "NONE",
+        "reason_codes": [
+          "historical_or_high_level_context"
+        ]
+      },
+      "prior": []
+    },
+    {
+      "seed_id": 20,
+      "domain": "harassment",
+      "platform_hint": "minecraft",
+      "channel_profile": "minecraft_public",
+      "base": "youre terrible at pvp lol",
+      "alt": "youre still terrible at this game lmao",
+      "token": "terrible",
+      "outcome": {
+        "label": "LOW_LEVEL_HARASSMENT",
+        "action": "ALLOW",
+        "review_priority": "NONE",
+        "strike": false,
+        "containment": "NONE",
+        "containment_duration_seconds": null,
+        "support_flow": "NONE",
+        "reason_codes": [
+          "low_severity_insult"
+        ]
+      },
+      "prior": []
+    },
+    {
+      "seed_id": 21,
+      "domain": "staff_abuse",
+      "platform_hint": "discord",
+      "channel_profile": "discord_general",
+      "base": "mod youre worthless and nobody respects you",
+      "alt": "staff youre worthless trash, shut up",
+      "token": "worthless",
+      "outcome": {
+        "label": "STAFF_TARGETED_ABUSE",
+        "action": "BLOCK",
+        "review_priority": "NONE",
+        "strike": true,
+        "containment": "NONE",
+        "containment_duration_seconds": null,
+        "support_flow": "NONE",
+        "reason_codes": [
+          "staff_targeted_abuse"
+        ]
+      },
+      "prior": []
+    },
+    {
+      "seed_id": 22,
+      "domain": "harassment",
+      "platform_hint": "minecraft",
+      "channel_profile": "minecraft_public",
+      "base": "PlayerC youre pathetic, leave the server",
+      "alt": "PlayerC youre pathetic and nobody wants you here",
+      "token": "pathetic",
+      "outcome": {
+        "label": "SEVERE_HARASSMENT",
+        "action": "BLOCK",
+        "review_priority": "NONE",
+        "strike": true,
+        "containment": "NONE",
+        "containment_duration_seconds": null,
+        "support_flow": "NONE",
+        "reason_codes": [
+          "coordinated_dogpile",
+          "multi_sender_dogpile",
+          "repeated_targeting"
+        ]
+      },
+      "prior": [
+        {
+          "speaker": "B",
+          "offset_ms": -4000,
+          "text": "everyone pile on PlayerC until he quits"
+        },
+        {
+          "speaker": "C",
+          "offset_ms": -1800,
+          "text": "yeah keep spamming PlayerC"
+        }
+      ]
+    },
+    {
+      "seed_id": 23,
+      "domain": "harassment",
+      "platform_hint": "minecraft",
+      "channel_profile": "minecraft_private",
+      "base": "no, youre pathetic and im not stopping",
+      "alt": "youre still pathetic; ill keep bothering you",
+      "token": "pathetic",
+      "outcome": {
+        "label": "SEVERE_HARASSMENT",
+        "action": "BLOCK",
+        "review_priority": "NORMAL",
+        "strike": false,
+        "containment": "NONE",
+        "containment_duration_seconds": null,
+        "support_flow": "NONE",
+        "reason_codes": [
+          "target_requested_stop",
+          "repeated_targeting",
+          "private_context_relevant"
+        ]
+      },
+      "prior": [
+        {
+          "speaker": "B",
+          "offset_ms": -5000,
+          "text": "please stop messaging me"
+        }
+      ]
+    },
+    {
+      "seed_id": 24,
+      "domain": "staff_criticism_negative",
+      "platform_hint": "discord",
+      "channel_profile": "discord_general",
+      "base": "mod this mute was unfair and you handled the appeal badly",
+      "alt": "i still think the decision was unfair and want it reviewed",
+      "token": "unfair",
+      "outcome": {
+        "label": "SAFE",
+        "action": "ALLOW",
+        "review_priority": "NONE",
+        "strike": false,
+        "containment": "NONE",
+        "containment_duration_seconds": null,
+        "support_flow": "NONE",
+        "reason_codes": [
+          "staff_overturned_false_positive"
+        ]
+      },
+      "prior": [
+        {
+          "speaker": "STAFF",
+          "offset_ms": -8000,
+          "text": "This is a good-faith appeal example, not targeted staff abuse."
+        }
+      ]
+    },
+    {
+      "seed_id": 25,
+      "domain": "benign_hard_negative",
+      "platform_hint": "minecraft",
+      "channel_profile": "minecraft_public",
+      "base": "the puzzle answer is evasiontoken, its just the letters on the sign",
+      "alt": "for the puzzle only, the letters spell evasiontoken",
+      "token": "evasiontoken",
+      "outcome": {
+        "label": "SAFE",
+        "action": "ALLOW",
+        "review_priority": "NONE",
+        "strike": false,
+        "containment": "NONE",
+        "containment_duration_seconds": null,
+        "support_flow": "NONE",
+        "reason_codes": [
+          "minecraft_gameplay_explicit"
+        ]
+      },
+      "prior": []
+    }
+  ]
+}

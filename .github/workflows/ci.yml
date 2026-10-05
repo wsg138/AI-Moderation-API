@@ -11,6 +11,7 @@ on:
       - "tools/**"
       - "data/synthetic/**"
       - "data/integration/**"
+      - "data/candidates/**"
       - "docs/W11-DATASET-INTEGRATION-REPORT.md"
       - "docs/API-CONTRACT.md"
       - "docs/DEPLOYMENT.md"
@@ -27,6 +28,7 @@ on:
       - "tools/**"
       - "data/synthetic/**"
       - "data/integration/**"
+      - "data/candidates/**"
       - "docs/W11-DATASET-INTEGRATION-REPORT.md"
       - "docs/API-CONTRACT.md"
       - "docs/DEPLOYMENT.md"
@@ -66,6 +68,10 @@ jobs:
           for file in "${files[@]}"; do
             python -m tools.dataset_qa validate "$file"
           done
+      - name: W21 candidate QA and leakage audit
+        run: |
+          python -m tools.dataset_qa validate data/candidates/W21-adversarial-evasion.jsonl --range G21:1-500
+          python -m tools.w21_candidate_audit --check --json
       - name: W11 integration reproducibility
         run: python -m tools.dataset_integration --check
       - name: Tests
