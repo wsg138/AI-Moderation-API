@@ -1,58 +1,75 @@
 {
   "candidate": "baseline-tfidf",
-  "candidate_description": "TF-IDF (1-2gram, 30k max_features, sublinear_tf, min_df=2) + LogisticRegression (C=1.0, balanced class_weight, max_iter=2000)",
+  "model_version": "w12-baseline-tfidf-v2",
+  "serialization_version": "w12-v2",
   "seed": 42,
-  "initial_model_freeze": {
-    "frozen_at": "2026-10-03T06:47:00Z",
-    "code_commit_sha": "49930627d3fad9505f9ef4db7c2708030f9b6723"
+  "original_v1_history": {
+    "initial_model_freeze_sha": "49930627d3fad9505f9ef4db7c2708030f9b6723",
+    "old_heldout_evidence_observed": true,
+    "status": "superseded_development_evidence",
+    "reason": "material preprocessing correction after observation: train/runtime timing/speaker parity plus removal of post-target future messages"
+  },
+  "v2_preprocessing": {
+    "introduced_at_sha": "8604f292efc37469f06b419e82570dc31c9ead55",
+    "current_model_code_head": "3aac90ca8d0d57ca2174a852f961c6b753e7205d",
+    "canonical_speakers": "first appearance",
+    "target_offset_ms": 0,
+    "prior_offsets": "target-relative negative/zero",
+    "post_target_messages_excluded": true,
+    "editorial_metadata_excluded_from_model_input": true
   },
   "final_selection": {
-    "completed_by_validation_only_evidence": true,
-    "evidence_workflow_run_id": 37157150269,
-    "evidence_head_sha": "b2df8afab52699a43c27192dc61cf44adb2287a9",
-    "selected_candidate_changed_after_heldout_observation": false,
-    "preprocessing_changed_after_heldout_observation": false,
-    "thresholds_changed_after_heldout_observation": false,
-    "model_parameters_changed_after_heldout_observation": false,
-    "selection_rationale": "Baseline remained selected after the mandatory second pretrained candidate completed. Validation label accuracy/macro-F1 were 0.9195/0.8441 for baseline, 0.6779/0.4433 for bert-tiny, and 0.8571/0.7532 for bert-mini. Minecraft gameplay BLOCK false-positive rates were 0.0182, 0.0909, and 0.0545 respectively. Both encoders reached 0.9636 real-world-threat BLOCK recall versus baseline 0.9273; baseline was retained because its overall validation quality and normal-gameplay false-positive profile were stronger."
+    "basis": "W11 train + validation only",
+    "evidence_workflow_run_id": 37225843627,
+    "evidence_head_sha": "3aac90ca8d0d57ca2174a852f961c6b753e7205d",
+    "selected_candidate": "baseline-tfidf",
+    "thresholds_retuned_after_old_heldout_observation": false,
+    "old_heldout_used_for_v2_selection": false,
+    "metrics": {
+      "label_accuracy": 0.9142857142857143,
+      "label_macro_f1": 0.8281258599860339,
+      "block_precision": 0.9375,
+      "block_recall": 0.9217877094972067,
+      "minecraft_gameplay_block_false_positive_rate": 0.03571428571428571,
+      "real_world_threat_block_recall": 0.9090909090909091,
+      "calibration_ece": 0.16288780821650672,
+      "calibration_brier": 0.07907764342004127
+    },
+    "rationale": "baseline retained for stronger semantic quality and lower normal-user false positives; BERT Mini has higher BLOCK/threat recall and better calibration but worse gameplay/Discord/explicit-cue false positives and misses one split-message threat validation case"
   },
-  "calibration": {
-    "fitted_on": "validation only",
-    "validation_brier": 0.078,
-    "validation_ece": 0.168
-  },
-  "thresholds": {
-    "block_threshold": 0.5,
-    "note": "Unchanged provisional argmax/0.5 behavior. No threshold was retuned after frozen test, frozen-adversarial, or owner-golden results were observed."
-  },
-  "serialization": "workers/w12/dataset.py::serialize_messages v1 ([PROFILE=], abstract [SPEAKER@+offsetms], [TARGET] markers); runtime serialization reproduces the same structural contract",
   "w11_split": {
     "algorithm": "w11-v2",
     "train": 3269,
     "validation": 385,
     "test": 410,
-    "frozen_adversarial": 436
+    "frozen_adversarial": 436,
+    "reshuffled": false
   },
-  "contamination_statement": "Training used W11 train only and candidate selection/calibration used validation only. Frozen test, frozen_adversarial, and owner_golden were opened before the mandatory second encoder comparison completed. The second encoder was subsequently trained on train and evaluated on validation only; the selected baseline, model parameters, preprocessing, and threshold behavior did not change. Those held-out results were not used to choose the final candidate and remain the one-time acceptance evidence for this unchanged model version. Any future candidate, model, preprocessing, or threshold change must treat the already-observed held-outs as development evidence and use a new/versioned unseen acceptance set.",
   "selected_onnx_evidence": {
-    "workflow_run_id": 37157150269,
-    "metadata_sha256": "f3489e5fffb54303f34ee4f9bef672b211556ee6a6a0d2f2994d3e1c6e7dd1df",
-    "sklearn_onnx_prediction_mismatches": 0,
-    "max_abs_probability_delta": 1.6771714006491578e-7,
-    "runtime_artifact_bytes": 1022836,
-    "p50_ms": 0.23008799999502116,
-    "p95_ms": 0.24844499998266656,
-    "p99_ms": 0.2706880000005185,
-    "rss_attributable_mb": 0.46875,
+    "model_version": "w12-baseline-tfidf-v2",
+    "metadata_sha256": "aca804fd0bdedd7414be7dbeaecb777c68e2ebfdf299660a6920fce240e111c2",
+    "feature_count": 7073,
+    "runtime_artifact_bytes": 1010811,
+    "validation_examples": 385,
+    "prediction_mismatches": 0,
+    "max_abs_probability_delta": 1.8235273024913567e-7,
+    "artifact_id": 11311807878,
+    "artifact_zip_sha256": "0fc9e21da1486d496800fd11b6c084b5d449e269204de56be0cac29535a4d87e",
+    "artifact_expires_at": "2026-11-03T18:50:39Z",
     "quantization": {
       "attempted": true,
-      "supported": true,
       "selected": false,
-      "metadata_sha256": "4b5fec4fa0992620fd18bde46122b5824e3fca8f80b3829265f3927763f0c695",
-      "prediction_mismatches": 4,
-      "max_abs_probability_delta": 0.027912365454849986,
-      "decision": "retain exact-parity FP32 bundle"
+      "runtime_artifact_bytes": 420811,
+      "metadata_sha256": "09e1e9c1886a85d88261c38113fc3c4785bafc09bedcedc04507973abda87e81",
+      "validation_prediction_mismatches": 3,
+      "max_abs_probability_delta": 0.02604693601774083,
+      "decision": "retain FP32 because int8 changes validation predictions"
     }
   },
-  "freeze_status": "final_selected_candidate_unchanged_after_required_validation_comparison"
+  "final_acceptance": {
+    "status": "AWAITING_FRESH_UNSEEN_W20_ACCEPTANCE",
+    "issue": 43,
+    "pr": 44,
+    "rule": "one-shot evaluation after independent W20 review/freeze; any subsequent semantic model/preprocessing/threshold change burns W20 and requires a new unseen set"
+  }
 }
