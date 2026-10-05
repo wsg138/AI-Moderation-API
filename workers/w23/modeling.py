@@ -5,11 +5,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-import numpy as np
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import StratifiedKFold
-from sklearn.pipeline import FeatureUnion
+import numpy as np  # pyright: ignore[reportMissingImports]
+from sklearn.feature_extraction.text import TfidfVectorizer  # pyright: ignore[reportMissingImports]
+from sklearn.linear_model import LogisticRegression  # pyright: ignore[reportMissingImports]
+from sklearn.model_selection import StratifiedKFold  # pyright: ignore[reportMissingImports]
+from sklearn.pipeline import FeatureUnion  # pyright: ignore[reportMissingImports]
 
 from workers.w12.dataset import (
     ACTION_TO_ID,
@@ -151,9 +151,10 @@ def existing_word_baseline_bundle(
 
     model = train_baseline(train_examples, seed=SEED)
     texts = [item.serialized for item in examples]
+    features = model.vectorizer.transform(texts)
     probabilities = {
-        name: np.asarray(matrix, dtype=np.float64)
-        for name, matrix in model.predict_proba_all(texts).items()
+        name: _aligned_probabilities(head, features, HEAD_CLASS_COUNTS[name])
+        for name, head in model.heads.items()
     }
     predictions = model.predict_all(texts)
     return PredictionBundle(predictions=predictions, probabilities=probabilities)

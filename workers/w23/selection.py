@@ -65,7 +65,7 @@ def select_screening_rule(rule_reports: list[dict]) -> dict:
     )
     return {
         "rule": chosen["name"],
-        "selection_order": "BLOCK recall, then precision, then F1",
+        "selection_order": "screening recall, then precision, then F1",
     }
 
 
@@ -108,7 +108,11 @@ def select_strike_rule(rule_reports: list[dict], baseline: dict) -> dict:
     }
 
 
-def select_hypothetical_auto_rule(rule_reports: list[dict]) -> dict:
+def _recall_sacrifice(candidate: dict, baseline: dict) -> float:
+    return max(0.0, float(baseline["recall"]) - float(candidate["recall"]))
+
+
+def select_hypothetical_auto_rule(rule_reports: list[dict], baseline: dict) -> dict:
     eligible = [
         item
         for item in rule_reports
@@ -121,6 +125,8 @@ def select_hypothetical_auto_rule(rule_reports: list[dict]) -> dict:
             "reason": "No validation operating point reached the predeclared precision floor.",
             "best_observed_rule": best["name"],
             "best_observed_precision": best["precision"],
+            "best_observed_recall": best["recall"],
+            "recall_sacrifice_vs_baseline": _recall_sacrifice(best, baseline),
         }
     chosen = max(eligible, key=lambda item: (item["recall"], item["precision"]))
     return {
@@ -129,5 +135,6 @@ def select_hypothetical_auto_rule(rule_reports: list[dict]) -> dict:
         "precision_floor": AUTO_PUNISHMENT_PRECISION_FLOOR,
         "precision": chosen["precision"],
         "recall": chosen["recall"],
+        "recall_sacrifice_vs_baseline": _recall_sacrifice(chosen, baseline),
         "reason": "Development calculation only; automatic punishment remains disabled.",
     }

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import numpy as np
+import numpy as np  # pyright: ignore[reportMissingImports]
 
 from workers.w12.dataset import ACTION_TO_ID, CONTAINMENT_TO_ID
 from workers.w23.config import BLOCK_THRESHOLDS, SCREENING_THRESHOLDS, STRIKE_THRESHOLDS
@@ -16,6 +16,11 @@ def positive_probability(
     positive_id: int,
 ) -> list[float]:
     return bundle.probabilities[head][:, positive_id].astype(float).tolist()
+
+
+def screening_probability(bundle: PredictionBundle) -> list[float]:
+    allow_id = ACTION_TO_ID["ALLOW"]
+    return (1.0 - bundle.probabilities["action"][:, allow_id]).astype(float).tolist()
 
 
 def block_probability(bundle: PredictionBundle) -> list[float]:
@@ -44,11 +49,11 @@ def _threshold_rules(
 def screening_rules(bundles: dict[str, PredictionBundle]) -> dict[str, list[int]]:
     result: dict[str, list[int]] = {}
     for name in ("word", "char", "combined", "bert", "meta"):
-        probabilities = block_probability(bundles[name])
+        probabilities = screening_probability(bundles[name])
         result.update(_threshold_rules(name, probabilities, SCREENING_THRESHOLDS))
-    word = np.asarray(block_probability(bundles["word"]))
-    bert = np.asarray(block_probability(bundles["bert"]))
-    combined = np.asarray(block_probability(bundles["combined"]))
+    word = np.asarray(screening_probability(bundles["word"]))
+    bert = np.asarray(screening_probability(bundles["bert"]))
+    combined = np.asarray(screening_probability(bundles["combined"]))
     max_prob = np.maximum.reduce([word, bert, combined]).tolist()
     avg_prob = ((word + bert + combined) / 3.0).tolist()
     result.update(_threshold_rules("union-prob", max_prob, SCREENING_THRESHOLDS))

@@ -6,10 +6,10 @@ import argparse
 import json
 from pathlib import Path
 
-import numpy as np
-import torch
-from sklearn.model_selection import StratifiedKFold
-from torch.utils.data import DataLoader
+import numpy as np  # pyright: ignore[reportMissingImports]
+import torch  # pyright: ignore[reportMissingImports]
+from sklearn.model_selection import StratifiedKFold  # pyright: ignore[reportMissingImports]
+from torch.utils.data import DataLoader  # pyright: ignore[reportMissingImports]
 
 from workers.w12.dataset import LABEL_TO_ID, ModerationExample, load_partition
 from workers.w12.train_encoder import (

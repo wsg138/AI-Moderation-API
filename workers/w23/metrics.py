@@ -14,6 +14,10 @@ from workers.w23.config import IMPORTANT_BENIGN_SLICES
 from workers.w23.modeling import PredictionBundle
 
 
+def gold_screening(examples: list[ModerationExample]) -> list[int]:
+    return [1 if item.action != "ALLOW" else 0 for item in examples]
+
+
 def gold_block(examples: list[ModerationExample]) -> list[int]:
     return [1 if item.action == "BLOCK" else 0 for item in examples]
 
@@ -26,26 +30,28 @@ def gold_mute(examples: list[ModerationExample]) -> list[int]:
     return [1 if item.containment == "MUTE" else 0 for item in examples]
 
 
+def _safe_ratio(numerator: int | float, denominator: int | float) -> float:
+    return float(numerator / denominator) if denominator else 0.0
+
+
+def _confusion_counts(gold: list[int], predicted: list[int]) -> tuple[int, int, int, int]:
+    pairs = list(zip(gold, predicted, strict=True))
+    tp = pairs.count((1, 1))
+    fp = pairs.count((0, 1))
+    fn = pairs.count((1, 0))
+    tn = pairs.count((0, 0))
+    return tp, fp, fn, tn
+
+
 def binary_metrics(gold: list[int], predicted: list[int]) -> dict[str, float | int]:
-    tp = sum(
-        expected == 1 and actual == 1 for expected, actual in zip(gold, predicted, strict=True)
-    )
-    fp = sum(
-        expected == 0 and actual == 1 for expected, actual in zip(gold, predicted, strict=True)
-    )
-    fn = sum(
-        expected == 1 and actual == 0 for expected, actual in zip(gold, predicted, strict=True)
-    )
-    tn = len(gold) - tp - fp - fn
-    precision = tp / (tp + fp) if tp + fp else 0.0
-    recall = tp / (tp + fn) if tp + fn else 0.0
-    f1 = 2 * precision * recall / (precision + recall) if precision + recall else 0.0
-    fpr = fp / (fp + tn) if fp + tn else 0.0
+    tp, fp, fn, tn = _confusion_counts(gold, predicted)
+    precision = _safe_ratio(tp, tp + fp)
+    recall = _safe_ratio(tp, tp + fn)
     return {
         "precision": precision,
         "recall": recall,
-        "f1": f1,
-        "false_positive_rate": fpr,
+        "f1": _safe_ratio(2 * precision * recall, precision + recall),
+        "false_positive_rate": _safe_ratio(fp, fp + tn),
         "tp": tp,
         "fp": fp,
         "fn": fn,
@@ -57,22 +63,43 @@ def threshold_predictions(probabilities: Iterable[float], threshold: float) -> l
     return [1 if float(value) >= threshold else 0 for value in probabilities]
 
 
+def _slice_fp_record(
+    examples: list[ModerationExample],
+    predicted_block: list[int],
+    name: str,
+) -> dict[str, float | int | None]:
+    indices = [index for index, item in enumerate(examples) if slice_predicate(item, name)]
+    allowed = [index for index in indices if examples[index].action != "BLOCK"]
+    false_positives = sum(predicted_block[index] == 1 for index in allowed)
+    rate = _safe_ratio(false_positives, len(allowed)) if allowed else None
+    return {
+        "n": len(indices),
+        "n_gold_allow": len(allowed),
+        "false_positives": false_positives,
+        "false_positive_rate": rate,
+    }
+
+
 def important_slice_fprs(
     examples: list[ModerationExample],
     predicted_block: list[int],
 ) -> dict[str, dict[str, float | int | None]]:
-    result = {}
-    for name in IMPORTANT_BENIGN_SLICES:
-        indices = [index for index, item in enumerate(examples) if slice_predicate(item, name)]
-        allowed = [index for index in indices if examples[index].action != "BLOCK"]
-        false_positives = [index for index in allowed if predicted_block[index] == 1]
-        result[name] = {
-            "n": len(indices),
-            "n_gold_allow": len(allowed),
-            "false_positives": len(false_positives),
-            "false_positive_rate": len(false_positives) / len(allowed) if allowed else None,
-        }
-    return result
+    return {
+        name: _slice_fp_record(examples, predicted_block, name) for name in IMPORTANT_BENIGN_SLICES
+    }
+
+
+def screening_rule_report(
+    name: str,
+    examples: list[ModerationExample],
+    predicted: list[int],
+    probabilities: list[float] | None = None,
+) -> dict:
+    gold = gold_screening(examples)
+    report = {"name": name, **binary_metrics(gold, predicted)}
+    if probabilities is not None:
+        report["calibration"] = calibration_report(gold, probabilities)
+    return report
 
 
 def decision_rule_report(

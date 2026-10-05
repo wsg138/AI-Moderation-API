@@ -5,20 +5,21 @@ from __future__ import annotations
 import inspect
 from pathlib import Path
 
-import pytest
+import pytest  # pyright: ignore[reportMissingImports]
 
 pytest.importorskip("sklearn")
 
 from workers.w12.dataset import load_partition
 from workers.w23.config import IMPORTANT_BENIGN_SLICES
 from workers.w23.evasion import TRANSFORMS, build_probe_set, deterministic_probe_sample
-from workers.w23.metrics import binary_metrics, decision_rule_report
+from workers.w23.metrics import binary_metrics, decision_rule_report, gold_screening
 from workers.w23.modeling import (
+    HEAD_CLASS_COUNTS,
     existing_word_baseline_bundle,
     predict_text_model,
     train_text_model,
 )
-from workers.w23.selection import select_block_rule
+from workers.w23.selection import select_block_rule, select_hypothetical_auto_rule
 
 
 def _slice_rates(rate: float) -> dict:
@@ -54,6 +55,14 @@ def test_word_candidate_matches_existing_w12_baseline() -> None:
     existing = existing_word_baseline_bundle(train, validation)
     w23 = predict_text_model(train_text_model(train, "word"), validation)
     assert w23.predictions == existing.predictions  # nosec B101 - test assertion
+
+
+def test_existing_word_probabilities_align_to_full_head_vocabularies() -> None:
+    train = load_partition("train")
+    validation = load_partition("validation")
+    existing = existing_word_baseline_bundle(train, validation)
+    for name, class_count in HEAD_CLASS_COUNTS.items():
+        assert existing.probabilities[name].shape == (len(validation), class_count)  # nosec B101
 
 
 def test_train_and_validation_membership_are_disjoint() -> None:
@@ -110,6 +119,29 @@ def test_binary_metrics_use_actual_paired_predictions() -> None:
     assert metrics["recall"] == 0.5  # nosec B101 - test assertion
     assert metrics["tp"] == 1  # nosec B101 - test assertion
     assert metrics["fp"] == 1  # nosec B101 - test assertion
+
+
+def test_screening_ground_truth_includes_review_and_block() -> None:
+    examples = load_partition("validation")
+    gold = gold_screening(examples)
+    review = next(index for index, item in enumerate(examples) if item.action == "REVIEW")
+    block = next(index for index, item in enumerate(examples) if item.action == "BLOCK")
+    allow = next(index for index, item in enumerate(examples) if item.action == "ALLOW")
+    assert gold[review] == 1  # nosec B101 - test assertion
+    assert gold[block] == 1  # nosec B101 - test assertion
+    assert gold[allow] == 0  # nosec B101 - test assertion
+
+
+def test_hypothetical_auto_rule_reports_recall_sacrifice() -> None:
+    baseline = {"recall": 0.90}
+    candidates = [
+        {"name": "precise", "precision": 0.995, "recall": 0.55, "tp": 10},
+        {"name": "less-precise", "precision": 0.98, "recall": 0.80, "tp": 20},
+    ]
+    selected = select_hypothetical_auto_rule(candidates, baseline)
+    assert selected["enabled"] is False  # nosec B101 - test assertion
+    assert selected["hypothetical_rule"] == "precise"  # nosec B101 - test assertion
+    assert selected["recall_sacrifice_vs_baseline"] == pytest.approx(0.35)  # nosec B101
 
 
 def test_block_selection_prefers_precision_with_recall_and_slice_guard() -> None:

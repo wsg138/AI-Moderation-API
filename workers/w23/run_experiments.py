@@ -29,6 +29,7 @@ from workers.w23.metrics import (
     gold_block,
     mute_rule_report,
     paired_error_overlap,
+    screening_rule_report,
     strike_rule_report,
 )
 from workers.w23.modeling import (
@@ -159,6 +160,13 @@ def _oof_bundles(
     }
 
 
+def _screening_reports(
+    validation: list[ModerationExample],
+    rules: dict[str, list[int]],
+) -> list[dict]:
+    return [screening_rule_report(name, validation, predicted) for name, predicted in rules.items()]
+
+
 def _decision_reports(
     validation: list[ModerationExample],
     rules: dict[str, list[int]],
@@ -185,7 +193,7 @@ def _rule_reports(
     bundles: dict[str, PredictionBundle],
 ) -> tuple[dict, dict[str, list[int]]]:
     screening = screening_rules(bundles)
-    screening_reports = _decision_reports(validation, screening)
+    screening_reports = _screening_reports(validation, screening)
     blocks = block_rules(bundles)
     block_reports = _decision_reports(validation, blocks)
     baseline = next(item for item in block_reports if item["name"] == "word-argmax")
@@ -198,6 +206,7 @@ def _rule_reports(
     )
     mutes = mute_rules(bundles)
     mute_reports = _mute_reports(validation, mutes)
+    baseline_mute = next(item for item in mute_reports if item["name"] == "word-argmax")
     return {
         "screening": {
             "selection": select_screening_rule(screening_reports),
@@ -207,9 +216,16 @@ def _rule_reports(
         "strike": {
             "selection": select_strike_rule(strike_reports, baseline_strike),
             "candidates": strike_reports,
-            "hypothetical_auto_punishment": select_hypothetical_auto_rule(strike_reports),
+            "hypothetical_auto_punishment": select_hypothetical_auto_rule(
+                strike_reports, baseline_strike
+            ),
         },
-        "containment_mute": {"candidates": mute_reports},
+        "containment_mute": {
+            "candidates": mute_reports,
+            "hypothetical_auto_punishment": select_hypothetical_auto_rule(
+                mute_reports, baseline_mute
+            ),
+        },
     }, blocks
 
 

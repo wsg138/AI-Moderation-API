@@ -10,7 +10,7 @@ import math
 import re
 from dataclasses import dataclass
 
-import numpy as np
+import numpy as np  # pyright: ignore[reportMissingImports]
 
 from workers.w12.dataset import ModerationExample
 

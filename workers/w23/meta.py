@@ -4,10 +4,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-import numpy as np
-from sklearn.linear_model import LogisticRegression
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import StandardScaler
+import numpy as np  # pyright: ignore[reportMissingImports]
+from sklearn.linear_model import LogisticRegression  # pyright: ignore[reportMissingImports]
+from sklearn.pipeline import Pipeline  # pyright: ignore[reportMissingImports]
+from sklearn.preprocessing import StandardScaler  # pyright: ignore[reportMissingImports]
 
 from workers.w12.dataset import ModerationExample
 from workers.w23.features import RuntimeFeatureEncoder

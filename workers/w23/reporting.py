@@ -35,6 +35,21 @@ def _model_rows(report: dict[str, Any]) -> list[str]:
     return rows
 
 
+def _auto_summary(label: str, result: dict[str, Any]) -> str:
+    if "hypothetical_rule" in result:
+        return (
+            f"- Hypothetical auto {label}: \x60{result['hypothetical_rule']}\x60, "
+            + f"precision {_pct(result['precision'])}, recall {_pct(result['recall'])}, "
+            + f"recall sacrifice {_pct(result['recall_sacrifice_vs_baseline'])}; disabled."
+        )
+    return (
+        f"- Hypothetical auto {label}: no rule reached the precision floor; "
+        + f"best precision {_pct(result['best_observed_precision'])}, "
+        + f"recall {_pct(result['best_observed_recall'])}, recall sacrifice "
+        + f"{_pct(result['recall_sacrifice_vs_baseline'])}."
+    )
+
+
 def _decision_lines(report: dict[str, Any]) -> list[str]:
     tiers = report["decision_tiers"]
     recommended = report["recommended_architecture"]
@@ -43,12 +58,12 @@ def _decision_lines(report: dict[str, Any]) -> list[str]:
         f"- BLOCK: \x60{tiers['block']['selection']['rule']}\x60.",
         f"- STRIKE: \x60{tiers['strike']['selection']['rule']}\x60.",
         "- Automatic punishment: disabled; calculations are hypothetical only.",
-        (
-            "- Replace current W12 candidate: "
-            f"\x60{recommended['justifies_replacing_current_w12_candidate']}\x60 "
-            f"(BLOCK precision delta {_pct(recommended['precision_gain_vs_w12_word'])}, "
-            f"recall ratio {_pct(recommended['recall_ratio_vs_w12_word'])})."
-        ),
+        _auto_summary("STRIKE", tiers["strike"]["hypothetical_auto_punishment"]),
+        _auto_summary("MUTE", tiers["containment_mute"]["hypothetical_auto_punishment"]),
+        "- Replace current W12 candidate: "
+        + f"\x60{recommended['justifies_replacing_current_w12_candidate']}\x60 "
+        + f"(BLOCK precision delta {_pct(recommended['precision_gain_vs_w12_word'])}, "
+        + f"recall ratio {_pct(recommended['recall_ratio_vs_w12_word'])}).",
     ]
 
 
@@ -59,14 +74,10 @@ def _paired_table(report: dict[str, Any]) -> list[str]:
     return [
         "| Rule | BLOCK precision | BLOCK recall | BLOCK F1 |",
         "| --- | ---: | ---: | ---: |",
-        (
-            f"| Word+BERT intersection | {_pct(intersection['precision'])} | "
-            f"{_pct(intersection['recall'])} | {_pct(intersection['f1'])} |"
-        ),
-        (
-            f"| Word+BERT union | {_pct(union['precision'])} | "
-            f"{_pct(union['recall'])} | {_pct(union['f1'])} |"
-        ),
+        f"| Word+BERT intersection | {_pct(intersection['precision'])} | "
+        + f"{_pct(intersection['recall'])} | {_pct(intersection['f1'])} |",
+        f"| Word+BERT union | {_pct(union['precision'])} | "
+        + f"{_pct(union['recall'])} | {_pct(union['f1'])} |",
     ]
 
 
@@ -75,14 +86,10 @@ def _overlap_lines(report: dict[str, Any]) -> list[str]:
     fp = overlap["false_positives"]
     fn = overlap["false_negatives"]
     return [
-        (
-            f"- False positives: word {fp['left']}, BERT {fp['right']}, "
-            f"shared {fp['intersection']}, union {fp['union']}."
-        ),
-        (
-            f"- False negatives: word {fn['left']}, BERT {fn['right']}, "
-            f"shared {fn['intersection']}, union {fn['union']}."
-        ),
+        f"- False positives: word {fp['left']}, BERT {fp['right']}, "
+        + f"shared {fp['intersection']}, union {fp['union']}.",
+        f"- False negatives: word {fn['left']}, BERT {fn['right']}, "
+        + f"shared {fn['intersection']}, union {fn['union']}.",
     ]
 
 
@@ -110,10 +117,8 @@ def render_markdown(report: dict[str, Any]) -> str:
         "",
         "## Model comparison",
         "",
-        (
-            "| Model | Semantic accuracy | Macro F1 | BLOCK precision | BLOCK recall | "
-            "STRIKE precision | STRIKE recall | MUTE precision | MUTE recall |"
-        ),
+        "| Model | Semantic accuracy | Macro F1 | BLOCK precision | BLOCK recall | "
+        + "STRIKE precision | STRIKE recall | MUTE precision | MUTE recall |",
         "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
         *_model_rows(report),
         "",
