@@ -15,7 +15,7 @@ from pathlib import Path
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 
-from .dataset import (
+from workers.w12.dataset import (
     ACTION_TO_ID,
     ACTIONS,
     CONTAINMENT_TO_ID,
@@ -107,7 +107,7 @@ def train_baseline(
 
 
 def main() -> None:
-    from .dataset import load_partition
+    from workers.w12.dataset import load_partition
 
     train = load_partition("train")
     validation = load_partition("validation")
