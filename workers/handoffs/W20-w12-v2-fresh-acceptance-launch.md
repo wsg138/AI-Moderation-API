@@ -152,9 +152,14 @@ You may add additional provenance/coverage/leakage fields, but do not rename or
 remove these fields.
 
 For the dedicated benign-hard-negative quota, use
-`domain: "benign_hard_negative"`. This is evaluation metadata only and is not
-part of model input. Other policy slices should continue using the existing
-settled reason codes/channel profiles/labels required by Policy v1 and dataset QA.
+`domain: "benign_hard_negative"`.
+
+For the allowed Minecraft/fictional dangerous-instruction contrast quota, use
+`domain: "dangerous_instruction_benign_contrast"`.
+
+These domain values are evaluation metadata only and are not part of model input.
+Other policy slices should continue using the existing settled reason
+codes/channel profiles/labels required by Policy v1 and dataset QA.
 
 ## Freeze manifest
 
