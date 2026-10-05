@@ -1,0 +1,153 @@
+{
+  "schema_version": 2,
+  "candidate": "baseline-tfidf",
+  "model_version": "w12-baseline-tfidf-v2-int8",
+  "seed": 42,
+  "serialization_version": "w12-v2",
+  "serialization": "w12-v2: canonical first-seen speaker aliases; target/current = 0ms; prior offsets are target-relative; post-target messages excluded",
+  "vectorizer": {
+    "path": "baseline-tfidf-vectorizer.json",
+    "sha256": "6b2d2e3a6c915adabbc3ac17ae72fe058a6bb8d4ee76c29601558bbfb6a5ee6d",
+    "bytes": 216544,
+    "feature_count": 7073
+  },
+  "target_opset": 17,
+  "export_backend": "standard-onnx-logistic-regression",
+  "sklearn_version": "1.9.1",
+  "onnx_version": "1.23.0",
+  "heads": {
+    "label": {
+      "path": "baseline-tfidf-label-int8.onnx",
+      "sha256": "4b8fb721079a07f5cba8d217198b9a845f55edfb651b1d3b6dfe42f34488d376",
+      "bytes": 121244,
+      "input_name": "features",
+      "probabilities_output": "probabilities",
+      "classes": [
+        "SAFE",
+        "GAMEPLAY_VIOLENCE",
+        "LOW_LEVEL_HARASSMENT",
+        "SEVERE_HARASSMENT",
+        "STAFF_TARGETED_ABUSE",
+        "REAL_WORLD_THREAT",
+        "SELF_HARM_INSTRUCTION",
+        "SELF_HARM_INTENT",
+        "THIRD_PARTY_SELF_HARM_CONCERN",
+        "HATE",
+        "SLUR_USE",
+        "SEXUAL_CONTENT",
+        "SEXUAL_MINOR",
+        "DOXXING",
+        "GROOMING",
+        "DANGEROUS_REAL_WORLD_INSTRUCTIONS",
+        "AMBIGUOUS_REVIEW"
+      ],
+      "class_ids": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        15,
+        16,
+        17
+      ]
+    },
+    "action": {
+      "path": "baseline-tfidf-action-int8.onnx",
+      "sha256": "b3cb7e8c3a88ef7b82fff8f5cc3ac1405f2d490adf0464128f6901b7b9763235",
+      "bytes": 22167,
+      "input_name": "features",
+      "probabilities_output": "probabilities",
+      "classes": [
+        "ALLOW",
+        "BLOCK",
+        "REVIEW"
+      ],
+      "class_ids": [
+        0,
+        1,
+        2
+      ]
+    },
+    "review_priority": {
+      "path": "baseline-tfidf-review_priority-int8.onnx",
+      "sha256": "950c52ded7aa4a1b00eca51c7ecb6365e56971c96b66cb6eccfe2e5ed9f18f81",
+      "bytes": 22176,
+      "input_name": "features",
+      "probabilities_output": "probabilities",
+      "classes": [
+        "NONE",
+        "NORMAL",
+        "URGENT"
+      ],
+      "class_ids": [
+        0,
+        1,
+        2
+      ]
+    },
+    "strike": {
+      "path": "baseline-tfidf-strike-int8.onnx",
+      "sha256": "825299a9481d37037509b90e6ffd4a6872146b5e5880616a418cf18ad96e5cbd",
+      "bytes": 8251,
+      "input_name": "features",
+      "probabilities_output": "probabilities",
+      "classes": [
+        "false",
+        "true"
+      ],
+      "class_ids": [
+        0,
+        1
+      ]
+    },
+    "containment": {
+      "path": "baseline-tfidf-containment-int8.onnx",
+      "sha256": "1a37ba63cbd3dbc3a1ba74655f90a97de4d14025dbfd2be7701c1662efc911c0",
+      "bytes": 8256,
+      "input_name": "features",
+      "probabilities_output": "probabilities",
+      "classes": [
+        "NONE",
+        "MUTE"
+      ],
+      "class_ids": [
+        0,
+        1
+      ]
+    },
+    "support_flow": {
+      "path": "baseline-tfidf-support_flow-int8.onnx",
+      "sha256": "efcdd06d38b8701428299c4bef7ed103c0982665a8f9ad0aa782d7681a8f1368",
+      "bytes": 22173,
+      "input_name": "features",
+      "probabilities_output": "probabilities",
+      "classes": [
+        "NONE",
+        "SELF_HARM_CHECK",
+        "TARGET_SAFETY_CHECK"
+      ],
+      "class_ids": [
+        0,
+        1,
+        2
+      ]
+    }
+  },
+  "export_command": "python -m workers.w12.export_baseline_onnx",
+  "source_evidence_run_id": 37225843627,
+  "source_evidence_head_sha": "3aac90ca8d0d57ca2174a852f961c6b753e7205d",
+  "metadata_sha256": "09e1e9c1886a85d88261c38113fc3c4785bafc09bedcedc04507973abda87e81",
+  "quantization": "onnxruntime-dynamic-qint8",
+  "selected": false,
+  "rejection_reason": "3 validation prediction mismatches; retain exact-parity FP32 bundle"
+}
