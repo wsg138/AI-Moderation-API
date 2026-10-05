@@ -131,6 +131,31 @@ Preserve all required outcome dimensions. Do not collapse the problem to a singl
 
 No raw production chat, private evidence, account identifiers, credentials, staff-only text, or secrets may be committed.
 
+## Acceptance manifest contract
+
+Use these exact top-level fields so the frozen W12 scorer can verify that it is
+receiving the independently prepared corpus:
+
+```json
+{
+  "contract": "w12-v2-fresh-acceptance-v1",
+  "acceptance_only": true,
+  "forbidden_for_training": true,
+  "built_without_w12_predictions": true,
+  "dataset_sha256": "<sha256 of exact JSONL bytes>",
+  "record_count": 0,
+  "family_count": 0
+}
+```
+
+You may add additional provenance/coverage/leakage fields, but do not rename or
+remove these fields.
+
+For the dedicated benign-hard-negative quota, use
+`domain: "benign_hard_negative"`. This is evaluation metadata only and is not
+part of model input. Other policy slices should continue using the existing
+settled reason codes/channel profiles/labels required by Policy v1 and dataset QA.
+
 ## Freeze manifest
 
 Create a machine-readable manifest containing at minimum:
