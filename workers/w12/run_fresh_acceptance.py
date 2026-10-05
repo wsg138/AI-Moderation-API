@@ -18,14 +18,14 @@ from moderation_api.model_serialization import SERIALIZATION_VERSION
 from moderation_api.onnx_classifier import OnnxClassifier, OnnxClassifierConfig
 from moderation_api.tfidf_runtime import TfidfRuntimeVectorizer
 
-from .dataset import (
+from workers.w12.dataset import (
     ACTION_TO_ID,
     LABEL_TO_ID,
     ModerationExample,
     _record_to_example,
     is_fully_labeled,
 )
-from .evaluate import _slice_metrics, evaluate_predictions, runtime_visibility, slice_predicate
+from workers.w12.evaluate import _slice_metrics, evaluate_predictions, runtime_visibility, slice_predicate
 
 HEAD_NAMES = ("label", "action", "review_priority", "strike", "containment", "support_flow")
 
