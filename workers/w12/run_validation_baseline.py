@@ -7,9 +7,9 @@ import platform
 
 import sklearn
 
-from .baseline import train_baseline
-from .dataset import load_partition
-from .evaluate import REPORTS_DIR, evaluate_predictions
+from workers.w12.baseline import train_baseline
+from workers.w12.dataset import load_partition
+from workers.w12.evaluate import REPORTS_DIR, evaluate_predictions
 
 
 def main() -> None:
