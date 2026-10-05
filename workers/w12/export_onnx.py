@@ -46,7 +46,7 @@ def export_onnx(candidate: str, seed: int, max_len: int = 128) -> dict:
     device = torch.device("cpu")
 
     model = MultiTaskBert(cfg["hf_id"], local_dir).to(device)
-    ckpt = torch.load(ARTIFACT_DIR / f"{candidate}-seed{seed}.pt", map_location=device)
+    ckpt = torch.load(\n        ARTIFACT_DIR / f"{candidate}-seed{seed}.pt",\n        map_location=device,\n        weights_only=True,\n    )
     model.load_state_dict(ckpt)
     model.eval()
 
