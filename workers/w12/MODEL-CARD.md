@@ -6,8 +6,8 @@
 - **Model version:** `w12-baseline-tfidf-v2`
 - **Serialization:** `w12-v2`
 - **Policy version:** v1
-- **Model/code freeze used for current evidence:** `3aac90ca8d0d57ca2174a852f961c6b753e7205d`
-- **Validation/ONNX evidence workflow:** `w12-evidence` run `37225843627`
+- **Model/code freeze used for current evidence:** `2abf7bebff42de41063428ac647cfee80cbe1739`
+- **Validation/ONNX evidence workflow:** `w12-evidence` run `37320175852`
 - **Production deployment:** not authorized / not performed
 - **Final acceptance:** **PENDING** — requires independent fresh W20 acceptance set from issue #43 / PR #44.
 
@@ -121,7 +121,7 @@ Production runtime uses a safe JSON TF-IDF vectorizer plus six standard-op ONNX 
 It does not load pickle in production and performs no network download at startup.
 
 Current v2 selected FP32 bundle:
-- metadata SHA-256: `aca804fd0bdedd7414be7dbeaecb777c68e2ebfdf299660a6920fce240e111c2`
+- metadata SHA-256: `529880d0c97bb4ee50050b22cf8a61f88fa05bbb153e2f97f76d81e0e2a4f126`
 - vectorizer: 7,073 features, 216,544 bytes
 - total runtime artifact bytes: 1,010,811
 - validation parity: 0 predicted-class mismatches across all six heads / 385 examples
@@ -129,24 +129,24 @@ Current v2 selected FP32 bundle:
 - serialization version enforced as `w12-v2`
 
 Artifact review ZIP:
-- Actions artifact ID: `11311807878`
-- ZIP SHA-256: `0fc9e21da1486d496800fd11b6c084b5d449e269204de56be0cac29535a4d87e`
-- expires: 2026-11-03
+- Actions artifact ID: `11349359710`
+- ZIP SHA-256: `d3a7312c7b6360e65e944efe20b1f7754635476e94c640d90f22c6032114477d`
+- expires: 2026-11-04
 
 ## CPU benchmark
 
 GitHub-hosted Ubuntu x86-64, Python 3.12, ONNX Runtime, 4 reported CPUs.
 
 Selected FP32:
-- cold load: 13.85 ms
-- attributable RSS: 1.04 MB
-- single message p50/p95/p99: 0.553 / 0.647 / 1.006 ms
-- representative multi-message p50/p95/p99: 0.582 / 0.796 / 2.563 ms
-- multi-message batch-1 throughput: ~1,798 req/s
+- cold load: 31.88 ms
+- attributable RSS: 0.99 MB
+- single message p50/p95/p99: 0.551 / 0.599 / 0.812 ms
+- representative multi-message p50/p95/p99: 0.569 / 0.604 / 0.630 ms
+- multi-message batch-1 throughput: ~1,838 req/s
 
 Dynamic QInt8:
 - artifact bytes: 420,811
-- metadata SHA-256: `09e1e9c1886a85d88261c38113fc3c4785bafc09bedcedc04507973abda87e81`
+- metadata SHA-256: `d4fb525be175a0bb3592a65349fdf010378c7498d1f72f8763e6b79ea6e08997`
 - 3 head-level validation prediction mismatches
 - maximum probability delta: 0.02605
 - multi-message p50/p95/p99: 0.564 / 0.617 / 0.668 ms
@@ -155,18 +155,18 @@ QInt8 remains **rejected** for v2 because it changes validation predictions. FP3
 
 ## Evidence artifacts
 
-Current-head W12 evidence run `37225843627`:
-- baseline validation artifact `11311728142` — ZIP SHA-256 `23386236e43f6c3e3b0ff1e034782ed7516502b3de703faae0775e940cc3d797`
-- baseline ONNX artifact `11311807878` — ZIP SHA-256 `0fc9e21da1486d496800fd11b6c084b5d449e269204de56be0cac29535a4d87e`
-- BERT Tiny artifact `11311629011` — ZIP SHA-256 `b99e1ef2aaefa3864f98acda12d55a8554beac01564d8325a5c9feecdd0adb69`
-- BERT Mini artifact `11312028066` — ZIP SHA-256 `41eb6d4123b17e789bb1802e97138b8b55bca3829cefe4847ba1d6d9eb61e1e3`
+Current-head W12 evidence run `37320175852`:
+- baseline validation artifact `11349104683` — ZIP SHA-256 `48bbb3954e44d4283b2b2446f3e7884fb013b6a70cbba41aeb58d2544dd87750`
+- baseline ONNX artifact `11349359710` — ZIP SHA-256 `d3a7312c7b6360e65e944efe20b1f7754635476e94c640d90f22c6032114477d`
+- BERT Tiny artifact `11348849745` — ZIP SHA-256 `e06a0d9a0ace534423df35ec2817f222fd8a89c9893b9d471ad3c118e0ea97e3`
+- BERT Mini artifact `11351065305` — ZIP SHA-256 `afbfcb47c06119a9cdbd4b3ce7f2d48622b1c2aaecaad3cdf7cd279023879925`
 
-All currently expire 2026-11-03. A durable production artifact destination is still unresolved.
+All currently expire 2026-11-04. A durable production artifact destination is still unresolved.
 
 ## Acceptance contract
 
 W12 v2 is frozen for final acceptance at model/code head
-`3aac90ca8d0d57ca2174a852f961c6b753e7205d`, subject only to non-semantic
+`2abf7bebff42de41063428ac647cfee80cbe1739`, subject only to non-semantic
 documentation/static-analysis cleanup that is demonstrated not to change model/runtime outputs.
 
 Issue #43 / PR #44 owns a new independent unseen W20 acceptance set. W12 must not inspect that
