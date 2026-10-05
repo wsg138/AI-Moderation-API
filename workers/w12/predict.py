@@ -7,15 +7,16 @@ from pathlib import Path
 import torch
 from torch.utils.data import DataLoader
 
-from .baseline import load_baseline
-from .dataset import ModerationExample
+from .baseline import train_baseline
+from .dataset import ModerationExample, load_partition
 from .train_encoder import CANDIDATES, ModerationDataset, MultiTaskBert, load_candidate_tokenizer
 
 ARTIFACT_DIR = Path(__file__).resolve().parent / "artifacts"
 
 
 def predict_baseline(examples: list[ModerationExample]) -> tuple[dict[str, list[int]], list[float]]:
-    model = load_baseline(ARTIFACT_DIR / "baseline-tfidf.pkl")
+    """Retrain the deterministic baseline from W11 train, then predict."""
+    model = train_baseline(load_partition("train"), seed=42)
     texts = [e.serialized for e in examples]
     preds = model.predict_all(texts)
     probas = model.predict_proba_all(texts)
@@ -32,7 +33,7 @@ def predict_encoder(
     tokenizer = load_candidate_tokenizer(candidate)
     device = torch.device("cpu")
     model = MultiTaskBert(cfg["hf_id"], local_dir, cfg["revision"]).to(device)
-    ckpt = torch.load(ARTIFACT_DIR / f"{candidate}-seed{seed}.pt", map_location=device)
+    ckpt = torch.load(\n        ARTIFACT_DIR / f"{candidate}-seed{seed}.pt",\n        map_location=device,\n        weights_only=True,\n    )
     model.load_state_dict(ckpt)
     model.eval()
     loader = DataLoader(ModerationDataset(examples, tokenizer, 128), batch_size=batch_size)
