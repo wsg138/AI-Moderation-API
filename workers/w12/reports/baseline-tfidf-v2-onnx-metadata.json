@@ -1,0 +1,150 @@
+{
+  "schema_version": 2,
+  "candidate": "baseline-tfidf",
+  "model_version": "w12-baseline-tfidf-v2",
+  "seed": 42,
+  "serialization_version": "w12-v2",
+  "serialization": "w12-v2: canonical first-seen speaker aliases; target/current = 0ms; prior offsets are target-relative; post-target messages excluded",
+  "vectorizer": {
+    "path": "baseline-tfidf-vectorizer.json",
+    "sha256": "6b2d2e3a6c915adabbc3ac17ae72fe058a6bb8d4ee76c29601558bbfb6a5ee6d",
+    "bytes": 216544,
+    "feature_count": 7073
+  },
+  "target_opset": 17,
+  "export_backend": "standard-onnx-logistic-regression",
+  "sklearn_version": "1.9.1",
+  "onnx_version": "1.23.0",
+  "heads": {
+    "label": {
+      "path": "baseline-tfidf-label.onnx",
+      "sha256": "ad0163721e9fea839a60cf71b5f9690260117c7fabb82649927eb8c1fde7ec68",
+      "bytes": 481308,
+      "input_name": "features",
+      "probabilities_output": "probabilities",
+      "classes": [
+        "SAFE",
+        "GAMEPLAY_VIOLENCE",
+        "LOW_LEVEL_HARASSMENT",
+        "SEVERE_HARASSMENT",
+        "STAFF_TARGETED_ABUSE",
+        "REAL_WORLD_THREAT",
+        "SELF_HARM_INSTRUCTION",
+        "SELF_HARM_INTENT",
+        "THIRD_PARTY_SELF_HARM_CONCERN",
+        "HATE",
+        "SLUR_USE",
+        "SEXUAL_CONTENT",
+        "SEXUAL_MINOR",
+        "DOXXING",
+        "GROOMING",
+        "DANGEROUS_REAL_WORLD_INSTRUCTIONS",
+        "AMBIGUOUS_REVIEW"
+      ],
+      "class_ids": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        15,
+        16,
+        17
+      ]
+    },
+    "action": {
+      "path": "baseline-tfidf-action.onnx",
+      "sha256": "a83ae599174771388989b966244048b520c5e286c914a91ffaf37b7dd981ddfa",
+      "bytes": 85165,
+      "input_name": "features",
+      "probabilities_output": "probabilities",
+      "classes": [
+        "ALLOW",
+        "BLOCK",
+        "REVIEW"
+      ],
+      "class_ids": [
+        0,
+        1,
+        2
+      ]
+    },
+    "review_priority": {
+      "path": "baseline-tfidf-review_priority.onnx",
+      "sha256": "17e1c7df79175228bdcde33f134221fbed0be00e1a27df6cc1e199ae12724438",
+      "bytes": 85174,
+      "input_name": "features",
+      "probabilities_output": "probabilities",
+      "classes": [
+        "NONE",
+        "NORMAL",
+        "URGENT"
+      ],
+      "class_ids": [
+        0,
+        1,
+        2
+      ]
+    },
+    "strike": {
+      "path": "baseline-tfidf-strike.onnx",
+      "sha256": "0183f9f4c0281fcff302b40d9fe12174ab28bcb308dde91f30f7fc38b3385c11",
+      "bytes": 28722,
+      "input_name": "features",
+      "probabilities_output": "probabilities",
+      "classes": [
+        "false",
+        "true"
+      ],
+      "class_ids": [
+        0,
+        1
+      ]
+    },
+    "containment": {
+      "path": "baseline-tfidf-containment.onnx",
+      "sha256": "5b3a701b423af96db2c97da8b4d98d31adf4eb8949e610a4873ef929ff21876a",
+      "bytes": 28727,
+      "input_name": "features",
+      "probabilities_output": "probabilities",
+      "classes": [
+        "NONE",
+        "MUTE"
+      ],
+      "class_ids": [
+        0,
+        1
+      ]
+    },
+    "support_flow": {
+      "path": "baseline-tfidf-support_flow.onnx",
+      "sha256": "3fc683df25d81c20ee5f135e6ce83549583590dd5c810efc74a18c034d41b0c5",
+      "bytes": 85171,
+      "input_name": "features",
+      "probabilities_output": "probabilities",
+      "classes": [
+        "NONE",
+        "SELF_HARM_CHECK",
+        "TARGET_SAFETY_CHECK"
+      ],
+      "class_ids": [
+        0,
+        1,
+        2
+      ]
+    }
+  },
+  "export_command": "python -m workers.w12.export_baseline_onnx",
+  "source_evidence_run_id": 37225843627,
+  "source_evidence_head_sha": "3aac90ca8d0d57ca2174a852f961c6b753e7205d",
+  "metadata_sha256": "aca804fd0bdedd7414be7dbeaecb777c68e2ebfdf299660a6920fce240e111c2"
+}
