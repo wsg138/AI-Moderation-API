@@ -22,8 +22,8 @@ import onnxruntime as ort
 import torch
 from transformers import BertTokenizer
 
-from .dataset import load_partition
-from .train_encoder import CANDIDATES, MultiTaskBert
+from workers.w12.dataset import load_partition
+from workers.w12.train_encoder import CANDIDATES, MultiTaskBert
 
 ARTIFACT_DIR = Path(__file__).resolve().parent / "artifacts"
 EXPORT_DIR = ARTIFACT_DIR / "onnx"
