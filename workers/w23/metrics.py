@@ -186,7 +186,11 @@ def paired_error_overlap(
     right_fp = _error_indices(gold, right, 0, 1)
     left_fn = _error_indices(gold, left, 1, 0)
     right_fn = _error_indices(gold, right, 1, 0)
+    disagreements = sum(
+        left_value != right_value for left_value, right_value in zip(left, right, strict=True)
+    )
     return {
+        "prediction_disagreements": disagreements,
         "false_positives": _overlap_record(examples, left_fp, right_fp),
         "false_negatives": _overlap_record(examples, left_fn, right_fn),
     }

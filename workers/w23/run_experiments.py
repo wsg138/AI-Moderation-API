@@ -20,7 +20,12 @@ from workers.w23.config import (
     W12_BERT_MODEL_HEAD,
 )
 from workers.w23.evasion import all_probe_sets, deterministic_probe_sample
-from workers.w23.meta import META_FEATURE_CONTRACT, predict_meta_ensemble, train_meta_ensemble
+from workers.w23.meta import (
+    META_FEATURE_CONTRACT,
+    MetaEnsemble,
+    predict_meta_ensemble,
+    train_meta_ensemble,
+)
 from workers.w23.metrics import (
     binary_metrics,
     block_from_bundle,
@@ -251,6 +256,7 @@ def _probe_metrics(
 def _evasion_report(
     train: list[ModerationExample],
     text_models: dict[str, TextPolicyModel],
+    meta: MetaEnsemble,
 ) -> dict:
     original = deterministic_probe_sample(train)
     probe_sets = {"original": original, **all_probe_sets(train)}
@@ -258,6 +264,7 @@ def _evasion_report(
     flattened = [item for name in names for item in probe_sets[name]]
     bundles = {name: predict_text_model(model, flattened) for name, model in text_models.items()}
     bundles["bert"] = predict_bert_checkpoint(flattened, BERT_CHECKPOINT, batch_size=64)
+    bundles["meta"] = predict_meta_ensemble(meta, bundles, flattened)
     size = len(original)
     report: dict[str, dict] = {name: {} for name in bundles}
     for model_name, bundle in bundles.items():
@@ -348,7 +355,7 @@ def run() -> dict:
                 if item["name"] == "word+bert-union"
             ),
         },
-        "evasion_probes": _evasion_report(train, text_models),
+        "evasion_probes": _evasion_report(train, text_models, meta),
     }
     report["recommended_architecture"] = _recommendation(report)
     report["selected_block_prediction_count"] = sum(

@@ -86,6 +86,7 @@ def _overlap_lines(report: dict[str, Any]) -> list[str]:
     fp = overlap["false_positives"]
     fn = overlap["false_negatives"]
     return [
+        f"- BLOCK prediction disagreements: {overlap['prediction_disagreements']}.",
         f"- False positives: word {fp['left']}, BERT {fp['right']}, "
         + f"shared {fp['intersection']}, union {fp['union']}.",
         f"- False negatives: word {fn['left']}, BERT {fn['right']}, "

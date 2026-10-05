@@ -12,7 +12,12 @@ pytest.importorskip("sklearn")
 from workers.w12.dataset import load_partition
 from workers.w23.config import IMPORTANT_BENIGN_SLICES
 from workers.w23.evasion import TRANSFORMS, build_probe_set, deterministic_probe_sample
-from workers.w23.metrics import binary_metrics, decision_rule_report, gold_screening
+from workers.w23.metrics import (
+    binary_metrics,
+    decision_rule_report,
+    gold_screening,
+    paired_error_overlap,
+)
 from workers.w23.modeling import (
     HEAD_CLASS_COUNTS,
     existing_word_baseline_bundle,
@@ -119,6 +124,19 @@ def test_binary_metrics_use_actual_paired_predictions() -> None:
     assert metrics["recall"] == 0.5  # nosec B101 - test assertion
     assert metrics["tp"] == 1  # nosec B101 - test assertion
     assert metrics["fp"] == 1  # nosec B101 - test assertion
+
+
+def test_paired_error_overlap_reports_prediction_disagreements() -> None:
+    examples = load_partition("validation")
+    left = [0] * len(examples)
+    right = [1] * len(examples)
+    report = paired_error_overlap(examples, left, right)
+    assert report["prediction_disagreements"] == len(examples)  # nosec B101
+
+
+def test_evasion_report_scores_meta_ensemble() -> None:
+    source = (Path(__file__).parents[1] / "workers/w23/run_experiments.py").read_text()
+    assert 'bundles["meta"] = predict_meta_ensemble' in source  # nosec B101
 
 
 def test_screening_ground_truth_includes_review_and_block() -> None:
