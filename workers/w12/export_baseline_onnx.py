@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-import time
 from pathlib import Path
 
 import numpy as np
@@ -198,7 +197,6 @@ def export_baseline_onnx(model: BaselineModel | None = None) -> dict[str, object
         "onnx_version": onnx.__version__,
         "heads": outputs,
         "export_command": "python -m workers.w12.export_baseline_onnx",
-        "exported_at_unix": time.time(),
     }
     metadata_path = EXPORT_DIR / "baseline-tfidf-metadata.json"
     metadata_path.write_text(json.dumps(metadata, indent=2) + "\n", encoding="utf-8")
