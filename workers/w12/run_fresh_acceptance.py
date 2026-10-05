@@ -25,7 +25,12 @@ from workers.w12.dataset import (
     _record_to_example,
     is_fully_labeled,
 )
-from workers.w12.evaluate import _slice_metrics, evaluate_predictions, runtime_visibility, slice_predicate
+from workers.w12.evaluate import (
+    _slice_metrics,
+    evaluate_predictions,
+    runtime_visibility,
+    slice_predicate,
+)
 
 HEAD_NAMES = ("label", "action", "review_priority", "strike", "containment", "support_flow")
 
@@ -123,6 +128,7 @@ def validate_acceptance_manifest(
         raise ValueError("acceptance manifest family count mismatch")
     return manifest
 
+
 def load_bundle(metadata_path: Path, expected_sha256: str) -> dict[str, Any]:
     actual = sha256_of(metadata_path)
     if actual.lower() != expected_sha256.lower():
@@ -192,9 +198,7 @@ def _augment_w20_slices(
         if example.domain == "benign_hard_negative"
         or slice_predicate(example, "benign_hard_negatives")
     ]
-    _set_custom_slice(
-        report, examples, predictions, "benign_hard_negatives", hard_negative_indices
-    )
+    _set_custom_slice(report, examples, predictions, "benign_hard_negatives", hard_negative_indices)
     dangerous_benign_indices = [
         index
         for index, example in enumerate(examples)
@@ -278,7 +282,6 @@ def _slice_gates(report: dict[str, Any], failures: list[dict[str, Any]]) -> None
             _gate(failures, f"recall:{name}", float(value), minimum, "min")
 
 
-
 def _coverage_gates(
     slices: dict[str, Any],
     failures: list[dict[str, Any]],
@@ -296,6 +299,7 @@ def _coverage_gates(
                     "required": f"min {minimum}",
                 }
             )
+
 
 def _class_collapse_gates(report: dict[str, Any], failures: list[dict[str, Any]]) -> None:
     for item in report["semantic_label"]["per_class"]:

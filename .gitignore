@@ -43,3 +43,4 @@ Thumbs.db
 .pip-tmp/
 workers/w12/artifacts/
 workers/w12/models/
+workers/w23/artifacts/
