@@ -11,10 +11,10 @@ import sklearn
 import torch
 import transformers
 
-from .dataset import load_partition
-from .evaluate import REPORTS_DIR, evaluate_predictions
-from .predict import predict_encoder
-from .train_encoder import CANDIDATES
+from workers.w12.dataset import load_partition
+from workers.w12.evaluate import REPORTS_DIR, evaluate_predictions
+from workers.w12.predict import predict_encoder
+from workers.w12.train_encoder import CANDIDATES
 
 
 def main() -> None:
