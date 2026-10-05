@@ -2,13 +2,19 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
+
+import pytest
 
 from workers.w12.run_fresh_acceptance import (
     COVERAGE_MINIMA,
     MAX_SLICE_GATES,
     MIN_SLICE_GATES,
     evaluate_gates,
+    load_acceptance,
+    sha256_of,
+    validate_acceptance_manifest,
 )
 
 
@@ -89,3 +95,54 @@ def test_fresh_acceptance_runner_cannot_open_legacy_partitions():
         "heldout-owner_golden",
     )
     assert not any(token in source for token in forbidden)
+
+
+def test_acceptance_manifest_requires_independence_flags(tmp_path):
+    acceptance = tmp_path / "acceptance.jsonl"
+    acceptance.write_text(
+        json.dumps(
+            {
+                "example_id": "W20-0001",
+                "policy_version": "v1",
+                "source": "synthetic",
+                "domain": "benign_hard_negative",
+                "difficulty": "hard",
+                "platform_hint": "minecraft",
+                "channel_profile": "minecraft_public",
+                "messages": [
+                    {"speaker": "A", "offset_ms": 0, "text": "gg that was close"}
+                ],
+                "target_index": 0,
+                "label": "SAFE",
+                "action": "ALLOW",
+                "review_priority": "NONE",
+                "strike": False,
+                "containment": "NONE",
+                "containment_duration_seconds": None,
+                "support_flow": "NONE",
+                "reason_codes": ["minecraft_gameplay_explicit"],
+                "notes": "fixture",
+                "family_id": "w20.fixture.1",
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    examples = load_acceptance(acceptance)
+    manifest = tmp_path / "manifest.json"
+    manifest.write_text(
+        json.dumps(
+            {
+                "contract": "w12-v2-fresh-acceptance-v1",
+                "acceptance_only": True,
+                "forbidden_for_training": True,
+                "built_without_w12_predictions": False,
+                "dataset_sha256": sha256_of(acceptance),
+                "record_count": 1,
+                "family_count": 1,
+            }
+        ),
+        encoding="utf-8",
+    )
+    with pytest.raises(ValueError, match="built_without_w12_predictions"):
+        validate_acceptance_manifest(manifest, acceptance, examples)
