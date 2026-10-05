@@ -50,7 +50,6 @@ jobs:
           retention-days: 30
           if-no-files-found: error
           path: |
-            workers/w12/artifacts/baseline-tfidf.pkl
             workers/w12/reports/val-baseline-tfidf.json
 
   encoder-validation:
