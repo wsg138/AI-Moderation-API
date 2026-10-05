@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-import pytest
+import pytest  # pyright: ignore[reportMissingImports]
 
 from workers.w12.run_fresh_acceptance import (
     ALLOW_COVERAGE_MINIMA,
@@ -56,7 +56,7 @@ def _passing_report() -> dict:
 
 
 def test_fresh_acceptance_gate_accepts_passing_report():
-    assert evaluate_gates(_passing_report()) == []
+    assert evaluate_gates(_passing_report()) == []  # nosec B101 - pytest assertion
 
 
 def test_fresh_acceptance_gate_rejects_false_positive_regression():
@@ -65,7 +65,7 @@ def test_fresh_acceptance_gate_rejects_false_positive_regression():
         MAX_SLICE_GATES["private_flirting"] + 0.01
     )
     failures = evaluate_gates(report)
-    assert any(item["gate"] == "fp:private_flirting" for item in failures)
+    assert any(item["gate"] == "fp:private_flirting" for item in failures)  # nosec B101 - pytest assertion
 
 
 def test_fresh_acceptance_gate_rejects_critical_recall_regression():
@@ -74,7 +74,7 @@ def test_fresh_acceptance_gate_rejects_critical_recall_regression():
         MIN_SLICE_GATES["real_world_threat"] - 0.01
     )
     failures = evaluate_gates(report)
-    assert any(item["gate"] == "recall:real_world_threat" for item in failures)
+    assert any(item["gate"] == "recall:real_world_threat" for item in failures)  # nosec B101 - pytest assertion
 
 
 def test_fresh_acceptance_gate_rejects_underpowered_slice():
@@ -83,7 +83,7 @@ def test_fresh_acceptance_gate_rejects_underpowered_slice():
         BLOCK_COVERAGE_MINIMA["split_message_threat"] - 1
     )
     failures = evaluate_gates(report)
-    assert any(item["gate"] == "coverage_block:split_message_threat" for item in failures)
+    assert any(item["gate"] == "coverage_block:split_message_threat" for item in failures)  # nosec B101 - pytest assertion
 
 
 def test_fresh_acceptance_runner_cannot_open_legacy_partitions():
@@ -98,7 +98,7 @@ def test_fresh_acceptance_runner_cannot_open_legacy_partitions():
         "heldout-frozen_adversarial",
         "heldout-owner_golden",
     )
-    assert not any(token in source for token in forbidden)
+    assert not any(token in source for token in forbidden)  # nosec B101 - pytest assertion
 
 
 def test_acceptance_manifest_requires_independence_flags(tmp_path):
