@@ -1,0 +1,12 @@
+{
+  "include": [
+    "service",
+    "tests",
+    "workers/w12"
+  ],
+  "extraPaths": [
+    "service",
+    "."
+  ],
+  "pythonVersion": "3.12"
+}
