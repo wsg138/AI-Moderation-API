@@ -29,24 +29,28 @@ from .evaluate import _slice_metrics, evaluate_predictions, runtime_visibility, 
 
 HEAD_NAMES = ("label", "action", "review_priority", "strike", "containment", "support_flow")
 
-COVERAGE_MINIMA = {
+ALLOW_COVERAGE_MINIMA = {
     "minecraft_gameplay": 25,
     "generic_minecraft_violence": 20,
     "benign_hard_negatives": 30,
-    "real_world_threat": 25,
-    "split_message_threat": 20,
     "long_gap_non_linkage": 15,
-    "self_harm_instruction": 15,
     "first_person_self_harm_disclosure": 15,
-    "slur_actual_use": 15,
     "slur_reference_only": 15,
-    "sexual_minor": 20,
     "age_self_report_only": 20,
-    "real_world_explosive_request": 15,
-    "obfuscation_evasion": 20,
+    "minecraft_tnt": 15,
     "private_flirting": 20,
     "discord_general": 25,
     "minecraft_public": 25,
+}
+
+BLOCK_COVERAGE_MINIMA = {
+    "real_world_threat": 25,
+    "split_message_threat": 20,
+    "self_harm_instruction": 15,
+    "slur_actual_use": 15,
+    "sexual_minor": 20,
+    "real_world_explosive_request": 15,
+    "obfuscation_evasion": 20,
 }
 
 MAX_SLICE_GATES = {
@@ -58,6 +62,7 @@ MAX_SLICE_GATES = {
     "private_flirting": 0.10,
     "age_self_report_only": 0.10,
     "long_gap_non_linkage": 0.05,
+    "minecraft_tnt": 0.05,
 }
 
 MIN_SLICE_GATES = {
@@ -233,12 +238,8 @@ def evaluate_gates(report: dict[str, Any]) -> list[dict[str, Any]]:
 
 def _slice_gates(report: dict[str, Any], failures: list[dict[str, Any]]) -> None:
     slices = report["critical_slices"]
-    for name, minimum in COVERAGE_MINIMA.items():
-        count = int(slices.get(name, {}).get("n", 0))
-        if count < minimum:
-            failures.append(
-                {"gate": f"coverage:{name}", "value": count, "required": f"min {minimum}"}
-            )
+    _coverage_gates(slices, failures, ALLOW_COVERAGE_MINIMA, "n_gold_allow", "allow")
+    _coverage_gates(slices, failures, BLOCK_COVERAGE_MINIMA, "n_gold_block", "block")
     for name, maximum in MAX_SLICE_GATES.items():
         value = slices.get(name, {}).get("block_false_positive_rate")
         if value is None:
@@ -252,6 +253,25 @@ def _slice_gates(report: dict[str, Any], failures: list[dict[str, Any]]) -> None
         else:
             _gate(failures, f"recall:{name}", float(value), minimum, "min")
 
+
+
+def _coverage_gates(
+    slices: dict[str, Any],
+    failures: list[dict[str, Any]],
+    minima: dict[str, int],
+    count_key: str,
+    kind: str,
+) -> None:
+    for name, minimum in minima.items():
+        count = int(slices.get(name, {}).get(count_key, 0))
+        if count < minimum:
+            failures.append(
+                {
+                    "gate": f"coverage_{kind}:{name}",
+                    "value": count,
+                    "required": f"min {minimum}",
+                }
+            )
 
 def _class_collapse_gates(report: dict[str, Any], failures: list[dict[str, Any]]) -> None:
     for item in report["semantic_label"]["per_class"]:
