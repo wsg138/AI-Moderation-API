@@ -89,6 +89,30 @@ def load_acceptance(path: Path) -> list[ModerationExample]:
     return [_record_to_example(record) for record in records]
 
 
+def validate_acceptance_manifest(
+    manifest_path: Path,
+    acceptance_path: Path,
+    examples: list[ModerationExample],
+) -> dict[str, Any]:
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    required_flags = {
+        "contract": "w12-v2-fresh-acceptance-v1",
+        "acceptance_only": True,
+        "forbidden_for_training": True,
+        "built_without_w12_predictions": True,
+    }
+    for key, expected in required_flags.items():
+        if manifest.get(key) != expected:
+            raise ValueError(f"invalid acceptance manifest field {key}")
+    if manifest.get("dataset_sha256") != sha256_of(acceptance_path):
+        raise ValueError("acceptance manifest dataset SHA-256 mismatch")
+    if manifest.get("record_count") != len(examples):
+        raise ValueError("acceptance manifest record count mismatch")
+    family_count = len({example.family_id for example in examples if example.family_id})
+    if manifest.get("family_count") != family_count:
+        raise ValueError("acceptance manifest family count mismatch")
+    return manifest
+
 def load_bundle(metadata_path: Path, expected_sha256: str) -> dict[str, Any]:
     actual = sha256_of(metadata_path)
     if actual.lower() != expected_sha256.lower():
@@ -244,6 +268,7 @@ def run(
     if output_path.exists():
         raise FileExistsError("refusing to overwrite an existing one-shot acceptance report")
     examples = load_acceptance(acceptance_path)
+    manifest = validate_acceptance_manifest(manifest_path, acceptance_path, examples)
     metadata = load_bundle(metadata_path, metadata_sha256)
     predictions, block_probabilities = predict_bundle(metadata, metadata_path.parent, examples)
     report = evaluate_predictions(
@@ -262,6 +287,7 @@ def run(
         "contract": "w12-v2-fresh-acceptance-v1",
         "acceptance_jsonl_sha256": sha256_of(acceptance_path),
         "acceptance_manifest_sha256": sha256_of(manifest_path),
+        "acceptance_contract": manifest["contract"],
         "model_metadata_sha256": sha256_of(metadata_path),
         "model_version": metadata["model_version"],
         "n": len(examples),
