@@ -13,7 +13,8 @@ import sklearn
 from moderation_api.model_serialization import SERIALIZATION_VERSION
 from onnx import TensorProto, helper, numpy_helper
 
-from .baseline import load_baseline
+from .baseline import BaselineModel, train_baseline
+from .dataset import load_partition
 
 ARTIFACT_DIR = Path(__file__).resolve().parent / "artifacts"
 EXPORT_DIR = ARTIFACT_DIR / "onnx"
@@ -161,8 +162,10 @@ def _export_head(
     }
 
 
-def export_baseline_onnx() -> dict[str, object]:
-    model = load_baseline(ARTIFACT_DIR / "baseline-tfidf.pkl")
+def export_baseline_onnx(model: BaselineModel | None = None) -> dict[str, object]:
+    """Export a supplied deterministic baseline or retrain from W11 train."""
+    if model is None:
+        model = train_baseline(load_partition("train"), seed=42)
     EXPORT_DIR.mkdir(parents=True, exist_ok=True)
 
     vectorizer = _export_vectorizer(model)
