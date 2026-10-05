@@ -8,7 +8,8 @@ from pathlib import Path
 import pytest
 
 from workers.w12.run_fresh_acceptance import (
-    COVERAGE_MINIMA,
+    ALLOW_COVERAGE_MINIMA,
+    BLOCK_COVERAGE_MINIMA,
     MAX_SLICE_GATES,
     MIN_SLICE_GATES,
     evaluate_gates,
@@ -19,13 +20,16 @@ from workers.w12.run_fresh_acceptance import (
 
 
 def _passing_report() -> dict:
+    names = set(ALLOW_COVERAGE_MINIMA) | set(BLOCK_COVERAGE_MINIMA)
     slices = {
         name: {
-            "n": minimum,
+            "n": 100,
+            "n_gold_allow": 100,
+            "n_gold_block": 100,
             "block_false_positive_rate": 0.0,
             "block_recall": 1.0,
         }
-        for name, minimum in COVERAGE_MINIMA.items()
+        for name in names
     }
     return {
         "runtime_visibility_binary": {
@@ -75,11 +79,11 @@ def test_fresh_acceptance_gate_rejects_critical_recall_regression():
 
 def test_fresh_acceptance_gate_rejects_underpowered_slice():
     report = _passing_report()
-    report["critical_slices"]["split_message_threat"]["n"] = (
-        COVERAGE_MINIMA["split_message_threat"] - 1
+    report["critical_slices"]["split_message_threat"]["n_gold_block"] = (
+        BLOCK_COVERAGE_MINIMA["split_message_threat"] - 1
     )
     failures = evaluate_gates(report)
-    assert any(item["gate"] == "coverage:split_message_threat" for item in failures)
+    assert any(item["gate"] == "coverage_block:split_message_threat" for item in failures)
 
 
 def test_fresh_acceptance_runner_cannot_open_legacy_partitions():
