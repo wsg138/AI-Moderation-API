@@ -1,10 +1,10 @@
 # Coordinator state
 
-Last updated: 2026-10-02
+Last updated: 2026-10-05
 
 ## Current phase
 
-**Phase 3 — Runtime recovery and dataset integration accepted; model/client work ready**
+**Phase 4 — Client integrations mostly complete; W12 final acceptance and W15 review remain before shadow deployment**
 
 The repository has been initialized and the worker system is live.
 
@@ -432,3 +432,86 @@ Production status remains unchanged:
 - no live package/config/firewall mutation;
 - no production moderation-data mutation;
 - no automatic punishment enablement.
+
+
+## Live coordinator checkpoint — 2026-10-05
+
+This section supersedes older W12-W15 status text above. Live GitHub remains authoritative if any SHA/status below moves.
+
+### Current critical path
+
+1. **W20 / issue #43 — fresh unseen W12-v2 acceptance set**
+   - Required because PR #42's original test/frozen-adversarial/owner-golden evidence was observed before a later material preprocessing correction.
+   - W20 must be built independently from Policy v1/project requirements without inspecting W12 individual model failures or predictions.
+   - Exact/trivial leakage against every W11 partition and owner golden must be zero/reviewed before freeze.
+   - Once frozen, W12 v2 gets one acceptance run. Any later semantic model/preprocessing/threshold change burns that set and requires a new unseen set.
+
+2. **W12 / issue #13 / PR #42 — model training/evaluation/runtime adapter**
+   - Live branch: `w12/model-training`.
+   - Current observed head: `3aac90ca8d0d57ca2174a852f961c6b753e7205d`.
+   - PR remains **draft** and is **not merge-ready**.
+   - A later audit corrected train/runtime serialization parity, canonical speaker ordering, target-relative timing, removal of post-target future messages, and empty/mis-keyed critical slices.
+   - Using W11 train + validation only, v2 selection remains `baseline-tfidf`; BERT Mini and BERT Tiny were comparison candidates.
+   - Previously opened W11 test/frozen-adversarial/owner-golden evidence is development/superseded evidence for the old preprocessing contract and must not accept v2.
+   - Current hosted Codacy summary on PR #42 reports new findings and must be reviewed/cleared before acceptance/merge.
+   - No production deployment has occurred.
+
+3. **W15 / issue #16 / EnthusiaStaff PR #318 — Staff review queue/GUI**
+   - Product PR remains open.
+   - Current observed head: `e3d84f9bb861c04dfba543cd5eca66b52ce3dfaa`.
+   - Earlier issue comments that called `1317e92...` the final reviewed head are superseded by later commits.
+   - Current-head review/static-analysis reconciliation is still required before merge.
+   - Central review/correction state remains authoritative; W15 must remain optional/fail-safe and must not dispatch automatic punishment.
+
+4. **Final cross-platform integration seam**
+   - W13 RoseChat and W14 Discord clients are merged.
+   - The real Minecraft→Discord transport still must carry the authoritative W13 canonical-message metadata into W14's mirror registry.
+   - W14 intentionally does not infer mirrors by matching message text.
+   - Verify exact related-message deletion across Minecraft/Discord only after this metadata handoff is wired.
+
+5. **Shadow deployment and acceptance**
+   - After W12 + W15 + mirror handoff are accepted, deploy the central moderation service and clients in shadow/observability-first mode.
+   - Preserve fail-open behavior for Minecraft/Discord chat.
+   - Keep OpenAI optional/advisory and off the critical latency path.
+   - Do not enable automatic punishment during initial shadow evaluation.
+   - Review real disagreements/false positives/false negatives, promote only reviewed/redacted examples, then retrain/version deliberately.
+
+### Completed downstream integrations
+
+**W13 — RoseChat central moderation client: accepted/merged**
+- Enthusia-RoseChat PR #18 accepted head: `1ba4a736290cd797a3f8d9ae385877b1982de46a`.
+- Merge commit: `831aadda7e1de28c07ea2ad4e6a4b09ce2af24a2`.
+- Follow-up async circuit-breaker test-race fix merged afterward; post-fix master build succeeded.
+- Central service is the semantic authority in central mode; bounded hold, late-delete, generation fencing, circuit/fail-open behavior remain preserved.
+
+**W14 — Discord central moderation client: accepted/merged**
+- enthusia-support-bot PR #9 accepted head: `04c0900c44b824d02f2e0c0c25b0fd5fa1572ecd`.
+- Squash merge: `a0d58937d34479b12dce77ebfd9e2e929fb8943a`.
+- Ticket/staff/configured-exempt content is excluded before semantic moderation.
+- BLOCK deletion is bounded to exact authoritative Discord message/version refs.
+- Review/strike/containment/support output does not automatically punish.
+- Ticket Bot readiness remains independent of moderation health.
+
+### Relationship to wsg138/Enthusia-AI
+
+Do **not** merge the moderation classifier/model into the general support LLM.
+
+The Enthusia-AI master specification already defines moderation as a separate operational path and separate model/workload. Its `services/moderation-adapter` is specifically designed to call this external moderation service without coupling health.
+
+Recommended production topology:
+- same Bloom physical host is fine;
+- shared overall machine resources are fine when explicitly capped/benchmarked;
+- keep moderation and general support inference in separate processes, preferably separate Pterodactyl splits;
+- a support-model crash/OOM/restart must not take moderation offline;
+- moderation failure must not break chat;
+- repositories may share contracts/integration documentation, but keeping independent release/model lineage is intentional.
+
+### Production status
+
+As of this checkpoint:
+- no AI moderation service production deployment;
+- no production model acceptance;
+- no automatic punishment enablement;
+- no production moderation-data mutation;
+- no authorization to turn a support-model deployment/restart into a moderation restart;
+- deployment should proceed only after W12 final acceptance, W15 current-head acceptance, mirror metadata handoff, and exact-head integration evidence.
