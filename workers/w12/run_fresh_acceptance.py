@@ -18,8 +18,13 @@ from moderation_api.model_serialization import SERIALIZATION_VERSION
 from moderation_api.onnx_classifier import OnnxClassifier, OnnxClassifierConfig
 from moderation_api.tfidf_runtime import TfidfRuntimeVectorizer
 
-from .dataset import ACTION_TO_ID, LABEL_TO_ID, ModerationExample, _record_to_example
-from .dataset import is_fully_labeled
+from .dataset import (
+    ACTION_TO_ID,
+    LABEL_TO_ID,
+    ModerationExample,
+    _record_to_example,
+    is_fully_labeled,
+)
 from .evaluate import _slice_metrics, evaluate_predictions, runtime_visibility, slice_predicate
 
 HEAD_NAMES = ("label", "action", "review_priority", "strike", "containment", "support_flow")
@@ -231,7 +236,9 @@ def _slice_gates(report: dict[str, Any], failures: list[dict[str, Any]]) -> None
     for name, minimum in COVERAGE_MINIMA.items():
         count = int(slices.get(name, {}).get("n", 0))
         if count < minimum:
-            failures.append({"gate": f"coverage:{name}", "value": count, "required": f"min {minimum}"})
+            failures.append(
+                {"gate": f"coverage:{name}", "value": count, "required": f"min {minimum}"}
+            )
     for name, maximum in MAX_SLICE_GATES.items():
         value = slices.get(name, {}).get("block_false_positive_rate")
         if value is None:
@@ -315,7 +322,8 @@ def main() -> None:
         args.metadata_sha256,
         args.output,
     )
-    print(json.dumps({"passed": result["passed"], "gate_failures": result["gate_failures"]}, indent=2))
+    summary = {"passed": result["passed"], "gate_failures": result["gate_failures"]}
+    print(json.dumps(summary, indent=2))
     raise SystemExit(0 if result["passed"] else 2)
 
 
