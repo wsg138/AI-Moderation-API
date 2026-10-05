@@ -130,7 +130,6 @@ def export_onnx(candidate: str, seed: int, max_len: int = 128) -> dict:
         "export_command": (
             f"python -m workers.w12.export_onnx --candidate {candidate} --seed {seed}"
         ),
-        "exported_at": time.time(),
     }
     with open(EXPORT_DIR / f"{candidate}-seed{seed}-metadata.json", "w") as f:
         json.dump(metadata, f, indent=2)
