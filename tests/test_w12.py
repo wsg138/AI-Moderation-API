@@ -33,6 +33,7 @@ from workers.w12.dataset import (
     serialize_messages,
 )
 from workers.w12.evaluate import SLICES, slice_predicate
+from workers.w12.freeze_eval import run_heldout_evaluation
 
 
 def test_split_manifest_counts():
@@ -410,3 +411,32 @@ async def test_onnx_classifier_not_ready_raises(tmp_path):
     classifier = OnnxClassifier(cfg)
     with pytest.raises(RuntimeError):
         await classifier.classify(_make_input())
+
+
+def test_superseded_v1_heldout_evaluator_is_disabled():
+    with pytest.raises(RuntimeError, match="W20 acceptance set"):
+        run_heldout_evaluation()
+
+
+def test_w12_training_tooling_does_not_import_pickle():
+    repo_root = Path(__file__).resolve().parents[1]
+    paths = [
+        repo_root / "workers/w12/baseline.py",
+        repo_root / "workers/w12/export_baseline_onnx.py",
+        repo_root / "workers/w12/run_baseline_onnx_evidence.py",
+    ]
+    for path in paths:
+        source = path.read_text(encoding="utf-8")
+        assert "import pickle" not in source
+        assert "pickle.load(" not in source
+        assert "pickle.dump(" not in source
+
+
+def test_w12_model_metadata_export_has_no_wall_clock_timestamp():
+    repo_root = Path(__file__).resolve().parents[1]
+    for relative in (
+        "workers/w12/export_baseline_onnx.py",
+        "workers/w12/export_onnx.py",
+    ):
+        source = (repo_root / relative).read_text(encoding="utf-8")
+        assert "exported_at_unix" not in source
