@@ -1,15 +1,13 @@
-"""W12 baseline: TF-IDF + linear heads (multi-task).
+"""W12 baseline: deterministic TF-IDF + linear policy heads.
 
-Sanity-check baseline. Trains one linear classifier per policy dimension on
-TF-IDF features of the leakage-safe serialization. Cheap, deterministic, and
-fast — establishes the floor that encoder candidates must beat on critical
-policy slices, not just aggregate F1.
+The baseline is trained from the frozen W11 train partition whenever evidence
+is produced. It is intentionally not persisted as a pickle/joblib artifact:
+review and production artifacts use JSON + ONNX instead.
 """
 
 from __future__ import annotations
 
 import json
-import pickle
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -31,7 +29,7 @@ from .dataset import (
     ModerationExample,
 )
 
-ARTIFACT_DIR = Path(__file__).resolve().parent / "artifacts"
+REPORTS_DIR = Path(__file__).resolve().parent / "reports"
 
 
 @dataclass
@@ -42,33 +40,29 @@ class BaselineModel:
     trained_at: float = field(default_factory=time.time)
     seed: int = 0
 
-    def __reduce__(self):
-        # Make pickle robust regardless of whether this module was run as
-        # __main__ or imported normally.
-        from workers.w12 import baseline as _mod
-        return (_mod._rebuild_baseline, (self.vectorizer, self.heads,
-                                         self.classes, self.trained_at, self.seed))
-
     def predict_proba_all(self, texts: list[str]) -> dict[str, list[list[float]]]:
-        X = self.vectorizer.transform(texts)
-        out: dict[str, list[list[float]]] = {}
-        for name, head in self.heads.items():
-            out[name] = head.predict_proba(X).tolist()
-        return out
+        features = self.vectorizer.transform(texts)
+        return {
+            name: head.predict_proba(features).tolist()
+            for name, head in self.heads.items()
+        }
 
     def predict_all(self, texts: list[str]) -> dict[str, list[int]]:
-        X = self.vectorizer.transform(texts)
-        return {name: head.predict(X).tolist() for name, head in self.heads.items()}
+        features = self.vectorizer.transform(texts)
+        return {
+            name: head.predict(features).tolist()
+            for name, head in self.heads.items()
+        }
 
 
 def _targets(examples: list[ModerationExample]) -> dict[str, list[int]]:
     return {
-        "label": [LABEL_TO_ID[e.label] for e in examples],
-        "action": [ACTION_TO_ID[e.action] for e in examples],
-        "review_priority": [REVIEW_TO_ID[e.review_priority] for e in examples],
-        "strike": [1 if e.strike else 0 for e in examples],
-        "containment": [CONTAINMENT_TO_ID[e.containment] for e in examples],
-        "support_flow": [SUPPORT_TO_ID[e.support_flow] for e in examples],
+        "label": [LABEL_TO_ID[item.label] for item in examples],
+        "action": [ACTION_TO_ID[item.action] for item in examples],
+        "review_priority": [REVIEW_TO_ID[item.review_priority] for item in examples],
+        "strike": [1 if item.strike else 0 for item in examples],
+        "containment": [CONTAINMENT_TO_ID[item.containment] for item in examples],
+        "support_flow": [SUPPORT_TO_ID[item.support_flow] for item in examples],
     }
 
 
@@ -77,17 +71,16 @@ def train_baseline(
     seed: int = 42,
     max_features: int = 30000,
 ) -> BaselineModel:
-    texts = [e.serialized for e in train_examples]
+    texts = [item.serialized for item in train_examples]
     vectorizer = TfidfVectorizer(
         max_features=max_features,
         ngram_range=(1, 2),
         sublinear_tf=True,
         min_df=2,
     )
-    X = vectorizer.fit_transform(texts)
-    targets = _targets(train_examples)
+    features = vectorizer.fit_transform(texts)
     heads: dict[str, LogisticRegression] = {}
-    for name, y in targets.items():
+    for name, target in _targets(train_examples).items():
         head = LogisticRegression(
             max_iter=2000,
             C=1.0,
@@ -95,8 +88,9 @@ def train_baseline(
             random_state=seed,
             n_jobs=1,
         )
-        head.fit(X, y)
+        head.fit(features, target)
         heads[name] = head
+
     return BaselineModel(
         vectorizer=vectorizer,
         heads=heads,
@@ -112,41 +106,38 @@ def train_baseline(
     )
 
 
-def _rebuild_baseline(vectorizer, heads, classes, trained_at, seed) -> BaselineModel:
-    return BaselineModel(vectorizer=vectorizer, heads=heads, classes=classes,
-                         trained_at=trained_at, seed=seed)
-
-
-def save_baseline(model: BaselineModel, path: Path) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with open(path, "wb") as f:
-        pickle.dump(model, f)
-
-
-def load_baseline(path: Path) -> BaselineModel:
-    with open(path, "rb") as f:
-        return pickle.load(f)
-
-
 def main() -> None:
     from .dataset import load_partition
 
     train = load_partition("train")
-    val = load_partition("validation")
-    print(f"train={len(train)} val={len(val)}", flush=True)
-    t0 = time.time()
+    validation = load_partition("validation")
+    started = time.time()
     model = train_baseline(train)
-    print(f"trained in {time.time() - t0:.1f}s", flush=True)
-    ARTIFACT_DIR.mkdir(parents=True, exist_ok=True)
-    save_baseline(model, ARTIFACT_DIR / "baseline-tfidf.pkl")
+    predictions = model.predict_all([item.serialized for item in validation])
+    gold = [LABEL_TO_ID[item.label] for item in validation]
+    accuracy = sum(
+        predicted == expected
+        for predicted, expected in zip(predictions["label"], gold, strict=True)
+    ) / len(gold)
 
-    # Quick validation sanity: label accuracy
-    preds = model.predict_all([e.serialized for e in val])
-    gold = [LABEL_TO_ID[e.label] for e in val]
-    acc = sum(p == g for p, g in zip(preds["label"], gold, strict=True)) / len(gold)
-    print(f"val label accuracy: {acc:.3f}", flush=True)
-    with open(ARTIFACT_DIR / "baseline-val-sanity.json", "w") as f:
-        json.dump({"val_label_accuracy": acc, "n_val": len(val)}, f, indent=2)
+    REPORTS_DIR.mkdir(parents=True, exist_ok=True)
+    path = REPORTS_DIR / "baseline-val-sanity.json"
+    path.write_text(
+        json.dumps(
+            {
+                "train": len(train),
+                "validation": len(validation),
+                "seed": model.seed,
+                "elapsed_seconds": time.time() - started,
+                "val_label_accuracy": accuracy,
+                "persistence": "none; retrain deterministically and export JSON+ONNX",
+            },
+            indent=2,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    print(f"val label accuracy: {accuracy:.3f}", flush=True)
 
 
 if __name__ == "__main__":
