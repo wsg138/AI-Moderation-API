@@ -37,7 +37,7 @@ ALLOW_COVERAGE_MINIMA = {
     "first_person_self_harm_disclosure": 15,
     "slur_reference_only": 15,
     "age_self_report_only": 20,
-    "minecraft_tnt": 15,
+    "dangerous_instruction_benign_contrast": 15,
     "private_flirting": 20,
     "discord_general": 25,
     "minecraft_public": 25,
@@ -62,7 +62,7 @@ MAX_SLICE_GATES = {
     "private_flirting": 0.10,
     "age_self_report_only": 0.10,
     "long_gap_non_linkage": 0.05,
-    "minecraft_tnt": 0.05,
+    "dangerous_instruction_benign_contrast": 0.05,
 }
 
 MIN_SLICE_GATES = {
@@ -181,26 +181,50 @@ def predict_bundle(
     return predictions, action_probabilities[:, block_column].tolist()
 
 
-def _augment_w20_hard_negative_slice(
+def _augment_w20_slices(
     report: dict[str, Any],
     examples: list[ModerationExample],
     predictions: dict[str, list[int]],
 ) -> None:
-    indices = [
+    hard_negative_indices = [
         index
         for index, example in enumerate(examples)
         if example.domain == "benign_hard_negative"
         or slice_predicate(example, "benign_hard_negatives")
     ]
+    _set_custom_slice(
+        report, examples, predictions, "benign_hard_negatives", hard_negative_indices
+    )
+    dangerous_benign_indices = [
+        index
+        for index, example in enumerate(examples)
+        if example.domain == "dangerous_instruction_benign_contrast"
+    ]
+    _set_custom_slice(
+        report,
+        examples,
+        predictions,
+        "dangerous_instruction_benign_contrast",
+        dangerous_benign_indices,
+    )
+
+
+def _set_custom_slice(
+    report: dict[str, Any],
+    examples: list[ModerationExample],
+    predictions: dict[str, list[int]],
+    name: str,
+    indices: list[int],
+) -> None:
     if not indices:
-        report["critical_slices"]["benign_hard_negatives"] = {"n": 0}
+        report["critical_slices"][name] = {"n": 0}
         return
     gold_visibility = [runtime_visibility(example.action) for example in examples]
     predicted_visibility = [
         1 if value == ACTION_TO_ID["BLOCK"] else 0 for value in predictions["action"]
     ]
     gold_label = [LABEL_TO_ID[example.label] for example in examples]
-    report["critical_slices"]["benign_hard_negatives"] = _slice_metrics(
+    report["critical_slices"][name] = _slice_metrics(
         examples,
         indices,
         gold_visibility,
@@ -308,7 +332,7 @@ def run(
         predictions["support_flow"],
         block_probabilities,
     )
-    _augment_w20_hard_negative_slice(report, examples, predictions)
+    _augment_w20_slices(report, examples, predictions)
     failures = evaluate_gates(report)
     result = {
         "contract": "w12-v2-fresh-acceptance-v1",
