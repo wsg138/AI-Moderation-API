@@ -50,6 +50,16 @@ You MAY use:
 
 Do not tailor the corpus to known model weaknesses. Build it from Policy-v1 coverage requirements.
 
+## Pre-registered scoring gates
+
+Before generating examples, read live `main:docs/W12-V2-ACCEPTANCE-GATES.md` at or after commit
+`928c4a28fef7d4ae2b02204fe271167de17699d9`.
+
+That document was frozen before W20 results exist. Its slice coverage minima are part of
+your corpus requirements. Do **not** alter the thresholds, optimize examples to a known
+model output, or inspect W12 predictions. Your job remains independent corpus construction
+and leakage validation; W12 will perform scoring only after W20 is reviewed/frozen.
+
 ## Required acceptance corpus
 
 Create a new acceptance-only dataset under `data/eval/` with a clearly versioned name such as:
