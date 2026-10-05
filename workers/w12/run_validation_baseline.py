@@ -7,7 +7,7 @@ import platform
 
 import sklearn
 
-from .baseline import ARTIFACT_DIR, save_baseline, train_baseline
+from .baseline import train_baseline
 from .dataset import load_partition
 from .evaluate import REPORTS_DIR, evaluate_predictions
 
@@ -16,7 +16,6 @@ def main() -> None:
     train = load_partition("train")
     validation = load_partition("validation")
     model = train_baseline(train, seed=42)
-    save_baseline(model, ARTIFACT_DIR / "baseline-tfidf.pkl")
     texts = [example.serialized for example in validation]
     predictions = model.predict_all(texts)
     probabilities = model.predict_proba_all(texts)
