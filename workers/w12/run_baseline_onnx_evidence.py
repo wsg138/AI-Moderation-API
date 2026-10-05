@@ -34,7 +34,7 @@ from moderation_api.onnx_classifier import OnnxClassifier, OnnxClassifierConfig
 from moderation_api.tfidf_runtime import TfidfRuntimeVectorizer
 from onnxruntime.quantization import QuantType, quantize_dynamic
 
-from .baseline import ARTIFACT_DIR, save_baseline, train_baseline
+from .baseline import train_baseline
 from .dataset import load_partition
 from .evaluate import REPORTS_DIR, evaluate_predictions
 from .export_baseline_onnx import EXPORT_DIR, export_baseline_onnx, sha256_of
@@ -58,7 +58,6 @@ def _validation_reproduction() -> tuple[Any, list[Any], dict[str, Any]]:
     train = load_partition("train")
     validation = load_partition("validation")
     model = train_baseline(train, seed=42)
-    save_baseline(model, ARTIFACT_DIR / "baseline-tfidf.pkl")
     texts = [example.serialized for example in validation]
     predictions = model.predict_all(texts)
     probabilities = model.predict_proba_all(texts)
@@ -346,11 +345,10 @@ def _copy_manifest_to_reports(metadata_path: Path, report_name: str) -> dict[str
 
 
 def main() -> None:
-    ARTIFACT_DIR.mkdir(parents=True, exist_ok=True)
     REPORTS_DIR.mkdir(parents=True, exist_ok=True)
 
     model, validation, reproduction = _validation_reproduction()
-    metadata = export_baseline_onnx()
+    metadata = export_baseline_onnx(model)
     metadata_path = EXPORT_DIR / "baseline-tfidf-metadata.json"
     original_manifest = _copy_manifest_to_reports(
         metadata_path,
