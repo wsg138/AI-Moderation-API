@@ -12,8 +12,8 @@ import sklearn
 from moderation_api.model_serialization import SERIALIZATION_VERSION
 from onnx import TensorProto, helper, numpy_helper
 
-from .baseline import BaselineModel, train_baseline
-from .dataset import load_partition
+from workers.w12.baseline import BaselineModel, train_baseline
+from workers.w12.dataset import load_partition
 
 ARTIFACT_DIR = Path(__file__).resolve().parent / "artifacts"
 EXPORT_DIR = ARTIFACT_DIR / "onnx"
