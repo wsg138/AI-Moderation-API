@@ -16,10 +16,10 @@ import json
 import time
 from pathlib import Path
 
-import torch
-import torch.nn as nn
-from torch.utils.data import DataLoader, Dataset
-from transformers import BertModel, BertTokenizer
+import torch  # pyright: ignore[reportMissingImports]
+import torch.nn as nn  # pyright: ignore[reportMissingImports]
+from torch.utils.data import DataLoader, Dataset  # pyright: ignore[reportMissingImports]
+from transformers import BertModel, BertTokenizer  # pyright: ignore[reportMissingImports]
 
 from workers.w12.dataset import (
     ACTION_TO_ID,
@@ -103,7 +103,7 @@ class MultiTaskBert(nn.Module):
     ):
         super().__init__()
         if local_dir and (local_dir / "config.json").exists():
-            self.encoder = BertModel.from_pretrained(str(local_dir), local_files_only=True)
+            self.encoder = BertModel.from_pretrained(  # nosec B615 - verified local cache, no network\n                str(local_dir), local_files_only=True\n            )
         else:
             self.encoder = BertModel.from_pretrained(encoder_name, revision=revision)
         hidden = self.encoder.config.hidden_size
@@ -127,12 +127,11 @@ def evaluate(model: nn.Module, loader: DataLoader, device: torch.device) -> dict
             input_ids = batch["input_ids"].to(device)
             mask = batch["attention_mask"].to(device)
             logits = model(input_ids, mask)
-            loss = sum(criterion(logits[name], batch[name].to(device)) for name in HEADS)
-            total_loss += loss.item()
+            loss = torch.stack([criterion(logits[name], batch[name].to(device)) for name in HEADS]).sum()\n            total_loss += float(loss.detach().cpu())
             total += input_ids.size(0)
             for name in HEADS:
                 pred = logits[name].argmax(dim=-1).cpu()
-                correct[name] += (pred == batch[name]).sum().item()
+                correct[name] += int(torch.sum(pred == batch[name]).item())
     return {
         "loss": total_loss / max(total, 1),
         **{f"{name}_acc": correct[name] / max(total, 1) for name in HEADS},
@@ -194,11 +193,10 @@ def train_candidate(
         for batch in train_loader:
             optimizer.zero_grad()
             logits = model(batch["input_ids"].to(device), batch["attention_mask"].to(device))
-            loss = sum(criterion(logits[name], batch[name].to(device)) for name in HEADS)
-            loss.backward()
+            loss = torch.stack([criterion(logits[name], batch[name].to(device)) for name in HEADS]).sum()\n            loss.backward()
             torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
             optimizer.step()
-            epoch_loss += loss.item()
+            epoch_loss += float(loss.detach().cpu())
         metrics = evaluate(model, val_loader, device)
         metrics["epoch"] = epoch + 1
         metrics["train_loss"] = epoch_loss / len(train_loader)
@@ -213,8 +211,7 @@ def train_candidate(
             best_val = metrics["label_acc"]
             best_state = {k: v.cpu().clone() for k, v in model.state_dict().items()}
 
-    assert best_state is not None
-    ARTIFACT_DIR.mkdir(parents=True, exist_ok=True)
+    if best_state is None:\n        raise RuntimeError("encoder training produced no selectable checkpoint")\n    ARTIFACT_DIR.mkdir(parents=True, exist_ok=True)
     ckpt_path = ARTIFACT_DIR / f"{candidate}-seed{seed}.pt"
     torch.save(best_state, ckpt_path)
     with open(ARTIFACT_DIR / f"{candidate}-seed{seed}-history.json", "w") as f:
