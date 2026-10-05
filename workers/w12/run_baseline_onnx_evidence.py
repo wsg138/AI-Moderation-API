@@ -34,10 +34,10 @@ from moderation_api.onnx_classifier import OnnxClassifier, OnnxClassifierConfig
 from moderation_api.tfidf_runtime import TfidfRuntimeVectorizer
 from onnxruntime.quantization import QuantType, quantize_dynamic
 
-from .baseline import train_baseline
-from .dataset import load_partition
-from .evaluate import REPORTS_DIR, evaluate_predictions
-from .export_baseline_onnx import EXPORT_DIR, export_baseline_onnx, sha256_of
+from workers.w12.baseline import train_baseline
+from workers.w12.dataset import load_partition
+from workers.w12.evaluate import REPORTS_DIR, evaluate_predictions
+from workers.w12.export_baseline_onnx import EXPORT_DIR, export_baseline_onnx, sha256_of
 
 
 def _selected_metrics(report: dict[str, Any]) -> dict[str, float | None]:
