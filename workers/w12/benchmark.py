@@ -17,7 +17,7 @@ import onnxruntime as ort
 import psutil
 from transformers import BertTokenizer
 
-from .train_encoder import CANDIDATES
+from workers.w12.train_encoder import CANDIDATES
 
 ARTIFACT_DIR = Path(__file__).resolve().parent / "artifacts"
 EXPORT_DIR = ARTIFACT_DIR / "onnx"
