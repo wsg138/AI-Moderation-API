@@ -12,7 +12,7 @@ from collections import defaultdict
 from collections.abc import Callable
 from pathlib import Path
 
-from .dataset import (
+from workers.w12.dataset import (
     ACTION_TO_ID,
     ACTIONS,
     CONTAINMENT_TO_ID,
