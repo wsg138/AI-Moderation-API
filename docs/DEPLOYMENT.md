@@ -42,7 +42,7 @@ It refuses a non-loopback bind unless `AI_MOD_ALLOW_NONLOCAL_BIND=true` is expli
 
 - `GET /health/live` is process liveness.
 - `GET /health/ready` is durable-store + classifier/runtime readiness.
-- The current stub classifier intentionally makes `/health/ready` return HTTP 503.
+- Without an accepted/configured W12 ONNX bundle, the service stays in stub/fail-open mode and `/health/ready` returns HTTP 503. After W12 acceptance, readiness is HTTP 200 only when the configured checksum-verified classifier bundle loads successfully.
 - An unready or unavailable AI service must not stop or delay the Ticket Bot.
 
 The Ticket Bot supervisor may restart the AI child after repeated liveness failures. Readiness failure alone is a degraded state and must not restart or stop the Ticket Bot.
@@ -75,7 +75,7 @@ The production database path should remain:
 /ai-moderation/runtime-data/moderation.sqlite3
 ```
 
-Keep the entire `/ai-moderation/runtime-data/` directory outside any destructive release cleanup. Future accepted model artifacts should live under `runtime-data/models/` (or another explicitly persistent path chosen by W12) rather than inside a disposable virtual environment.
+Keep the entire `/ai-moderation/runtime-data/` directory outside any destructive release cleanup. Accepted model artifacts must live under `runtime-data/models/` (or another explicitly persistent path chosen at deployment) rather than inside a disposable virtual environment. Configure `AI_MOD_ONNX_METADATA_PATH` and `AI_MOD_ONNX_METADATA_SHA256` to the accepted metadata file and its recorded SHA-256; the runtime then verifies the metadata, vectorizer, every ONNX head, schema version, and `w12-v2` serialization contract before reporting classifier readiness.
 
 Rollback rules:
 
@@ -92,7 +92,7 @@ Never solve a rollback by deleting or replacing `moderation.sqlite3`.
 
 The host has 2 GB total RAM and the Ticket Bot normally uses roughly 300 MB. The Ticket Bot remains the priority process.
 
-Until W12 supplies a measured ONNX model, use these operating rules:
+W12 v2 currently measures the selected FP32 TF-IDF/ONNX bundle at roughly 1 MB of model/vectorizer artifacts and around 1 MB attributable RSS on GitHub's CPU evidence host. Final W20 unseen acceptance is still required before production use. Use these operating rules:
 
 - no GPU dependency;
 - keep the AI worker count at the current bounded defaults unless measured load requires a change;
@@ -108,7 +108,7 @@ Run only after explicit deployment authorization.
 
 1. Start the container and confirm the existing Ticket Bot reaches its normal Discord-ready marker.
 2. `curl -fsS http://127.0.0.1:8787/health/live` must return `{"status":"ok"}`.
-3. Check `/health/ready`. With the current stub classifier, HTTP 503/`not_ready` is expected and must not affect the Ticket Bot.
+3. Check `/health/ready`. Before a model is configured, HTTP 503/`not_ready` is expected and must not affect the Ticket Bot. With the accepted model configured, require HTTP 200/`ready`, `classifier_mode=onnx-baseline-tfidf`, the expected `local_model_version`, and the expected metadata checksum before enabling any client.
 4. Record the SQLite file identity/size, stop only the AI child, and confirm:
    - Ticket Bot remains online;
    - the supervisor logs the AI exit;
