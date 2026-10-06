@@ -8,13 +8,14 @@ from __future__ import annotations
 
 import copy
 import random
+from collections.abc import Iterator
 from contextlib import nullcontext
 from dataclasses import dataclass
 
 import numpy as np  # pyright: ignore[reportMissingImports]
 import torch  # pyright: ignore[reportMissingImports]
 import torch.nn as nn  # pyright: ignore[reportMissingImports]
-from torch.utils.data import DataLoader, Dataset  # pyright: ignore[reportMissingImports]
+from torch.utils.data import DataLoader, Dataset, Sampler  # pyright: ignore[reportMissingImports]
 from transformers import AutoModel, AutoTokenizer  # pyright: ignore[reportMissingImports]
 
 from workers.w12.dataset import (
@@ -68,6 +69,32 @@ class ModerationDataset(Dataset):
         }
         row.update(_target_tensors(example))
         return row
+
+
+class LengthBucketBatchSampler(Sampler[list[int]]):
+    def __init__(
+        self,
+        dataset: ModerationDataset,
+        batch_size: int,
+        seed: int,
+    ) -> None:
+        self.lengths = [int(row["input_ids"].shape[-1]) for row in dataset.encoded]
+        self.batch_size = batch_size
+        self.seed = seed
+        self.epoch = 0
+
+    def __len__(self) -> int:
+        return (len(self.lengths) + self.batch_size - 1) // self.batch_size
+
+    def __iter__(self) -> Iterator[list[int]]:
+        ordered = sorted(range(len(self.lengths)), key=self.lengths.__getitem__)
+        batches = [
+            ordered[start : start + self.batch_size]
+            for start in range(0, len(ordered), self.batch_size)
+        ]
+        random.Random(self.seed + self.epoch).shuffle(batches)
+        self.epoch += 1
+        yield from batches
 
 
 class MultiTaskEncoder(nn.Module):
@@ -143,7 +170,13 @@ def train_encoder(
     tokenizer = load_tokenizer(model_key)
     length = min(max_length or spec.max_length, spec.max_length)
     loaders = _build_loaders(
-        train_examples, dev_examples, tokenizer, length, serialization_variant, batch_size
+        train_examples,
+        dev_examples,
+        tokenizer,
+        length,
+        serialization_variant,
+        batch_size,
+        seed,
     )
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = MultiTaskEncoder(model_key).to(device)
@@ -158,16 +191,18 @@ def _build_loaders(
     max_length: int,
     variant: str,
     batch_size: int,
+    seed: int,
 ) -> tuple[DataLoader, DataLoader]:
     train = ModerationDataset(train_examples, tokenizer, max_length, variant)
     dev = ModerationDataset(dev_examples, tokenizer, max_length, variant)
+
     def collate(rows):
         return _collate_batch(tokenizer, rows)
+
     return (
         DataLoader(
             train,
-            batch_size=batch_size,
-            shuffle=True,
+            batch_sampler=LengthBucketBatchSampler(train, batch_size, seed),
             collate_fn=collate,
             pin_memory=torch.cuda.is_available(),
         ),

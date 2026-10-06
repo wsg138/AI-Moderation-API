@@ -7,6 +7,7 @@ torch = pytest.importorskip("torch")
 from workers.w12.dataset import ModerationExample  # noqa: E402 - skip torch first
 from workers.w25.contract import HEAD_NAMES  # noqa: E402 - skip torch before neural import
 from workers.w25.neural import (  # noqa: E402 - optional evidence dependency
+    LengthBucketBatchSampler,
     ModerationDataset,
     _collate_batch,
 )
@@ -95,6 +96,22 @@ def test_dynamic_collation_pads_only_to_longest_batch_member() -> None:
     assert batch["attention_mask"][1].tolist() == [1, 1, 0]
     for name in HEAD_NAMES:
         assert batch[name].tolist() == [0, 1]
+
+
+def test_length_bucket_sampler_groups_similar_lengths_deterministically() -> None:
+    dataset = object.__new__(ModerationDataset)
+    dataset.encoded = [
+        {"input_ids": torch.ones((1, width), dtype=torch.long)}
+        for width in (1, 100, 2, 90, 3, 80)
+    ]
+    first = list(LengthBucketBatchSampler(dataset, 2, 42))
+    second = list(LengthBucketBatchSampler(dataset, 2, 42))
+    assert first == second
+    assert {frozenset(batch) for batch in first} == {
+        frozenset((0, 2)),
+        frozenset((4, 5)),
+        frozenset((3, 1)),
+    }
 
 
 class _FakeModel:
