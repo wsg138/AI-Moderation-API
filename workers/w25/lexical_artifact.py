@@ -6,14 +6,18 @@ import hashlib
 import json
 from collections.abc import Mapping
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Protocol
 
 import numpy as np  # pyright: ignore[reportMissingImports]
 
 if TYPE_CHECKING:
-    from sklearn.linear_model import LogisticRegression
-
     from workers.w25.lexical import LexicalFusionModel
+
+
+class _LinearHead(Protocol):
+    coef_: Any
+    intercept_: Any
+    classes_: Any
 
 
 def export_lexical_artifact(
@@ -62,7 +66,7 @@ def _write_vectorizer(vectorizer, path: Path) -> dict[str, Any]:
 
 
 def _write_heads(
-    heads: Mapping[str, LogisticRegression],
+    heads: Mapping[str, _LinearHead],
     path: Path,
 ) -> dict[str, Any]:
     arrays = {}
