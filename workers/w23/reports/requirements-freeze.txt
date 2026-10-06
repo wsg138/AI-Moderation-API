@@ -7,7 +7,7 @@ cloudpickle==3.1.2
 cuda-bindings==13.4.3
 cuda-pathfinder==1.8.3
 cuda-toolkit==13.0.3.0
--e git+https://github.com/wsg138/AI-Moderation-API@c5385666990d647195a68af54f4b78d1fb1c6903#egg=enthusia_ai_moderation
+-e git+https://github.com/wsg138/AI-Moderation-API@471cdc06d76c57afb672539fb5ddc41760e8313b#egg=enthusia_ai_moderation
 fastapi==0.142.2
 filelock==4.0.12
 flatbuffers==25.12.19
