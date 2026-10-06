@@ -101,7 +101,7 @@ def test_dynamic_collation_pads_only_to_longest_batch_member() -> None:
 
 
 def test_length_bucket_sampler_groups_similar_lengths_deterministically() -> None:
-    dataset = cast(Any, object.__new__(ModerationDataset))
+    dataset = object.__new__(ModerationDataset)
     dataset.encoded = [
         {"input_ids": torch.ones((1, width), dtype=torch.long)}
         for width in (1, 100, 2, 90, 3, 80)

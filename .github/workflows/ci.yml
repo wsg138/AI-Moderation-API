@@ -68,6 +68,8 @@ jobs:
         run: ruff check .
       - name: Mypy
         run: mypy
+      - name: Pyright W25
+        run: npx --yes pyright@1.1.414 workers/w25 tests/test_w25_*.py
       - name: Complexity limits
         run: python tools/check_complexity.py
       - name: Dataset QA
