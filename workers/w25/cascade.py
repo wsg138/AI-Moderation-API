@@ -159,15 +159,18 @@ def _fit_consequence_threshold(
     ]
     if not eligible:
         return 1.0
-    best = max(
-        eligible,
-        key=lambda item: (
-            float(item[1]["recall"]),
-            -float(item[1]["false_positive_rate"]),
-            -item[0],
-        ),
-    )
+    best = max(eligible, key=_consequence_candidate_rank)
     return best[0]
+
+
+def _consequence_candidate_rank(
+    item: tuple[float, dict[str, float | int]],
+) -> tuple[float, float, float]:
+    return (
+        float(item[1]["recall"]),
+        -float(item[1]["false_positive_rate"]),
+        -item[0],
+    )
 
 
 def _candidate_thresholds(
