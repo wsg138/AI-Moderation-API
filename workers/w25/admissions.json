@@ -21,6 +21,17 @@
       "partition_manifest": "W26_real_chat_partitions_PRIVATE.json",
       "partition_manifest_sha256": "e096f92f463406f12545f5682abf755aed2de8537484b663b1fc5ac4931017d5",
       "partition_manifest_storage": "private"
+    },
+    {
+      "path": "W27_real_chat_frozen_validation_PRIVATE.jsonl",
+      "sha256": "e9e414b4b7a21d9deaba9612159d1bdfb62b10420d5584584dfa5e9a522c0d37",
+      "role": "validation_only",
+      "reviewed_by": "W27 six-shard Policy-v1 adjudication plus coordinator positive-row, policy-gap, leakage, and structural QA",
+      "frozen_group_field": "family_id",
+      "storage": "private",
+      "partition_manifest": "W27_real_chat_frozen_validation_partitions_PRIVATE.json",
+      "partition_manifest_sha256": "95193616746bb74b8a14c7af3cf190b2b360e78ce4ada1d813728574d2240705",
+      "partition_manifest_storage": "private"
     }
   ],
   "notes": [
@@ -30,6 +41,9 @@
     "W26 contributes 3,561 human-adjudicated real-chat development records through a hash-pinned private source; raw production-derived text must never be committed to the public repository.",
     "W26 connected records that share context-message IDs or exact normalized target text before freezing 3,098 family groups; split counts are 2,489 train / 506 development / 566 test.",
     "One W26 policy-gap record ('should we rep bomb him?') is quarantined and excluded from admission pending an owner policy decision.",
-    "Admissions are ready for development training. Final W25 ranking remains separately gated on required frozen comparison suites, especially independently reviewed real-distribution/time-based validation."
+    "W27 is validation-only and contributes 3,598 independently adjudicated later-period records: 600 context and 2,998 time-based real-chat. Its role is deliberately excluded from TRAINING_ROLES.",
+    "Two W27 real-animal/pet harm records remain quarantined because Policy-v1 does not settle that edge.",
+    "W27 context and time-based partitions are family-disjoint; W20 remains untouched.",
+    "Admissions and all required W25 classifier comparison suites are frozen and ready for a private-host bakeoff."
   ]
 }
