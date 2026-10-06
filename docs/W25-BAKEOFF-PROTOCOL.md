@@ -35,11 +35,26 @@ Admitted-development training is therefore ready on an authorized private host
 that has `W25_PRIVATE_DATA_ROOT` set to the directory containing the pinned
 W26 files. Public GitHub Actions intentionally remains W11-only smoke evidence.
 
-Final ranking still fails closed until two independent private holdouts are
-ready: a context/mirror suite and a separately frozen later-period time-based
-real-chat suite. The chronological suite is now required because the private
-corpus contains a protected post-2026-09-09 period large enough to support drift
-evaluation. W20 remains unseen and reserved for one-shot final acceptance.
+W27 now freezes 3,598 independently adjudicated later-period records after
+quarantining two real-animal/pet-harm cases that Policy-v1 does not settle.
+Related rows sharing context-message IDs or exact normalized target text remain
+in one family. The family-disjoint W25 comparison partitions are:
+
+- context: 600 records (588 ALLOW / 11 BLOCK / 1 REVIEW);
+- time-based real chat: 2,998 records (2,989 ALLOW / 9 BLOCK).
+
+The time-based suite also has a separate strict novel-target analysis containing
+2,733 targets whose exact normalized target text does not occur in W26
+train+development. This secondary analysis does not replace the production-shaped
+time-based suite.
+
+Canonical mirror/double-count suppression remains an incident-linker/runtime
+responsibility and is separately covered by W24. W25's context suite measures
+classifier-visible context, timing, channel/profile, retry/evasion, private-chat,
+Discord, and cross-platform duplicate-control behavior.
+
+All five W25 classifier comparison suites are now frozen. W20 remains unseen and
+reserved for one-shot final acceptance after architecture selection and freeze.
 
 ## Immutable neural backbones
 
@@ -136,15 +151,22 @@ private W26 data. A private-host run must first execute:
 
 `python -m workers.w25.run_bakeoff preflight --require-ready`
 
-which verifies both admitted files and partition manifests against their pinned
-SHA-256 values before training.
+which verifies the W21, W26, and W27 admitted sources and their applicable
+partition manifests against pinned SHA-256 values before training/evaluation.
 
-The balanced-policy, real-distribution, and adversarial/evasion suites are now
-frozen. Two required comparison suites remain blocked: an independently frozen
-context/mirror holdout and a disjoint human-reviewed sample from the protected
-later real-chat period. W20 is not referenced by the development workflow and
+All required comparison suites are frozen:
+
+- balanced policy;
+- real distribution (W26);
+- adversarial/evasion (W11 + W21);
+- context (W27);
+- time-based real chat (W27).
+
+The remaining blocker is execution of the full private-host multi-seed bakeoff
+and evidence aggregation. W20 is not referenced by the development workflow and
 remains reserved for the one-shot acceptance process after an architecture is
 selected and frozen.
 
-There is intentionally no W25 winner yet. A winner or punishment-readiness claim
-before both remaining suites exist would violate the experiment design.
+There is intentionally no W25 winner yet. No BLOCK/STRIKE/containment readiness
+claim may be made before the full private bakeoff is executed and compared on
+fingerprint-identical copies of all five suites.
