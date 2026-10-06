@@ -71,18 +71,33 @@ def _fit_block_policy(
     examples: list[ModerationExample],
     bundle: PredictionBundle,
 ) -> tuple[float, float]:
-    gold = [1 if example.action == "BLOCK" else 0 for example in examples]
-    candidates = []
-    for block in BLOCK_GRID:
-        for uncertainty in UNCERTAINTY_GRID:
-            thresholds = SelectiveThresholds(block, 1.0, 1.0, uncertainty)
-            selective, _ = apply_selective_policy(bundle, thresholds)
-            predicted = [
-                1 if value == ACTION_TO_ID["BLOCK"] else 0
-                for value in selective.predictions["action"]
-            ]
-            report = binary_metrics(gold, predicted)
-            candidates.append((block, uncertainty, report))
+    gold = [int(example.action == "BLOCK") for example in examples]
+    candidates = [
+        _block_candidate(bundle, gold, block, uncertainty)
+        for block in BLOCK_GRID
+        for uncertainty in UNCERTAINTY_GRID
+    ]
+    return _select_block_candidate(candidates)
+
+
+def _block_candidate(
+    bundle: PredictionBundle,
+    gold: list[int],
+    block: float,
+    uncertainty: float,
+) -> tuple[float, float, dict[str, float | int]]:
+    thresholds = SelectiveThresholds(block, 1.0, 1.0, uncertainty)
+    selective, _ = apply_selective_policy(bundle, thresholds)
+    predicted = [
+        int(value == ACTION_TO_ID["BLOCK"])
+        for value in selective.predictions["action"]
+    ]
+    return block, uncertainty, binary_metrics(gold, predicted)
+
+
+def _select_block_candidate(
+    candidates: list[tuple[float, float, dict[str, float | int]]],
+) -> tuple[float, float]:
     eligible = [item for item in candidates if float(item[2]["precision"]) >= 0.99]
     if not eligible:
         return 1.0, min(UNCERTAINTY_GRID)

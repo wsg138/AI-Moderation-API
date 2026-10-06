@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any
 
 REQUIRED_FINAL_SUITES = (
     "balanced_policy",
@@ -33,7 +34,7 @@ class CandidateSummary:
     readiness: str
 
 
-def rank_candidates(evidence: list[dict[str, object]]) -> list[CandidateSummary]:
+def rank_candidates(evidence: list[dict[str, Any]]) -> list[CandidateSummary]:
     if not evidence:
         raise ValueError("candidate evidence is empty")
     validate_suite_fingerprints(evidence)
@@ -41,7 +42,7 @@ def rank_candidates(evidence: list[dict[str, object]]) -> list[CandidateSummary]
     return sorted(summaries, key=_ranking_key, reverse=True)
 
 
-def validate_suite_fingerprints(evidence: list[dict[str, object]]) -> None:
+def validate_suite_fingerprints(evidence: list[dict[str, Any]]) -> None:
     for suite in REQUIRED_FINAL_SUITES:
         fingerprints = {_suite_fingerprint(item, suite) for item in evidence}
         if None in fingerprints:
@@ -50,7 +51,7 @@ def validate_suite_fingerprints(evidence: list[dict[str, object]]) -> None:
             raise ValueError(f"candidate suite mismatch for {suite}")
 
 
-def _summarize(evidence: dict[str, object]) -> CandidateSummary:
+def _summarize(evidence: dict[str, Any]) -> CandidateSummary:
     suites = _mapping(evidence, "suites")
     balanced = _mapping(suites, "balanced_policy")
     real = _mapping(suites, "real_distribution")
@@ -133,13 +134,13 @@ def _both_supported(
     )
 
 
-def _precision_supported(report: dict[str, object], threshold: float) -> bool:
+def _precision_supported(report: dict[str, Any], threshold: float) -> bool:
     observed = float(report["precision"])
     lower = float(report.get("precision_wilson_lower_95", 0.0))
     return observed >= threshold and lower >= threshold
 
 
-def _critical_recall(report: dict[str, object]) -> float:
+def _critical_recall(report: dict[str, Any]) -> float:
     slices = _mapping(report, "critical_slices")
     recalls = []
     for payload in slices.values():
@@ -153,11 +154,11 @@ def _critical_recall(report: dict[str, object]) -> float:
     return min(recalls) if recalls else 0.0
 
 
-def _consequence(report: dict[str, object], name: str) -> dict[str, object]:
+def _consequence(report: dict[str, Any], name: str) -> dict[str, Any]:
     return _mapping(_mapping(report, "consequences"), name)
 
 
-def _suite_fingerprint(evidence: dict[str, object], suite: str) -> str | None:
+def _suite_fingerprint(evidence: dict[str, Any], suite: str) -> str | None:
     suites = _mapping(evidence, "suites")
     report = suites.get(suite)
     if not isinstance(report, dict):
@@ -169,7 +170,7 @@ def _suite_fingerprint(evidence: dict[str, object], suite: str) -> str | None:
     return str(value) if value else None
 
 
-def _mapping(parent: dict[str, object], key: str) -> dict[str, object]:
+def _mapping(parent: dict[str, Any], key: str) -> dict[str, Any]:
     value = parent.get(key)
     if not isinstance(value, dict):
         raise ValueError(f"{key} must be an object")

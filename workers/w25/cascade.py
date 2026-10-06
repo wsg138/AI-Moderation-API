@@ -29,6 +29,15 @@ class CascadeThresholds:
     containment: float = 0.995
 
 
+@dataclass(frozen=True)
+class ConsequenceFitSpec:
+    consequence: str
+    grid: tuple[float, ...]
+    target_precision: float
+    block: float = 1.0
+    strike: float = 1.0
+
+
 def fit_cascade_thresholds(
     examples: list[ModerationExample],
     stage_a: PredictionBundle,
@@ -43,30 +52,27 @@ def fit_cascade_thresholds(
         stage_a,
         stage_b,
         screen,
-        consequence="block",
-        grid=BLOCK_GRID,
-        target_precision=0.99,
+        ConsequenceFitSpec("block", BLOCK_GRID, 0.99),
     )
     strike = _fit_consequence_threshold(
         examples,
         stage_a,
         stage_b,
         screen,
-        consequence="strike",
-        grid=STRIKE_GRID,
-        target_precision=0.995,
-        block=block,
+        ConsequenceFitSpec("strike", STRIKE_GRID, 0.995, block=block),
     )
     containment = _fit_consequence_threshold(
         examples,
         stage_a,
         stage_b,
         screen,
-        consequence="containment",
-        grid=CONTAINMENT_GRID,
-        target_precision=0.999,
-        block=block,
-        strike=strike,
+        ConsequenceFitSpec(
+            "containment",
+            CONTAINMENT_GRID,
+            0.999,
+            block=block,
+            strike=strike,
+        ),
     )
     return CascadeThresholds(
         screen_block=screen["block"],
@@ -83,22 +89,38 @@ def _fit_screening_thresholds(
     examples: list[ModerationExample],
     stage_a: PredictionBundle,
 ) -> dict[str, float]:
-    block_id = ACTION_TO_ID["BLOCK"]
-    mute_id = CONTAINMENT_TO_ID["MUTE"]
     return {
-        "block": _high_recall_threshold(
-            [1 if item.action == "BLOCK" else 0 for item in examples],
-            [row[block_id] for row in stage_a.probabilities["action"]],
-        ),
-        "strike": _high_recall_threshold(
-            [1 if item.strike else 0 for item in examples],
-            [row[1] for row in stage_a.probabilities["strike"]],
-        ),
-        "containment": _high_recall_threshold(
-            [1 if item.containment == "MUTE" else 0 for item in examples],
-            [row[mute_id] for row in stage_a.probabilities["containment"]],
-        ),
+        "block": _block_screen_threshold(examples, stage_a),
+        "strike": _strike_screen_threshold(examples, stage_a),
+        "containment": _containment_screen_threshold(examples, stage_a),
     }
+
+
+def _block_screen_threshold(
+    examples: list[ModerationExample],
+    bundle: PredictionBundle,
+) -> float:
+    block_id = ACTION_TO_ID["BLOCK"]
+    gold = [int(item.action == "BLOCK") for item in examples]
+    return _high_recall_threshold(gold, [row[block_id] for row in bundle.probabilities["action"]])
+
+
+def _strike_screen_threshold(
+    examples: list[ModerationExample],
+    bundle: PredictionBundle,
+) -> float:
+    gold = [int(item.strike) for item in examples]
+    return _high_recall_threshold(gold, [row[1] for row in bundle.probabilities["strike"]])
+
+
+def _containment_screen_threshold(
+    examples: list[ModerationExample],
+    bundle: PredictionBundle,
+) -> float:
+    mute_id = CONTAINMENT_TO_ID["MUTE"]
+    gold = [int(item.containment == "MUTE") for item in examples]
+    probabilities = [row[mute_id] for row in bundle.probabilities["containment"]]
+    return _high_recall_threshold(gold, probabilities)
 
 
 def _high_recall_threshold(gold: list[int], probabilities: list[float]) -> float:
@@ -118,26 +140,23 @@ def _fit_consequence_threshold(
     stage_a: PredictionBundle,
     stage_b: PredictionBundle,
     screen: dict[str, float],
-    *,
-    consequence: str,
-    grid: tuple[float, ...],
-    target_precision: float,
-    block: float = 1.0,
-    strike: float = 1.0,
+    spec: ConsequenceFitSpec,
 ) -> float:
     candidates = []
-    for threshold in grid:
+    for threshold in spec.grid:
         thresholds = _candidate_thresholds(
             screen,
-            consequence,
+            spec.consequence,
             threshold,
-            block,
-            strike,
+            spec.block,
+            spec.strike,
         )
         bundle, _ = combine_cascade(stage_a, stage_b, thresholds)
-        report = _consequence_report(examples, bundle, consequence)
+        report = _consequence_report(examples, bundle, spec.consequence)
         candidates.append((threshold, report))
-    eligible = [item for item in candidates if float(item[1]["precision"]) >= target_precision]
+    eligible = [
+        item for item in candidates if float(item[1]["precision"]) >= spec.target_precision
+    ]
     if not eligible:
         return 1.0
     best = max(
@@ -174,23 +193,45 @@ def _consequence_report(
     bundle: PredictionBundle,
     consequence: str,
 ) -> dict[str, float | int]:
-    if consequence == "block":
-        gold = [1 if item.action == "BLOCK" else 0 for item in examples]
-        predicted = [
-            1 if value == ACTION_TO_ID["BLOCK"] else 0
-            for value in bundle.predictions["action"]
-        ]
-    elif consequence == "strike":
-        gold = [1 if item.strike else 0 for item in examples]
-        predicted = bundle.predictions["strike"]
-    else:
-        mute_id = CONTAINMENT_TO_ID["MUTE"]
-        gold = [1 if item.containment == "MUTE" else 0 for item in examples]
-        predicted = [
-            1 if value == mute_id else 0
-            for value in bundle.predictions["containment"]
-        ]
+    vectorizer = _CONSEQUENCE_VECTORS.get(consequence)
+    if vectorizer is None:
+        raise ValueError(f"unknown cascade consequence: {consequence}")
+    gold, predicted = vectorizer(examples, bundle)
     return binary_metrics(gold, predicted)
+
+
+def _block_vectors(
+    examples: list[ModerationExample],
+    bundle: PredictionBundle,
+) -> tuple[list[int], list[int]]:
+    block_id = ACTION_TO_ID["BLOCK"]
+    gold = [int(item.action == "BLOCK") for item in examples]
+    predicted = [int(value == block_id) for value in bundle.predictions["action"]]
+    return gold, predicted
+
+
+def _strike_vectors(
+    examples: list[ModerationExample],
+    bundle: PredictionBundle,
+) -> tuple[list[int], list[int]]:
+    return [int(item.strike) for item in examples], list(bundle.predictions["strike"])
+
+
+def _containment_vectors(
+    examples: list[ModerationExample],
+    bundle: PredictionBundle,
+) -> tuple[list[int], list[int]]:
+    mute_id = CONTAINMENT_TO_ID["MUTE"]
+    gold = [int(item.containment == "MUTE") for item in examples]
+    predicted = [int(value == mute_id) for value in bundle.predictions["containment"]]
+    return gold, predicted
+
+
+_CONSEQUENCE_VECTORS = {
+    "block": _block_vectors,
+    "strike": _strike_vectors,
+    "containment": _containment_vectors,
+}
 
 
 def combine_cascade(

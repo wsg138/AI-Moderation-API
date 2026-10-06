@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 
 from workers.w12.dataset import (
@@ -41,7 +42,7 @@ class PredictionBundle:
         _validate_heads(self.predictions, self.probabilities, count)
 
 
-def _require_exact_heads(values: dict[str, object]) -> None:
+def _require_exact_heads(values: Mapping[str, object]) -> None:
     if set(values) != set(HEAD_NAMES):
         raise ValueError(f"expected exactly heads {HEAD_NAMES}")
 

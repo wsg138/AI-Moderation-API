@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import pytest
+import pytest  # pyright: ignore[reportMissingImports]
 from moderation_api.model_serialization import ModelMessage, serialize_model_input
 
 from workers.w12.dataset import ModerationExample
@@ -72,7 +72,7 @@ def test_w12_word_baseline_expands_unseen_classes_to_contract_width() -> None:
     bundle = predict_w12_word_baseline([_example("baseline-contract")])
     bundle.validate()
     for head in HEAD_NAMES:
-        assert len(bundle.probabilities[head][0]) == len(HEAD_VALUES[head])
+        assert len(bundle.probabilities[head][0]) == len(HEAD_VALUES[head])  # nosec B101
 
 
 def test_calibration_preserves_contract_and_returns_all_temperatures() -> None:
@@ -80,16 +80,16 @@ def test_calibration_preserves_contract_and_returns_all_temperatures() -> None:
     examples = [_example("A"), _example("B", action="BLOCK", strike=True)]
     calibrated, temperatures = calibrate_bundle(bundle, examples)
     calibrated.validate()
-    assert set(temperatures) == set(HEAD_NAMES)
-    assert all(value > 0 for value in temperatures.values())
+    assert set(temperatures) == set(HEAD_NAMES)  # nosec B101
+    assert all(value > 0 for value in temperatures.values())  # nosec B101
 
 
 def test_cascade_verifier_can_block_without_stage_a_consensus() -> None:
     stage_a = _bundle([[0.60, 0.30, 0.10]], [[0.99, 0.01]])
     stage_b = _bundle([[0.02, 0.97, 0.01]], [[0.99, 0.01]])
     result, routed = combine_cascade(stage_a, stage_b, CascadeThresholds())
-    assert routed == [True]
-    assert HEAD_VALUES["action"][result.predictions["action"][0]] == "BLOCK"
+    assert routed == [True]  # nosec B101
+    assert HEAD_VALUES["action"][result.predictions["action"][0]] == "BLOCK"  # nosec B101
 
 
 def test_cascade_disagreement_defaults_to_review() -> None:
@@ -97,8 +97,8 @@ def test_cascade_disagreement_defaults_to_review() -> None:
     stage_b = _bundle([[0.70, 0.20, 0.10]], [[0.99, 0.01]])
     result, routed = combine_cascade(stage_a, stage_b, CascadeThresholds())
     assert routed == [True]
-    assert HEAD_VALUES["action"][result.predictions["action"][0]] == "REVIEW"
-    assert result.predictions["strike"][0] == 0
+    assert HEAD_VALUES["action"][result.predictions["action"][0]] == "REVIEW"  # nosec B101
+    assert result.predictions["strike"][0] == 0  # nosec B101
 
 
 def test_cascade_requires_both_stages_for_strike() -> None:
@@ -111,8 +111,8 @@ def test_cascade_requires_both_stages_for_strike() -> None:
 def test_attack_harness_is_deterministic_and_covers_required_character_families() -> None:
     first = attack_variants("sample message")
     second = attack_variants("sample message")
-    assert first == second
-    assert {
+    assert first == second  # nosec B101
+    assert {  # nosec B101
         "case",
         "spacing",
         "punctuation",
@@ -122,27 +122,27 @@ def test_attack_harness_is_deterministic_and_covers_required_character_families(
         "zero_width",
         "keyboard_typo",
     } <= set(first)
-    assert first["zero_width"] != "sample message"
+    assert first["zero_width"] != "sample message"  # nosec B101
 
 
 def test_deberta_size_selection_uses_development_quality_only() -> None:
     xsmall = DevelopmentScore("deberta-v3-xsmall", 0.995, 0.91, 0.90, 0.88, 0.02, 8.0)
     small = DevelopmentScore("deberta-v3-small", 0.996, 0.89, 0.94, 0.90, 0.03, 13.0)
-    assert select_deberta_size([xsmall, small]).name == "deberta-v3-small"
+    assert select_deberta_size([xsmall, small]).name == "deberta-v3-small"  # nosec B101
 
 
 def test_frozen_temperature_application_reuses_development_fit() -> None:
     bundle = _bundle([[0.8, 0.1, 0.1]], [[0.9, 0.1]])
     calibrated, temperatures = calibrate_bundle(bundle, [_example("A")])
     reapplied = apply_bundle_temperatures(bundle, temperatures)
-    assert reapplied.predictions == calibrated.predictions
+    assert reapplied.predictions == calibrated.predictions  # nosec B101
     for head in HEAD_NAMES:
         for actual, expected in zip(
             reapplied.probabilities[head],
             calibrated.probabilities[head],
             strict=True,
         ):
-            assert actual == pytest.approx(expected)
+            assert actual == pytest.approx(expected)  # nosec B101
 
 
 def test_deberta_selection_uses_seed_aggregate_not_best_single_run() -> None:
@@ -157,7 +157,7 @@ def test_deberta_selection_uses_seed_aggregate_not_best_single_run() -> None:
         DevelopmentScore("deberta-v3-small", 0.985, 0.94, 0.94, 0.91, 0.02, 13.0),
     ]
     selected = select_deberta_seed_aggregate(xsmall, small)
-    assert selected.name == "deberta-v3-small"
+    assert selected.name == "deberta-v3-small"  # nosec B101
 
 
 def test_modernbert_serialization_selection_uses_seed_aggregate() -> None:
@@ -178,7 +178,7 @@ def test_modernbert_serialization_selection_uses_seed_aggregate() -> None:
         for _ in range(3)
     ]
     selected = select_modernbert_seed_aggregate(raw, normalized)
-    assert selected.name == "modernbert-normalized"
+    assert selected.name == "modernbert-normalized"  # nosec B101
 
 
 def test_selective_policy_routes_uncertain_block_to_review() -> None:
@@ -190,16 +190,16 @@ def test_selective_policy_routes_uncertain_block_to_review() -> None:
         uncertainty_review=0.40,
     )
     selected, abstained = apply_selective_policy(bundle, thresholds)
-    assert abstained == [True]
-    assert HEAD_VALUES["action"][selected.predictions["action"][0]] == "REVIEW"
-    assert selected.predictions["strike"][0] == 0
+    assert abstained == [True]  # nosec B101
+    assert HEAD_VALUES["action"][selected.predictions["action"][0]] == "REVIEW"  # nosec B101
+    assert selected.predictions["strike"][0] == 0  # nosec B101
 
 
 def test_selective_policy_requires_block_before_strike() -> None:
     bundle = _bundle([[0.95, 0.03, 0.02]], [[0.001, 0.999]])
     thresholds = SelectiveThresholds(0.90, 0.995, 0.999, 0.50)
     selected, _ = apply_selective_policy(bundle, thresholds)
-    assert HEAD_VALUES["action"][selected.predictions["action"][0]] == "ALLOW"
+    assert HEAD_VALUES["action"][selected.predictions["action"][0]] == "ALLOW"  # nosec B101
     assert selected.predictions["strike"][0] == 0
 
 
@@ -214,8 +214,8 @@ def test_threshold_fitting_fails_closed_when_precision_floor_is_unmet() -> None:
         [[0.01, 0.99], [0.01, 0.99], [0.01, 0.99]],
     )
     thresholds = fit_selective_thresholds(examples, bundle)
-    assert thresholds.block == 1.0
-    assert thresholds.strike == 1.0
+    assert thresholds.block == 1.0  # nosec B101
+    assert thresholds.strike == 1.0  # nosec B101
 
 
 def test_cascade_safety_override_survives_probability_recalibration() -> None:
@@ -231,8 +231,8 @@ def test_cascade_safety_override_survives_probability_recalibration() -> None:
         routed,
         thresholds,
     )
-    assert HEAD_VALUES["action"][final.predictions["action"][0]] == "REVIEW"
-    assert final.predictions["strike"][0] == 0
+    assert HEAD_VALUES["action"][final.predictions["action"][0]] == "REVIEW"  # nosec B101
+    assert final.predictions["strike"][0] == 0  # nosec B101
 
 
 def test_cascade_threshold_fitting_fails_closed_on_false_positive_pressure() -> None:
@@ -262,11 +262,11 @@ def test_serialized_attacks_preserve_profile_and_context_markers() -> None:
     )
     variants = attack_serialized_variants(serialized)
     for mutated in variants.values():
-        assert mutated.startswith(
+        assert mutated.startswith(  # nosec B101
             "[PROFILE=minecraft_public]\n[A@-1000ms] hello there\n"
             "[B@+0ms] [TARGET] "
         )
-        assert mutated != serialized
+        assert mutated != serialized  # nosec B101
 
 
 def test_serialized_attacks_accept_canonical_runtime_serialization() -> None:
@@ -279,10 +279,10 @@ def test_serialized_attacks_accept_canonical_runtime_serialization() -> None:
         1,
     )
     variants = attack_serialized_variants(serialized)
-    assert variants
-    assert all("[PROFILE=minecraft_public]" in value for value in variants.values())
-    assert all("hello there" in value for value in variants.values())
-    assert all("[TARGET]" in value for value in variants.values())
+    assert variants  # nosec B101
+    assert all("[PROFILE=minecraft_public]" in value for value in variants.values())  # nosec B101
+    assert all("hello there" in value for value in variants.values())  # nosec B101
+    assert all("[TARGET]" in value for value in variants.values())  # nosec B101
 
 
 def test_train_only_augmentation_is_deterministic_and_label_preserving() -> None:
@@ -311,11 +311,11 @@ def test_train_only_augmentation_is_deterministic_and_label_preserving() -> None
     first = augment_training_examples([example])
     second = augment_training_examples([example])
     assert first == second
-    assert len(first) == 2
+    assert len(first) == 2  # nosec B101
     generated = first[1]
-    assert generated.example_id.startswith("train-1::w25-adv::")
-    assert generated.family_id == "family-1"
-    assert generated.serialized != example.serialized
-    assert generated.label == example.label
-    assert generated.action == example.action
-    assert generated.strike == example.strike
+    assert generated.example_id.startswith("train-1::w25-adv::")  # nosec B101
+    assert generated.family_id == "family-1"  # nosec B101
+    assert generated.serialized != example.serialized  # nosec B101
+    assert generated.label == example.label  # nosec B101
+    assert generated.action == example.action  # nosec B101
+    assert generated.strike == example.strike  # nosec B101

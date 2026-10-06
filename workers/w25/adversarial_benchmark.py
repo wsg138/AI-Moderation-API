@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
 from workers.w12.dataset import ACTION_TO_ID, ModerationExample
 from workers.w25.adversarial_metrics import paired_attack_report
@@ -15,7 +16,7 @@ def adversarial_bundle_report(
     examples: list[ModerationExample],
     clean_bundle_path: Path,
     attacked_bundle_paths: dict[str, Path],
-) -> dict[str, object]:
+) -> dict[str, Any]:
     missing = set(ATTACK_FAMILIES) - attacked_bundle_paths.keys()
     if missing:
         raise ValueError(f"missing attack families: {sorted(missing)}")
@@ -50,7 +51,7 @@ def _family_report(
     clean_block: list[int],
     path: Path,
     examples: list[ModerationExample],
-) -> dict[str, object]:
+) -> dict[str, Any]:
     bundle = load_bundle(path)
     _require_bundle_length(bundle, examples)
     return paired_attack_report(gold, clean_block, _block_predictions(bundle))

@@ -4,12 +4,15 @@ from __future__ import annotations
 
 import hashlib
 import json
+from collections.abc import Mapping
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import numpy as np  # pyright: ignore[reportMissingImports]
 
 if TYPE_CHECKING:
+    from sklearn.linear_model import LogisticRegression
+
     from workers.w25.lexical import LexicalFusionModel
 
 
@@ -21,7 +24,7 @@ def export_lexical_artifact(
     word = _write_vectorizer(model.word, output_dir / "word-vectorizer.json")
     char = _write_vectorizer(model.char, output_dir / "char-vectorizer.json")
     heads = _write_heads(model.heads, output_dir / "heads.npz")
-    metadata = {
+    metadata: dict[str, Any] = {
         "schema_version": 1,
         "format": "w25-safe-data-only-v1",
         "production_safe_data_format": True,
@@ -41,7 +44,7 @@ def export_lexical_artifact(
     return metadata
 
 
-def _write_vectorizer(vectorizer, path: Path) -> dict[str, object]:
+def _write_vectorizer(vectorizer, path: Path) -> dict[str, Any]:
     payload = {
         "terms": vectorizer.get_feature_names_out().tolist(),
         "idf": np.asarray(vectorizer.idf_, dtype=np.float32).tolist(),
@@ -58,7 +61,10 @@ def _write_vectorizer(vectorizer, path: Path) -> dict[str, object]:
     return record
 
 
-def _write_heads(heads: dict[str, object], path: Path) -> dict[str, object]:
+def _write_heads(
+    heads: Mapping[str, LogisticRegression],
+    path: Path,
+) -> dict[str, Any]:
     arrays = {}
     for name, head in heads.items():
         arrays[f"{name}__coef"] = np.asarray(head.coef_, dtype=np.float32)
@@ -77,7 +83,7 @@ def _write_json(path: Path, payload: dict[str, object]) -> None:
     )
 
 
-def _file_record(path: Path) -> dict[str, object]:
+def _file_record(path: Path) -> dict[str, Any]:
     return {
         "path": path.name,
         "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),

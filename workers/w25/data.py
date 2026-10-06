@@ -6,8 +6,10 @@ import hashlib
 import json
 import os
 import unicodedata
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 from workers.w12.dataset import ModerationExample, load_partition, serialize_messages
 from workers.w25.attacks import augment_training_examples
@@ -51,7 +53,7 @@ def load_w11_development() -> tuple[list[ModerationExample], list[ModerationExam
     return load_partition("train"), load_partition("validation")
 
 
-def admissions_payload(path: Path = DEFAULT_ADMISSIONS) -> dict[str, object]:
+def admissions_payload(path: Path = DEFAULT_ADMISSIONS) -> dict[str, Any]:
     payload = json.loads(path.read_text(encoding="utf-8"))
     if payload.get("schema_version") != 1:
         raise ValueError("unsupported W25 admission manifest")
@@ -124,7 +126,7 @@ def verify_all_admissions(path: Path = DEFAULT_ADMISSIONS) -> tuple[Path, ...]:
 
 
 def freeze_group_partitions(
-    records: list[dict[str, object]],
+    records: Sequence[Mapping[str, object]],
     *,
     group_field: str,
     seed: str = "w25-group-freeze-v1",
@@ -139,7 +141,7 @@ def freeze_group_partitions(
 
 
 def assert_group_isolation(
-    records: list[dict[str, object]],
+    records: Sequence[Mapping[str, object]],
     manifest: dict[str, list[str]],
     *,
     group_field: str,
@@ -159,7 +161,7 @@ def assert_group_isolation(
 
 def _load_verified_source(
     source: AdmittedSource,
-) -> tuple[list[dict[str, object]], dict[str, list[str]]]:
+) -> tuple[list[dict[str, Any]], dict[str, list[str]]]:
     source_path = verify_admitted_source(source)
     records = _read_jsonl(source_path)
     manifest_path = _verified_partition_manifest(source)
@@ -186,8 +188,9 @@ def _examples_for_partition(
     return [_record_to_example(records_by_id[example_id], source) for example_id in sorted(ids)]
 
 
-def _record_to_example(record: dict[str, object], source: AdmittedSource) -> ModerationExample:
+def _record_to_example(record: dict[str, Any], source: AdmittedSource) -> ModerationExample:
     messages = list(record["messages"])
+    duration = record.get("containment_duration_seconds")
     serialized = serialize_messages(
         str(record["channel_profile"]),
         messages,
@@ -201,7 +204,7 @@ def _record_to_example(record: dict[str, object], source: AdmittedSource) -> Mod
         review_priority=str(record["review_priority"]),
         strike=bool(record["strike"]),
         containment=str(record["containment"]),
-        containment_duration_seconds=record.get("containment_duration_seconds"),
+        containment_duration_seconds=int(duration) if duration is not None else None,
         support_flow=str(record["support_flow"]),
         channel_profile=str(record["channel_profile"]),
         platform_hint=str(record.get("platform_hint", "")),
@@ -259,7 +262,7 @@ def _verified_file_hash(path: Path, expected_sha256: str, label: str) -> Path:
     return path
 
 
-def _read_jsonl(path: Path) -> list[dict[str, object]]:
+def _read_jsonl(path: Path) -> list[dict[str, Any]]:
     records = []
     for line in path.read_text(encoding="utf-8").splitlines():
         if line.strip():
@@ -268,7 +271,7 @@ def _read_jsonl(path: Path) -> list[dict[str, object]]:
 
 
 def _group_records(
-    records: list[dict[str, object]], group_field: str
+    records: Sequence[Mapping[str, object]], group_field: str
 ) -> dict[str, list[str]]:
     groups: dict[str, list[str]] = {}
     for record in records:

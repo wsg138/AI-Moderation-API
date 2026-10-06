@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import statistics
 from pathlib import Path
+from typing import Any
 
 from workers.w25.artifacts import load_bundle
 from workers.w25.stability import aggregate_numeric_values, stability_report
@@ -18,7 +19,7 @@ RANKING_SUITES = (
 )
 
 
-def aggregate_evidence_manifest(path: Path) -> dict[str, object]:
+def aggregate_evidence_manifest(path: Path) -> dict[str, Any]:
     manifest = _load_json(path)
     seeds = _load_manifest_seeds(manifest)
     stability = _aggregate_stability(seeds)
@@ -32,21 +33,21 @@ def aggregate_evidence_manifest(path: Path) -> dict[str, object]:
     }
 
 
-def _load_manifest_seeds(manifest: dict[str, object]) -> list[dict[str, object]]:
+def _load_manifest_seeds(manifest: dict[str, Any]) -> list[dict[str, Any]]:
     seed_entries = manifest.get("seeds")
     if not isinstance(seed_entries, list) or len(seed_entries) < 3:
         raise ValueError("candidate evidence requires at least three seed entries")
     return [_load_seed_entry(entry) for entry in seed_entries]
 
 
-def _aggregate_suites(seeds: list[dict[str, object]]) -> dict[str, object]:
+def _aggregate_suites(seeds: list[dict[str, Any]]) -> dict[str, Any]:
     return {
         name: _aggregate_suite([_seed_suite(seed, name) for seed in seeds])
         for name in RANKING_SUITES
     }
 
 
-def _aggregate_stability(seeds: list[dict[str, object]]) -> dict[str, object]:
+def _aggregate_stability(seeds: list[dict[str, Any]]) -> dict[str, Any]:
     predictions = _action_predictions(seeds)
     metrics = _seed_metrics(seeds)
     temperatures = _seed_numeric_payloads(seeds, "calibration", "temperatures")
@@ -56,14 +57,14 @@ def _aggregate_stability(seeds: list[dict[str, object]]) -> dict[str, object]:
     return result
 
 
-def _action_predictions(seeds: list[dict[str, object]]) -> dict[int, list[int]]:
+def _action_predictions(seeds: list[dict[str, Any]]) -> dict[int, list[int]]:
     return {
         int(seed["seed"]): load_bundle(Path(seed["real_bundle"])).predictions["action"]
         for seed in seeds
     }
 
 
-def _seed_metrics(seeds: list[dict[str, object]]) -> dict[int, dict[str, float]]:
+def _seed_metrics(seeds: list[dict[str, Any]]) -> dict[int, dict[str, float]]:
     return {
         int(seed["seed"]): _stability_metrics(_seed_suites(seed))
         for seed in seeds
@@ -71,7 +72,7 @@ def _seed_metrics(seeds: list[dict[str, object]]) -> dict[int, dict[str, float]]
 
 
 def _seed_numeric_payloads(
-    seeds: list[dict[str, object]],
+    seeds: list[dict[str, Any]],
     path_key: str,
     payload_key: str,
 ) -> dict[int, dict[str, float]]:
@@ -81,15 +82,15 @@ def _seed_numeric_payloads(
     }
 
 
-def _seed_suites(seed: dict[str, object]) -> dict[str, object]:
+def _seed_suites(seed: dict[str, Any]) -> dict[str, Any]:
     return _mapping(seed, "suites")
 
 
-def _seed_suite(seed: dict[str, object], name: str) -> dict[str, object]:
+def _seed_suite(seed: dict[str, Any], name: str) -> dict[str, Any]:
     return _mapping(_seed_suites(seed), name)
 
 
-def _load_seed_entry(entry: object) -> dict[str, object]:
+def _load_seed_entry(entry: object) -> dict[str, Any]:
     if not isinstance(entry, dict):
         raise ValueError("seed evidence entry must be an object")
     suites = entry.get("suites")
@@ -111,7 +112,7 @@ def _load_seed_entry(entry: object) -> dict[str, object]:
     }
 
 
-def _aggregate_suite(reports: list[dict[str, object]]) -> dict[str, object]:
+def _aggregate_suite(reports: list[dict[str, Any]]) -> dict[str, Any]:
     fingerprint = _shared_fingerprint(reports)
     return {
         "suite": {
@@ -130,9 +131,9 @@ def _aggregate_suite(reports: list[dict[str, object]]) -> dict[str, object]:
 
 
 def _aggregate_consequence(
-    reports: list[dict[str, object]],
+    reports: list[dict[str, Any]],
     name: str,
-) -> dict[str, object]:
+) -> dict[str, Any]:
     fields = (
         "precision",
         "recall",
@@ -142,7 +143,9 @@ def _aggregate_consequence(
         "precision_wilson_lower_95",
         "fpr_wilson_upper_95",
     )
-    consequence = {field: _mean_consequence(reports, name, field) for field in fields}
+    consequence: dict[str, Any] = {
+        field: _mean_consequence(reports, name, field) for field in fields
+    }
     consequence["calibration"] = {
         key: _mean_calibration(reports, name, key)
         for key in ("ece", "brier_score")
@@ -151,15 +154,15 @@ def _aggregate_consequence(
 
 
 def _aggregate_critical_slices(
-    reports: list[dict[str, object]],
-) -> dict[str, object]:
+    reports: list[dict[str, Any]],
+) -> dict[str, Any]:
     slices = _mapping(reports[0], "critical_slices")
     aggregated = {}
     for name, first in slices.items():
         if not isinstance(first, dict):
             continue
         rows = [_mapping(_mapping(report, "critical_slices"), name) for report in reports]
-        item = {"n": int(first.get("n", 0))}
+        item: dict[str, object] = {"n": int(first.get("n", 0))}
         if "n_gold_block" in first:
             item["n_gold_block"] = int(first["n_gold_block"])
         if first.get("block_recall") is not None:
@@ -170,7 +173,7 @@ def _aggregate_critical_slices(
     return aggregated
 
 
-def _aggregate_performance(seeds: list[dict[str, object]]) -> dict[str, object]:
+def _aggregate_performance(seeds: list[dict[str, Any]]) -> dict[str, Any]:
     rows = [seed["performance"] for seed in seeds]
     numeric = {
         key: [float(row[key]) for row in rows if isinstance(row, dict) and key in row]
@@ -184,7 +187,7 @@ def _aggregate_performance(seeds: list[dict[str, object]]) -> dict[str, object]:
             "cpu_percent_equivalent",
         )
     }
-    result = {
+    result: dict[str, object] = {
         key: statistics.fmean(values)
         for key, values in numeric.items()
         if values
@@ -195,7 +198,7 @@ def _aggregate_performance(seeds: list[dict[str, object]]) -> dict[str, object]:
     return result
 
 
-def _stability_metrics(suites: dict[str, object]) -> dict[str, float]:
+def _stability_metrics(suites: dict[str, Any]) -> dict[str, float]:
     real = _mapping(suites, "real_distribution")
     adversarial = _mapping(suites, "adversarial_evasion")
     block = _consequence(real, "block")
@@ -208,7 +211,7 @@ def _stability_metrics(suites: dict[str, object]) -> dict[str, float]:
     }
 
 
-def _seed_detail(seed: dict[str, object]) -> dict[str, object]:
+def _seed_detail(seed: dict[str, Any]) -> dict[str, Any]:
     return {
         "seed": int(seed["seed"]),
         "metrics": _stability_metrics(seed["suites"]),
@@ -216,24 +219,24 @@ def _seed_detail(seed: dict[str, object]) -> dict[str, object]:
     }
 
 
-def _shared_fingerprint(reports: list[dict[str, object]]) -> str:
+def _shared_fingerprint(reports: list[dict[str, Any]]) -> str:
     values = {str(_suite_meta(report)["fingerprint"]) for report in reports}
     if len(values) != 1:
         raise ValueError("seed suite fingerprints do not match")
     return values.pop()
 
 
-def _suite_meta(report: dict[str, object]) -> dict[str, object]:
+def _suite_meta(report: dict[str, Any]) -> dict[str, Any]:
     return _mapping(report, "suite")
 
 
 def _mean_path(
-    reports: list[dict[str, object]],
+    reports: list[dict[str, Any]],
     path: tuple[str, ...],
 ) -> float:
     values = []
     for report in reports:
-        current: object = report
+        current: Any = report
         for key in path:
             if not isinstance(current, dict):
                 raise ValueError(f"invalid report path: {path}")
@@ -243,7 +246,7 @@ def _mean_path(
 
 
 def _mean_consequence(
-    reports: list[dict[str, object]],
+    reports: list[dict[str, Any]],
     name: str,
     field: str,
 ) -> float:
@@ -251,7 +254,7 @@ def _mean_consequence(
 
 
 def _mean_calibration(
-    reports: list[dict[str, object]],
+    reports: list[dict[str, Any]],
     name: str,
     field: str,
 ) -> float:
@@ -261,7 +264,7 @@ def _mean_calibration(
     )
 
 
-def _consequence(report: dict[str, object], name: str) -> dict[str, object]:
+def _consequence(report: dict[str, Any], name: str) -> dict[str, Any]:
     return _mapping(_mapping(report, "consequences"), name)
 
 
@@ -273,7 +276,7 @@ def _numeric_payload(path: Path, key: str) -> dict[str, float]:
     return {str(name): float(value) for name, value in values.items()}
 
 
-def _max_metric(rows: list[object], key: str) -> int:
+def _max_metric(rows: list[Any], key: str) -> int:
     values = [
         int(row[key])
         for row in rows
@@ -282,14 +285,14 @@ def _max_metric(rows: list[object], key: str) -> int:
     return max(values) if values else 0
 
 
-def _load_json(path: Path) -> dict[str, object]:
+def _load_json(path: Path) -> dict[str, Any]:
     payload = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(payload, dict):
         raise ValueError(f"{path} must contain a JSON object")
     return payload
 
 
-def _mapping(parent: dict[str, object], key: str) -> dict[str, object]:
+def _mapping(parent: dict[str, Any], key: str) -> dict[str, Any]:
     value = parent.get(key)
     if not isinstance(value, dict):
         raise ValueError(f"{key} must be an object")

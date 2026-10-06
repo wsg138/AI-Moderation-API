@@ -2,9 +2,11 @@ from __future__ import annotations
 
 import json
 import time
+from collections.abc import Mapping
 from types import SimpleNamespace
+from typing import Any, cast
 
-import pytest
+import pytest  # pyright: ignore[reportMissingImports]
 
 from workers.w12.dataset import ModerationExample
 from workers.w25.adversarial_benchmark import adversarial_bundle_report
@@ -69,9 +71,9 @@ def _bundle(action_predictions: list[int]) -> PredictionBundle:
 def test_failure_report_groups_ids_without_raw_text_by_default() -> None:
     examples = [_example("A", "ALLOW"), _example("B", "BLOCK", "harassment")]
     bundle = _bundle([1, 0])
-    report = grouped_visibility_failures(examples, bundle)
-    assert report["total"] == 2
-    assert all("serialized" not in item for item in report["examples"])
+    report = cast(dict[str, Any], grouped_visibility_failures(examples, bundle))
+    assert report["total"] == 2  # nosec B101
+    assert all("serialized" not in item for item in report["examples"])  # nosec B101
 
 
 def test_paired_attack_report_counts_evasion_and_benign_corruption() -> None:
@@ -80,12 +82,12 @@ def test_paired_attack_report_counts_evasion_and_benign_corruption() -> None:
         clean_block=[1, 1, 0, 0],
         adversarial_block=[0, 1, 1, 0],
     )
-    assert report["attack_success_rate"] == pytest.approx(0.5)
-    assert report["benign_corruption_false_positive_rate"] == pytest.approx(0.5)
+    assert report["attack_success_rate"] == pytest.approx(0.5)  # nosec B101
+    assert report["benign_corruption_false_positive_rate"] == pytest.approx(0.5)  # nosec B101
 
 
 def test_stability_report_exposes_flip_and_metric_ranges() -> None:
-    report = stability_report(
+    report = cast(dict[str, Any], stability_report(
         predictions_by_seed={42: [0, 1], 138: [1, 1], 2026: [0, 1]},
         metrics_by_seed={
             42: {"precision": 0.99},
@@ -97,15 +99,15 @@ def test_stability_report_exposes_flip_and_metric_ranges() -> None:
             138: {"action": 1.1},
             2026: {"action": 0.9},
         },
-    )
-    assert report["prediction_flip_rate"] == pytest.approx(0.5)
-    assert report["metrics"]["precision"]["range"] == pytest.approx(0.02)
+    ))
+    assert report["prediction_flip_rate"] == pytest.approx(0.5)  # nosec B101
+    assert report["metrics"]["precision"]["range"] == pytest.approx(0.02)  # nosec B101
 
 
 def test_suite_fingerprint_changes_when_gold_policy_changes() -> None:
     allow = [_example("A", "ALLOW")]
     block = [_example("A", "BLOCK")]
-    assert suite_fingerprint(allow) != suite_fingerprint(block)
+    assert suite_fingerprint(allow) != suite_fingerprint(block)  # nosec B101
 
 
 def test_final_ranking_rejects_mismatched_suite_fingerprints() -> None:
@@ -119,8 +121,8 @@ def test_final_ranking_prioritizes_real_false_positive_behavior() -> None:
     precise = _candidate("precise", fingerprint="same", fpr=0.0001, precision=0.995)
     noisy = _candidate("noisy", fingerprint="same", fpr=0.001, precision=0.999)
     ranked = rank_candidates([noisy, precise])
-    assert ranked[0].name == "precise"
-    assert ranked[0].readiness == "BLOCK_CONSIDERATION"
+    assert ranked[0].name == "precise"  # nosec B101
+    assert ranked[0].readiness == "BLOCK_CONSIDERATION"  # nosec B101
 
 
 def _candidate(
@@ -174,10 +176,10 @@ def _suite(fingerprint: str, fpr: float, precision: float) -> dict[str, object]:
 
 def test_runtime_benchmark_reports_peak_rss_and_cpu() -> None:
     report = benchmark_callable(lambda: sum(range(20)), iterations=3, warmup=1)
-    assert report["peak_rss_bytes"] >= report["steady_rss_bytes"] - abs(
+    assert report["peak_rss_bytes"] >= report["steady_rss_bytes"] - abs(  # nosec B101
         report["rss_delta_bytes"]
     )
-    assert report["cpu_percent_equivalent"] >= 0.0
+    assert report["cpu_percent_equivalent"] >= 0.0  # nosec B101
 
 
 def test_queue_pressure_marks_timeout_as_fail_open() -> None:
@@ -187,8 +189,8 @@ def test_queue_pressure_marks_timeout_as_fail_open() -> None:
         workers=1,
         timeout_ms=1.0,
     )
-    assert report["fail_open_count"] == 4
-    assert report["fail_open_rate"] == 1.0
+    assert report["fail_open_count"] == 4  # nosec B101
+    assert report["fail_open_rate"] == 1.0  # nosec B101
 
 
 def test_artifact_size_counts_files_recursively(tmp_path) -> None:
@@ -198,20 +200,20 @@ def test_artifact_size_counts_files_recursively(tmp_path) -> None:
     second = nested / "b.bin"
     first.write_bytes(b"abc")
     second.write_bytes(b"12345")
-    assert artifact_size_bytes([tmp_path]) == 8
+    assert artifact_size_bytes([tmp_path]) == 8  # nosec B101
 
 
 def test_optimized_export_parity_requires_identical_head_decisions() -> None:
     reference = _bundle([0, 1])
     optimized = _bundle([0, 1])
-    report = parity_report(reference, optimized)
-    assert report["prediction_parity"] is True
-    assert report["total_prediction_mismatches"] == 0
+    report = cast(dict[str, Any], parity_report(reference, optimized))
+    assert report["prediction_parity"] is True  # nosec B101
+    assert report["total_prediction_mismatches"] == 0  # nosec B101
 
     changed = _bundle([0, 2])
-    changed_report = parity_report(reference, changed)
-    assert changed_report["prediction_parity"] is False
-    assert changed_report["total_prediction_mismatches"] >= 1
+    changed_report = cast(dict[str, Any], parity_report(reference, changed))
+    assert changed_report["prediction_parity"] is False  # nosec B101
+    assert changed_report["total_prediction_mismatches"] >= 1  # nosec B101
 
 
 def test_candidate_evidence_aggregates_three_seed_flips_and_ranges(tmp_path) -> None:
@@ -230,9 +232,9 @@ def test_candidate_evidence_aggregates_three_seed_flips_and_ranges(tmp_path) -> 
         },
     )
     evidence = aggregate_evidence_manifest(manifest)
-    assert evidence["stability"]["prediction_flip_rate"] == pytest.approx(0.5)
-    assert evidence["performance"]["steady_rss_bytes"] == 12_000
-    assert evidence["stability"]["thresholds"]["block"]["range"] > 0.0
+    assert evidence["stability"]["prediction_flip_rate"] == pytest.approx(0.5)  # nosec B101
+    assert evidence["performance"]["steady_rss_bytes"] == 12_000  # nosec B101
+    assert evidence["stability"]["thresholds"]["block"]["range"] > 0.0  # nosec B101
 
 
 def _seed_evidence_entry(
@@ -289,7 +291,7 @@ def _performance_fixture(seed: int, rss: int) -> dict[str, float | int]:
     }
 
 
-def _write_json(path, payload: dict[str, object]) -> None:
+def _write_json(path, payload: Mapping[str, object]) -> None:
     path.write_text(json.dumps(payload), encoding="utf-8")
 
 
@@ -306,8 +308,8 @@ def test_adversarial_bundle_report_requires_and_aggregates_all_families(tmp_path
     save_bundle(attacked_path, _bundle([0, 1, 1, 0]))
     attacked = {family: attacked_path for family in ATTACK_FAMILIES}
     report = adversarial_bundle_report(examples, clean_path, attacked)
-    assert report["worst_attack_success_rate"] == pytest.approx(0.5)
-    assert report["worst_benign_corruption_false_positive_rate"] == pytest.approx(0.5)
+    assert report["worst_attack_success_rate"] == pytest.approx(0.5)  # nosec B101
+    assert report["worst_benign_corruption_false_positive_rate"] == pytest.approx(0.5)  # nosec B101
 
 
 def test_adversarial_bundle_report_rejects_missing_family(tmp_path) -> None:
@@ -321,17 +323,17 @@ def test_adversarial_bundle_report_rejects_missing_family(tmp_path) -> None:
 def test_final_readiness_requires_drift_precision_too() -> None:
     evidence = _candidate("candidate", fingerprint="same", precision=0.995)
     suites = evidence["suites"]
-    assert isinstance(suites, dict)
+    assert isinstance(suites, dict)  # nosec B101
     drift = suites["time_based_real_chat"]
-    assert isinstance(drift, dict)
+    assert isinstance(drift, dict)  # nosec B101
     consequences = drift["consequences"]
-    assert isinstance(consequences, dict)
+    assert isinstance(consequences, dict)  # nosec B101
     block = consequences["block"]
-    assert isinstance(block, dict)
+    assert isinstance(block, dict)  # nosec B101
     block["precision"] = 0.98
     block["precision_wilson_lower_95"] = 0.98
     ranked = rank_candidates([evidence])
-    assert ranked[0].readiness == "SHADOW_ONLY"
+    assert ranked[0].readiness == "SHADOW_ONLY"  # nosec B101
 
 
 def test_composed_performance_report_includes_all_runtime_dimensions(tmp_path) -> None:
@@ -346,29 +348,29 @@ def test_composed_performance_report_includes_all_runtime_dimensions(tmp_path) -
         queue_requests=4,
         timeout_ms=1000.0,
     )
-    assert set(report) == {
+    assert set(report) == {  # nosec B101
         "concurrency_1",
         "concurrency_realistic",
         "startup",
         "queue_pressure",
         "artifact_size_bytes",
     }
-    assert report["artifact_size_bytes"] == 4
+    assert report["artifact_size_bytes"] == 4  # nosec B101
 
 
 def test_export_artifact_metadata_hashes_exact_bytes(tmp_path) -> None:
     artifact = tmp_path / "model.onnx"
     artifact.write_bytes(b"abc")
     metadata = artifact_metadata(artifact)
-    assert metadata["size_bytes"] == 3
-    assert metadata["sha256"] == (
+    assert metadata["size_bytes"] == 3  # nosec B101
+    assert metadata["sha256"] == (  # nosec B101
         "ba7816bf8f01cfea414140de5dae2223"
         "b00361a396177a9cb410ff61f20015ad"
     )
 
 
 def test_lexical_artifact_export_is_data_only_and_measured(tmp_path) -> None:
-    import numpy as np
+    import numpy as np  # pyright: ignore[reportMissingImports]
 
     vectorizer = SimpleNamespace(
         get_feature_names_out=lambda: np.asarray(["a", "b"]),
@@ -378,7 +380,7 @@ def test_lexical_artifact_export_is_data_only_and_measured(tmp_path) -> None:
         lowercase=True,
         sublinear_tf=True,
         norm="l2",
-        token_pattern=r"(?u)\\b\\w\\w+\\b",
+        token_pattern=r"(?u)\\b\\w\\w+\\b",  # nosec B106
     )
     head = SimpleNamespace(
         coef_=np.asarray([[1.0, -1.0]]),
@@ -392,8 +394,8 @@ def test_lexical_artifact_export_is_data_only_and_measured(tmp_path) -> None:
         use_embeddings=True,
         serialization_variant="raw",
     )
-    metadata = export_lexical_artifact(model, tmp_path)
+    metadata = export_lexical_artifact(cast(Any, model), tmp_path)
     measured = sum(path.stat().st_size for path in tmp_path.iterdir())
-    assert metadata["total_bytes"] == measured
-    assert metadata["production_safe_data_format"] is True
-    assert metadata["runtime_adapter_required"] is True
+    assert metadata["total_bytes"] == measured  # nosec B101
+    assert metadata["production_safe_data_format"] is True  # nosec B101
+    assert metadata["runtime_adapter_required"] is True  # nosec B101

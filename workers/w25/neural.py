@@ -92,7 +92,7 @@ class LengthBucketBatchSampler(Sampler[list[int]]):
             ordered[start : start + self.batch_size]
             for start in range(0, len(ordered), self.batch_size)
         ]
-        random.Random(self.seed + self.epoch).shuffle(batches)
+        random.Random(self.seed + self.epoch).shuffle(batches)  # nosec B311
         self.epoch += 1
         yield from batches
 
@@ -120,6 +120,16 @@ class MultiTaskEncoder(nn.Module):
         output = self.encoder(input_ids=input_ids, attention_mask=attention_mask)
         pooled = self.dropout(output.last_hidden_state[:, 0])
         return {name: head(pooled) for name, head in self.heads.items()}, pooled
+
+
+@dataclass(frozen=True)
+class TrainingConfig:
+    seed: int
+    serialization_variant: str
+    epochs: int = 5
+    batch_size: int = 8
+    learning_rate: float = 2e-5
+    max_length: int | None = None
 
 
 @dataclass(frozen=True)
@@ -157,31 +167,25 @@ def train_encoder(
     model_key: str,
     train_examples: list[ModerationExample],
     dev_examples: list[ModerationExample],
-    *,
-    seed: int,
-    serialization_variant: str,
-    epochs: int = 5,
-    batch_size: int = 8,
-    learning_rate: float = 2e-5,
-    max_length: int | None = None,
+    config: TrainingConfig,
 ) -> TrainResult:
-    _set_seed(seed)
+    _set_seed(config.seed)
     spec = MODEL_SPECS[model_key]
     tokenizer = load_tokenizer(model_key)
-    length = min(max_length or spec.max_length, spec.max_length)
+    length = min(config.max_length or spec.max_length, spec.max_length)
     loaders = _build_loaders(
         train_examples,
         dev_examples,
         tokenizer,
         length,
-        serialization_variant,
-        batch_size,
-        seed,
+        config.serialization_variant,
+        config.batch_size,
+        config.seed,
     )
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = MultiTaskEncoder(model_key).to(device)
-    optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
-    return _fit(model, tokenizer, loaders, optimizer, device, epochs)
+    optimizer = torch.optim.AdamW(model.parameters(), lr=config.learning_rate)
+    return _fit(model, tokenizer, loaders, optimizer, device, config.epochs)
 
 
 def _build_loaders(

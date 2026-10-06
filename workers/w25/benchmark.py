@@ -8,7 +8,7 @@ from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
-import psutil  # pyright: ignore[reportMissingImports]
+import psutil  # pyright: ignore[reportMissingImports, reportMissingModuleSource]
 
 
 def benchmark_callable(

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import Any
 
 from workers.w12.dataset import ModerationExample, load_partition
 from workers.w25.data import load_source_partition
@@ -11,7 +12,7 @@ from workers.w25.data import load_source_partition
 REGISTRY_PATH = Path(__file__).resolve().parent / "suite_registry.json"
 
 
-def load_suite_registry(path: Path = REGISTRY_PATH) -> dict[str, object]:
+def load_suite_registry(path: Path = REGISTRY_PATH) -> dict[str, Any]:
     payload = json.loads(path.read_text(encoding="utf-8"))
     if payload.get("schema_version") != 1:
         raise ValueError("unsupported W25 suite registry")
@@ -53,7 +54,7 @@ def assert_required_suites_ready() -> None:
         raise RuntimeError(f"required W25 suites are not ready: {sorted(pending)}")
 
 
-def _suite_entry(registry: dict[str, object], name: str) -> dict[str, object]:
+def _suite_entry(registry: dict[str, Any], name: str) -> dict[str, Any]:
     suites = registry["suites"]
     if not isinstance(suites, dict) or name not in suites:
         raise ValueError(f"unknown W25 suite: {name}")
@@ -65,7 +66,7 @@ def _suite_entry(registry: dict[str, object], name: str) -> dict[str, object]:
 
 def _load_suite_source(
     suite_name: str,
-    source: object,
+    source: Any,
 ) -> list[ModerationExample]:
     if not isinstance(source, dict):
         raise ValueError(f"invalid source entry for suite {suite_name}")
@@ -82,7 +83,7 @@ def _load_suite_source(
 
 def _apply_suite_selection(
     examples: list[ModerationExample],
-    selection: object,
+    selection: Any,
 ) -> list[ModerationExample]:
     if selection is None:
         return examples
@@ -113,7 +114,7 @@ def _label_cap(
 
 def _apply_filter(
     examples: list[ModerationExample],
-    filter_name: object,
+    filter_name: Any,
 ) -> list[ModerationExample]:
     if filter_name is None:
         return examples

@@ -36,8 +36,8 @@ def evaluate_candidate(
     report["consequences"] = consequences
     report["visibility_failures"] = grouped_visibility_failures(examples, bundle)
     report["base_rate_block_precision"] = base_rate_table(
-        recall=float(consequences["block"]["recall"]),
-        false_positive_rate=float(consequences["block"]["false_positive_rate"]),
+        recall=_numeric(consequences["block"], "recall"),
+        false_positive_rate=_numeric(consequences["block"], "false_positive_rate"),
         prevalences=PREVALENCE_LEVELS,
     )
     report["risk_coverage"] = _risk_coverage(examples, bundle)
@@ -84,7 +84,7 @@ def _full_multihead_report(
 def _block_report(
     examples: list[ModerationExample],
     bundle: PredictionBundle,
-) -> dict[str, float | int | dict[str, float]]:
+) -> dict[str, object]:
     gold = [1 if item.action == "BLOCK" else 0 for item in examples]
     predicted = [
         1 if value == ACTION_TO_ID["BLOCK"] else 0
@@ -97,7 +97,7 @@ def _block_report(
 def _strike_report(
     examples: list[ModerationExample],
     bundle: PredictionBundle,
-) -> dict[str, float | int | dict[str, float]]:
+) -> dict[str, object]:
     gold = [1 if item.strike else 0 for item in examples]
     predicted = list(bundle.predictions["strike"])
     probability = [row[1] for row in bundle.probabilities["strike"]]
@@ -107,7 +107,7 @@ def _strike_report(
 def _containment_report(
     examples: list[ModerationExample],
     bundle: PredictionBundle,
-) -> dict[str, float | int | dict[str, float]]:
+) -> dict[str, object]:
     mute_id = CONTAINMENT_TO_ID["MUTE"]
     gold = [1 if item.containment == "MUTE" else 0 for item in examples]
     predicted = [
@@ -121,7 +121,7 @@ def _containment_report(
 def _review_report(
     examples: list[ModerationExample],
     bundle: PredictionBundle,
-) -> dict[str, float | int | dict[str, float]]:
+) -> dict[str, object]:
     review_id = ACTION_TO_ID["REVIEW"]
     gold = [
         1 if item.action == "REVIEW" or item.review_priority != "NONE" else 0
@@ -142,10 +142,17 @@ def _with_calibration(
     gold: list[int],
     predicted: list[int],
     probability: list[float],
-) -> dict[str, float | int | dict[str, float]]:
-    report = binary_metrics(gold, predicted)
+) -> dict[str, object]:
+    report: dict[str, object] = dict(binary_metrics(gold, predicted))
     report["calibration"] = calibration_metrics(gold, probability)
     return report
+
+
+def _numeric(report: dict[str, object], key: str) -> float:
+    value = report.get(key)
+    if not isinstance(value, (int, float)):
+        raise ValueError(f"{key} must be numeric")
+    return float(value)
 
 
 def _risk_coverage(

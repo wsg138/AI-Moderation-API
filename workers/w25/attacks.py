@@ -120,14 +120,26 @@ def _single_typo(text: str) -> str:
     return _rewrite_first_word(text, mutate)
 
 
+def _leetspeak(text: str) -> str:
+    return text.translate(_LEET)
+
+
+def _unicode_confusable(text: str) -> str:
+    return text.translate(_CONFUSABLES)
+
+
+def _zero_width(text: str) -> str:
+    return _insert_separator(text, "\u200b")
+
+
 _ATTACK_TRANSFORMS: dict[str, Callable[[str], str]] = {
     "case": _alternating_case,
     "spacing": _space_letters,
     "punctuation": _punctuate,
     "repetition": _repeat_letters,
-    "leetspeak": lambda text: text.translate(_LEET),
-    "unicode_confusable": lambda text: text.translate(_CONFUSABLES),
-    "zero_width": lambda text: _insert_separator(text, "\u200b"),
+    "leetspeak": _leetspeak,
+    "unicode_confusable": _unicode_confusable,
+    "zero_width": _zero_width,
     "keyboard_typo": _single_typo,
 }
 ATTACK_FAMILIES = tuple(_ATTACK_TRANSFORMS)

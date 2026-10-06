@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-import pytest
+from typing import Any, cast
+
+import pytest  # pyright: ignore[reportMissingImports]
 
 torch = pytest.importorskip("torch")
 
@@ -21,17 +23,17 @@ class _Tokenizer:
 
     def __call__(self, _text, *, truncation, max_length, padding, return_tensors):
         self.calls += 1
-        assert truncation is True
-        assert max_length > 0
-        assert padding is False
-        assert return_tensors == "pt"
+        assert truncation is True  # nosec B101
+        assert max_length > 0  # nosec B101
+        assert padding is False  # nosec B101
+        assert return_tensors == "pt"  # nosec B101
         return {
             "input_ids": torch.tensor([[1, 2]], dtype=torch.long),
             "attention_mask": torch.ones((1, 2), dtype=torch.long),
         }
 
     def pad(self, inputs, *, padding, return_tensors):
-        assert padding is True
+        assert padding is True  # nosec B101
         assert return_tensors == "pt"
         width = max(len(row["input_ids"]) for row in inputs)
         input_ids = []
@@ -48,7 +50,7 @@ class _Tokenizer:
         }
 
 
-def _row(tokens: list[int], target: int) -> dict[str, torch.Tensor]:
+def _row(tokens: list[int], target: int) -> dict[str, Any]:
     row = {
         "input_ids": torch.tensor(tokens, dtype=torch.long),
         "attention_mask": torch.ones(len(tokens), dtype=torch.long),
@@ -82,20 +84,20 @@ def test_dataset_caches_tokenization_across_epochs() -> None:
     dataset = ModerationDataset([_example()], tokenizer, 1024, "raw")
     first = dataset[0]
     second = dataset[0]
-    assert tokenizer.calls == 1
-    assert first.keys() == second.keys()
+    assert tokenizer.calls == 1  # nosec B101
+    assert first.keys() == second.keys()  # nosec B101
     for key in first:
-        assert torch.equal(first[key], second[key])
+        assert torch.equal(first[key], second[key])  # nosec B101
 
 
 def test_dynamic_collation_pads_only_to_longest_batch_member() -> None:
     rows = [_row([1, 2, 3], 0), _row([4, 5], 1)]
     batch = _collate_batch(_Tokenizer(), rows)
-    assert tuple(batch["input_ids"].shape) == (2, 3)
-    assert batch["input_ids"][1].tolist() == [4, 5, 0]
-    assert batch["attention_mask"][1].tolist() == [1, 1, 0]
+    assert tuple(batch["input_ids"].shape) == (2, 3)  # nosec B101
+    assert batch["input_ids"][1].tolist() == [4, 5, 0]  # nosec B101
+    assert batch["attention_mask"][1].tolist() == [1, 1, 0]  # nosec B101
     for name in HEAD_NAMES:
-        assert batch[name].tolist() == [0, 1]
+        assert batch[name].tolist() == [0, 1]  # nosec B101
 
 
 def test_length_bucket_sampler_groups_similar_lengths_deterministically() -> None:
@@ -106,8 +108,8 @@ def test_length_bucket_sampler_groups_similar_lengths_deterministically() -> Non
     ]
     first = list(LengthBucketBatchSampler(dataset, 2, 42))
     second = list(LengthBucketBatchSampler(dataset, 2, 42))
-    assert first == second
-    assert {frozenset(batch) for batch in first} == {
+    assert first == second  # nosec B101
+    assert {frozenset(batch) for batch in first} == {  # nosec B101
         frozenset((0, 2)),
         frozenset((4, 5)),
         frozenset((3, 1)),
@@ -133,13 +135,13 @@ def test_fit_runs_all_requested_epochs_and_keeps_best_state(monkeypatch) -> None
     monkeypatch.setattr(neural, "_dev_loss", lambda *args: next(losses))
     model = _FakeModel()
     result = neural._fit(
-        model,
+        cast(Any, model),
         object(),
-        (object(), object()),
+        cast(Any, (object(), object())),
         object(),
         torch.device("cpu"),
         epochs=5,
     )
-    assert result.best_dev_loss == 0.8
-    assert len(result.history) == 5
-    assert model.loaded is not None
+    assert result.best_dev_loss == 0.8  # nosec B101
+    assert len(result.history) == 5  # nosec B101
+    assert model.loaded is not None  # nosec B101
