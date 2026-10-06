@@ -31,7 +31,11 @@ from workers.w25.metrics import (
     risk_coverage_curve,
     seed_flip_rate,
 )
-from workers.w25.suites import assert_required_suites_ready, load_frozen_suite
+from workers.w25.suites import (
+    assert_required_suites_ready,
+    load_frozen_suite,
+    load_suite_registry,
+)
 
 
 def test_model_revisions_are_immutable_sha_pins() -> None:
@@ -150,10 +154,10 @@ def test_public_contract_is_exact_allowlist() -> None:
     }
 
 
-def test_admissions_gate_pins_w21_and_private_w26() -> None:
+def test_admissions_gate_pins_training_and_w27_validation() -> None:
     payload = json.loads(Path("workers/w25/admissions.json").read_text(encoding="utf-8"))
     assert payload["status"] == "ready"  # nosec B101
-    assert len(payload["sources"]) == 2  # nosec B101
+    assert len(payload["sources"]) == 3  # nosec B101
     sources = {source["role"]: source for source in payload["sources"]}
     adversarial = sources["adversarial_training"]
     assert adversarial["sha256"] == (  # nosec B101
@@ -169,6 +173,14 @@ def test_admissions_gate_pins_w21_and_private_w26() -> None:
     )
     assert real_chat["partition_manifest_sha256"] == (  # nosec B101
         "e096f92f463406f12545f5682abf755aed2de8537484b663b1fc5ac4931017d5"
+    )
+    validation = sources["validation_only"]
+    assert validation["storage"] == "private"  # nosec B101
+    assert validation["sha256"] == (  # nosec B101
+        "e9e414b4b7a21d9deaba9612159d1bdfb62b10420d5584584dfa5e9a522c0d37"
+    )
+    assert validation["partition_manifest_sha256"] == (  # nosec B101
+        "95193616746bb74b8a14c7af3cf190b2b360e78ce4ada1d813728574d2240705"
     )
 
 
@@ -188,9 +200,8 @@ def test_w21_adversarial_suite_uses_only_frozen_test_families() -> None:
     assert test_ids.isdisjoint(split["partitions"]["development"])  # nosec B101
 
 
-def test_required_final_suites_remain_blocked_until_real_chat_is_frozen() -> None:
-    with pytest.raises(RuntimeError, match="required W25 suites are not ready"):
-        assert_required_suites_ready()
+def test_required_final_suites_are_frozen() -> None:
+    assert_required_suites_ready()
 
 
 def test_balanced_policy_suite_caps_each_w11_test_label_deterministically() -> None:
@@ -209,9 +220,26 @@ def test_adversarial_suite_combines_w11_and_w21_frozen_holdouts() -> None:
     assert len({item.example_id for item in examples}) == 616  # nosec B101
 
 
-def test_context_suite_waits_for_real_chat_mirror_controls() -> None:
-    with pytest.raises(RuntimeError, match="W25 suite is not ready: context"):
-        load_frozen_suite("context")
+def test_context_and_time_suites_use_private_w27_validation() -> None:
+    registry = load_suite_registry()
+    context = registry["suites"]["context"]
+    time_based = registry["suites"]["time_based_real_chat"]
+    assert context["status"] == "ready"  # nosec B101
+    assert time_based["status"] == "ready"  # nosec B101
+    assert context["sources"] == [  # nosec B101
+        {
+            "kind": "admitted",
+            "path": "W27_real_chat_frozen_validation_PRIVATE.jsonl",
+            "partition": "context",
+        }
+    ]
+    assert time_based["sources"] == [  # nosec B101
+        {
+            "kind": "admitted",
+            "path": "W27_real_chat_frozen_validation_PRIVATE.jsonl",
+            "partition": "time_based",
+        }
+    ]
 
 
 def test_private_admission_is_hash_pinned_under_explicit_root(tmp_path, monkeypatch) -> None:
@@ -228,6 +256,28 @@ def test_private_admission_is_hash_pinned_under_explicit_root(tmp_path, monkeypa
         frozen_group_field="session_id",
         storage="private",
         partition_manifest="split.json",
+        partition_manifest_sha256=hashlib.sha256(split_path.read_bytes()).hexdigest(),
+        partition_manifest_storage="private",
+    )
+    assert verify_admitted_source(source) == data_path  # nosec B101
+
+
+def test_validation_only_admission_verifies_partition_manifest(
+    tmp_path, monkeypatch
+) -> None:
+    data_path = tmp_path / "validation.jsonl"
+    split_path = tmp_path / "validation-split.json"
+    data_path.write_text("{}\n", encoding="utf-8")
+    split_path.write_text('{"partitions": {}}\n', encoding="utf-8")
+    monkeypatch.setenv("W25_PRIVATE_DATA_ROOT", str(tmp_path))
+    source = AdmittedSource(
+        path="validation.jsonl",
+        sha256=hashlib.sha256(data_path.read_bytes()).hexdigest(),
+        role="validation_only",
+        reviewed_by="reviewer",
+        frozen_group_field="family_id",
+        storage="private",
+        partition_manifest="validation-split.json",
         partition_manifest_sha256=hashlib.sha256(split_path.read_bytes()).hexdigest(),
         partition_manifest_storage="private",
     )
