@@ -53,6 +53,7 @@ def _auto_summary(label: str, result: dict[str, Any]) -> str:
 def _decision_lines(report: dict[str, Any]) -> list[str]:
     tiers = report["decision_tiers"]
     recommended = report["recommended_architecture"]
+    robustness = recommended["evasion_post_selection_gate"]
     return [
         f"- Screening/review: \x60{tiers['screening']['selection']['rule']}\x60.",
         f"- BLOCK: \x60{tiers['block']['selection']['rule']}\x60.",
@@ -63,7 +64,11 @@ def _decision_lines(report: dict[str, Any]) -> list[str]:
         "- Replace current W12 candidate: "
         + f"\x60{recommended['justifies_replacing_current_w12_candidate']}\x60 "
         + f"(BLOCK precision delta {_pct(recommended['precision_gain_vs_w12_word'])}, "
-        + f"recall ratio {_pct(recommended['recall_ratio_vs_w12_word'])}).",
+        + f"validation recall ratio {_pct(recommended['recall_ratio_vs_w12_word'])}).",
+        "- Post-selection evasion gate: "
+        + f"\x60{robustness['passed']}\x60 "
+        + f"(recall ratio {_pct(robustness['recall_ratio'])}, "
+        + f"floor {_pct(robustness['recall_ratio_floor'])}).",
     ]
 
 
@@ -99,13 +104,27 @@ def _evasion_lines(report: dict[str, Any]) -> list[str]:
     lines = [
         f"Train-derived deterministic probe sample: {probes['sample_size']} examples.",
         "",
-        "| Model | Original BLOCK recall | Worst transformed BLOCK recall |",
+        "| Model/rule | Original BLOCK recall | Worst transformed BLOCK recall |",
         "| --- | ---: | ---: |",
     ]
     for model, results in probes["models"].items():
         original = results["original"]["block"]["recall"]
         transformed = [results[name]["block"]["recall"] for name in probes["transforms"]]
         lines.append(f"| {model} | {_pct(original)} | {_pct(min(transformed))} |")
+    selected = probes["selected_block_rule"]
+    results = selected["results"]
+    original = results["original"]["recall"]
+    transformed = [results[name]["recall"] for name in probes["transforms"]]
+    lines.append(f"| selected {selected['rule']} | {_pct(original)} | {_pct(min(transformed))} |")
+    gate = selected["post_selection_gate"]
+    lines.extend(
+        [
+            "",
+            f"- Post-selection robustness gate passed: `{gate['passed']}`.",
+            f"- Selected/W12 worst-transformed recall ratio: {_pct(gate['recall_ratio'])} "
+            + f"(floor {_pct(gate['recall_ratio_floor'])}).",
+        ]
+    )
     return lines
 
 
@@ -142,6 +161,10 @@ def render_markdown(report: dict[str, Any]) -> str:
         "- Character and combined TF-IDF grids are selected on W11 validation only.",
         "- Meta-classifier training uses 3-fold W11-train OOF predictions only.",
         "- BLOCK requires the predeclared recall/slice-FPR guard when an eligible rule exists.",
+        (
+            "- Train-derived evasion probes are not selection data; they act only as a "
+            + "post-selection deployment gate against severe robustness regressions."
+        ),
         "- STRIKE is BLOCK-gated and selected with a stricter precision-first objective.",
         "- No production service, punishment behavior, or W20 acceptance evidence is changed.",
         "",

@@ -49,6 +49,7 @@ from workers.w23.modeling import (
 from workers.w23.reporting import render_markdown
 from workers.w23.rules import block_rules, mute_rules, screening_rules, strike_rules
 from workers.w23.selection import (
+    post_selection_robustness_gate,
     select_block_rule,
     select_hypothetical_auto_rule,
     select_precision_text_candidate,
@@ -253,19 +254,12 @@ def _probe_metrics(
     return {"block": block, "semantic_accuracy": accuracy}
 
 
-def _evasion_report(
-    train: list[ModerationExample],
-    text_models: dict[str, TextPolicyModel],
-    meta: MetaEnsemble,
-) -> dict:
-    original = deterministic_probe_sample(train)
-    probe_sets = {"original": original, **all_probe_sets(train)}
-    names = list(probe_sets)
-    flattened = [item for name in names for item in probe_sets[name]]
-    bundles = {name: predict_text_model(model, flattened) for name, model in text_models.items()}
-    bundles["bert"] = predict_bert_checkpoint(flattened, BERT_CHECKPOINT, batch_size=64)
-    bundles["meta"] = predict_meta_ensemble(meta, bundles, flattened)
-    size = len(original)
+def _bundle_probe_metrics(
+    probe_sets: dict[str, list[ModerationExample]],
+    names: list[str],
+    bundles: dict[str, PredictionBundle],
+    size: int,
+) -> dict[str, dict]:
     report: dict[str, dict] = {name: {} for name in bundles}
     for model_name, bundle in bundles.items():
         for index, probe_name in enumerate(names):
@@ -275,12 +269,78 @@ def _evasion_report(
                 probe_sets[probe_name],
                 _slice_bundle(bundle, start, end),
             )
+    return report
+
+
+def _rule_probe_metrics(
+    probe_sets: dict[str, list[ModerationExample]],
+    names: list[str],
+    predicted: list[int],
+    size: int,
+) -> dict[str, dict]:
+    report = {}
+    for index, probe_name in enumerate(names):
+        start = index * size
+        end = start + size
+        report[probe_name] = binary_metrics(
+            gold_block(probe_sets[probe_name]),
+            predicted[start:end],
+        )
+    return report
+
+
+def _evasion_report(
+    train: list[ModerationExample],
+    text_models: dict[str, TextPolicyModel],
+    meta: MetaEnsemble,
+    selected_block_rule: str,
+) -> dict:
+    original = deterministic_probe_sample(train)
+    probe_sets = {"original": original, **all_probe_sets(train)}
+    names = list(probe_sets)
+    flattened = [item for name in names for item in probe_sets[name]]
+    bundles = {name: predict_text_model(model, flattened) for name, model in text_models.items()}
+    bundles["bert"] = predict_bert_checkpoint(flattened, BERT_CHECKPOINT, batch_size=64)
+    bundles["meta"] = predict_meta_ensemble(meta, bundles, flattened)
+    size = len(original)
+    report = _bundle_probe_metrics(probe_sets, names, bundles, size)
+    selected = _rule_probe_metrics(
+        probe_sets,
+        names,
+        block_rules(bundles)[selected_block_rule],
+        size,
+    )
+    transforms = names[1:]
+    baseline_worst = min(report["word"][name]["block"]["recall"] for name in transforms)
+    selected_worst = min(selected[name]["recall"] for name in transforms)
     return {
         "source_partition": "W11 train only",
         "sample_size": size,
-        "transforms": names[1:],
+        "transforms": transforms,
         "models": report,
+        "selected_block_rule": {
+            "rule": selected_block_rule,
+            "results": selected,
+            "post_selection_gate": post_selection_robustness_gate(
+                selected_worst,
+                baseline_worst,
+            ),
+        },
     }
+
+
+def _validation_replacement_gate(
+    precision_gain: float,
+    recall_ratio: float,
+    slice_guard_applied: bool,
+) -> bool:
+    return all(
+        (
+            precision_gain >= MATERIAL_BLOCK_PRECISION_GAIN,
+            recall_ratio >= BLOCK_RECALL_RATIO_FLOOR,
+            slice_guard_applied,
+        )
+    )
 
 
 def _recommendation(report: dict) -> dict:
@@ -291,10 +351,11 @@ def _recommendation(report: dict) -> dict:
     )
     precision_gain = selected["precision"] - baseline["precision"]
     recall_ratio = selected["recall"] / baseline["recall"] if baseline["recall"] else 0.0
-    replace = (
-        precision_gain >= MATERIAL_BLOCK_PRECISION_GAIN
-        and recall_ratio >= BLOCK_RECALL_RATIO_FLOOR
-        and block["selection"]["slice_guard_applied"]
+    robustness = report["evasion_probes"]["selected_block_rule"]["post_selection_gate"]
+    validation_gate = _validation_replacement_gate(
+        precision_gain,
+        recall_ratio,
+        block["selection"]["slice_guard_applied"],
     )
     return {
         "screening_rule": report["decision_tiers"]["screening"]["selection"]["rule"],
@@ -304,10 +365,12 @@ def _recommendation(report: dict) -> dict:
         "recall_ratio_vs_w12_word": recall_ratio,
         "material_precision_gain_threshold": MATERIAL_BLOCK_PRECISION_GAIN,
         "slice_fpr_tolerance": BLOCK_SLICE_FPR_TOLERANCE,
-        "justifies_replacing_current_w12_candidate": replace,
+        "validation_gate_passed": validation_gate,
+        "evasion_post_selection_gate": robustness,
+        "justifies_replacing_current_w12_candidate": validation_gate and robustness["passed"],
         "replacement_scope": (
-            "Development recommendation only; any W12 candidate change must be "
-            "deliberate before W20."
+            "Development recommendation only; W11 validation selects the rule, while "
+            "train-derived evasion probes are a post-selection deployment gate."
         ),
         "automatic_punishment_enabled": False,
     }
@@ -326,6 +389,7 @@ def run() -> dict:
         name: full_bundle_report(validation, bundle) for name, bundle in bundles.items()
     }
     decision_tiers, block_predictions = _rule_reports(validation, bundles)
+    selected_block_rule = decision_tiers["block"]["selection"]["rule"]
     word_block = block_from_bundle(bundles["word"])
     bert_block = block_from_bundle(bundles["bert"])
     report = {
@@ -355,12 +419,10 @@ def run() -> dict:
                 if item["name"] == "word+bert-union"
             ),
         },
-        "evasion_probes": _evasion_report(train, text_models, meta),
+        "evasion_probes": _evasion_report(train, text_models, meta, selected_block_rule),
     }
     report["recommended_architecture"] = _recommendation(report)
-    report["selected_block_prediction_count"] = sum(
-        block_predictions[decision_tiers["block"]["selection"]["rule"]]
-    )
+    report["selected_block_prediction_count"] = sum(block_predictions[selected_block_rule])
     return report
 
 

@@ -58,6 +58,21 @@ def select_precision_text_candidate(
     }
 
 
+def post_selection_robustness_gate(
+    selected_worst_recall: float,
+    baseline_worst_recall: float,
+) -> dict:
+    ratio = selected_worst_recall / baseline_worst_recall if baseline_worst_recall else 0.0
+    return {
+        "passed": ratio >= BLOCK_RECALL_RATIO_FLOOR,
+        "selected_worst_recall": selected_worst_recall,
+        "baseline_worst_recall": baseline_worst_recall,
+        "recall_ratio": ratio,
+        "recall_ratio_floor": BLOCK_RECALL_RATIO_FLOOR,
+        "purpose": "post-selection deployment gate; not used to tune validation selection",
+    }
+
+
 def select_screening_rule(rule_reports: list[dict]) -> dict:
     chosen = max(
         rule_reports,

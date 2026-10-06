@@ -24,7 +24,11 @@ from workers.w23.modeling import (
     predict_text_model,
     train_text_model,
 )
-from workers.w23.selection import select_block_rule, select_hypothetical_auto_rule
+from workers.w23.selection import (
+    post_selection_robustness_gate,
+    select_block_rule,
+    select_hypothetical_auto_rule,
+)
 
 
 def _slice_rates(rate: float) -> dict:
@@ -134,9 +138,10 @@ def test_paired_error_overlap_reports_prediction_disagreements() -> None:
     assert report["prediction_disagreements"] == len(examples)  # nosec B101
 
 
-def test_evasion_report_scores_meta_ensemble() -> None:
+def test_evasion_report_scores_meta_ensemble_and_selected_rule() -> None:
     source = (Path(__file__).parents[1] / "workers/w23/run_experiments.py").read_text()
     assert 'bundles["meta"] = predict_meta_ensemble' in source  # nosec B101
+    assert "block_rules(bundles)[selected_block_rule]" in source  # nosec B101
 
 
 def test_screening_ground_truth_includes_review_and_block() -> None:
@@ -160,6 +165,17 @@ def test_hypothetical_auto_rule_reports_recall_sacrifice() -> None:
     assert selected["enabled"] is False  # nosec B101 - test assertion
     assert selected["hypothetical_rule"] == "precise"  # nosec B101 - test assertion
     assert selected["recall_sacrifice_vs_baseline"] == pytest.approx(0.35)  # nosec B101
+
+
+def test_post_selection_robustness_gate_rejects_recall_collapse() -> None:
+    gate = post_selection_robustness_gate(0.20, 0.90)
+    assert gate["passed"] is False  # nosec B101 - test assertion
+    assert gate["recall_ratio"] == pytest.approx(2 / 9)  # nosec B101
+
+
+def test_post_selection_robustness_gate_accepts_near_baseline_recall() -> None:
+    gate = post_selection_robustness_gate(0.88, 0.90)
+    assert gate["passed"] is True  # nosec B101 - test assertion
 
 
 def test_block_selection_prefers_precision_with_recall_and_slice_guard() -> None:
