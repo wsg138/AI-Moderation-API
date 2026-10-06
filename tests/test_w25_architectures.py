@@ -9,6 +9,7 @@ from workers.w25.attacks import (
     attack_variants,
     augment_training_examples,
 )
+from workers.w25.baselines import predict_w12_word_baseline
 from workers.w25.calibration import apply_bundle_temperatures, calibrate_bundle
 from workers.w25.cascade import (
     CascadeThresholds,
@@ -63,6 +64,13 @@ def _bundle(action_rows: list[list[float]], strike_rows: list[list[float]]) -> P
     }
     uncertainty = [1.0 - max(row) for row in action_rows]
     return PredictionBundle(predictions, probabilities, uncertainty)
+
+
+def test_w12_word_baseline_expands_unseen_classes_to_contract_width() -> None:
+    bundle = predict_w12_word_baseline([_example("baseline-contract")])
+    bundle.validate()
+    for head in HEAD_NAMES:
+        assert len(bundle.probabilities[head][0]) == len(HEAD_VALUES[head])
 
 
 def test_calibration_preserves_contract_and_returns_all_temperatures() -> None:

@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import copy
 import random
+from contextlib import nullcontext
 from dataclasses import dataclass
 
 import numpy as np  # pyright: ignore[reportMissingImports]
@@ -43,20 +44,24 @@ class ModerationDataset(Dataset):
         self.tokenizer = tokenizer
         self.max_length = max_length
         self.serialization_variant = serialization_variant
+        self.encoded = [self._encode(example) for example in examples]
 
     def __len__(self) -> int:
         return len(self.examples)
 
-    def __getitem__(self, index: int) -> dict[str, torch.Tensor]:
-        example = self.examples[index]
+    def _encode(self, example: ModerationExample):
         text = serialize_variant(example.serialized, self.serialization_variant)
-        encoded = self.tokenizer(
+        return self.tokenizer(
             text,
             truncation=True,
             max_length=self.max_length,
-            padding="max_length",
+            padding=False,
             return_tensors="pt",
         )
+
+    def __getitem__(self, index: int) -> dict[str, torch.Tensor]:
+        example = self.examples[index]
+        encoded = self.encoded[index]
         row = {
             "input_ids": encoded["input_ids"].squeeze(0),
             "attention_mask": encoded["attention_mask"].squeeze(0),
@@ -156,10 +161,34 @@ def _build_loaders(
 ) -> tuple[DataLoader, DataLoader]:
     train = ModerationDataset(train_examples, tokenizer, max_length, variant)
     dev = ModerationDataset(dev_examples, tokenizer, max_length, variant)
+    def collate(rows):
+        return _collate_batch(tokenizer, rows)
     return (
-        DataLoader(train, batch_size=batch_size, shuffle=True),
-        DataLoader(dev, batch_size=batch_size),
+        DataLoader(
+            train,
+            batch_size=batch_size,
+            shuffle=True,
+            collate_fn=collate,
+            pin_memory=torch.cuda.is_available(),
+        ),
+        DataLoader(
+            dev,
+            batch_size=batch_size,
+            collate_fn=collate,
+            pin_memory=torch.cuda.is_available(),
+        ),
     )
+
+
+def _collate_batch(tokenizer, rows):
+    inputs = [
+        {"input_ids": row["input_ids"], "attention_mask": row["attention_mask"]}
+        for row in rows
+    ]
+    batch = tokenizer.pad(inputs, padding=True, return_tensors="pt")
+    for name in HEAD_NAMES:
+        batch[name] = torch.stack([row[name] for row in rows])
+    return batch
 
 
 def _fit(
@@ -178,6 +207,10 @@ def _fit(
         train_loss = _train_epoch(model, train_loader, optimizer, device)
         dev_loss = _dev_loss(model, dev_loader, device)
         history.append({"epoch": float(epoch + 1), "train_loss": train_loss, "dev_loss": dev_loss})
+        print(
+            f"epoch {epoch + 1}/{epochs} train_loss={train_loss:.6f} dev_loss={dev_loss:.6f}",
+            flush=True,
+        )
         if dev_loss < best_loss:
             best_loss = dev_loss
             best_state = copy.deepcopy(model.state_dict())
@@ -191,9 +224,13 @@ def _train_epoch(model, loader, optimizer, device: torch.device) -> float:
     model.train()
     total = 0.0
     for batch in loader:
-        optimizer.zero_grad()
-        logits, _ = model(batch["input_ids"].to(device), batch["attention_mask"].to(device))
-        loss = _multihead_loss(logits, batch, device)
+        optimizer.zero_grad(set_to_none=True)
+        with _autocast(device):
+            logits, _ = model(
+                batch["input_ids"].to(device, non_blocking=True),
+                batch["attention_mask"].to(device, non_blocking=True),
+            )
+            loss = _multihead_loss(logits, batch, device)
         loss.backward()
         torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
         optimizer.step()
@@ -206,9 +243,19 @@ def _dev_loss(model, loader, device: torch.device) -> float:
     total = 0.0
     with torch.no_grad():
         for batch in loader:
-            logits, _ = model(batch["input_ids"].to(device), batch["attention_mask"].to(device))
-            total += float(_multihead_loss(logits, batch, device).detach().cpu())
+            with _autocast(device):
+                logits, _ = model(
+                    batch["input_ids"].to(device), batch["attention_mask"].to(device)
+                )
+                loss = _multihead_loss(logits, batch, device)
+            total += float(loss.detach().cpu())
     return total / max(len(loader), 1)
+
+
+def _autocast(device: torch.device):
+    if device.type != "cuda":
+        return nullcontext()
+    return torch.autocast(device_type="cuda", dtype=torch.bfloat16)
 
 
 def _multihead_loss(logits, batch, device: torch.device) -> torch.Tensor:
@@ -224,12 +271,12 @@ def predict(
     *,
     serialization_variant: str,
     max_length: int,
-    batch_size: int = 16,
+    batch_size: int = 8,
 ) -> tuple[PredictionBundle, dict[str, list[list[float]]], np.ndarray]:
-    loader = DataLoader(
-        ModerationDataset(examples, tokenizer, max_length, serialization_variant),
-        batch_size=batch_size,
-    )
+    dataset = ModerationDataset(examples, tokenizer, max_length, serialization_variant)
+    def collate(rows):
+        return _collate_batch(tokenizer, rows)
+    loader = DataLoader(dataset, batch_size=batch_size, collate_fn=collate)
     return _predict_loader(model, loader)
 
 
@@ -243,9 +290,10 @@ def _predict_loader(
     model.eval()
     with torch.no_grad():
         for batch in loader:
-            logits, pooled = model(
-                batch["input_ids"].to(device), batch["attention_mask"].to(device)
-            )
+            with _autocast(device):
+                logits, pooled = model(
+                    batch["input_ids"].to(device), batch["attention_mask"].to(device)
+                )
             embeddings.append(pooled.detach().cpu().numpy())
             for name in HEAD_NAMES:
                 raw[name].extend(logits[name].detach().cpu().tolist())

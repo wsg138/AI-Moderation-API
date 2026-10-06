@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from workers.w12.baseline import train_baseline
+from workers.w12.baseline import BaselineModel, train_baseline
 from workers.w12.dataset import ModerationExample, load_partition
-from workers.w25.contract import HEAD_NAMES, PredictionBundle
+from workers.w25.contract import HEAD_NAMES, HEAD_VALUES, PredictionBundle
 
 
 def predict_w12_word_baseline(
@@ -18,7 +18,7 @@ def predict_w12_word_baseline(
     model = train_baseline(load_partition("train"), seed=seed)
     texts = [item.serialized for item in examples]
     predictions = model.predict_all(texts)
-    probabilities = model.predict_proba_all(texts)
+    probabilities = _expand_w12_probabilities(model, model.predict_proba_all(texts))
     bundle = PredictionBundle(
         predictions=predictions,
         probabilities=probabilities,
@@ -26,6 +26,28 @@ def predict_w12_word_baseline(
     )
     bundle.validate()
     return bundle
+
+
+def _expand_w12_probabilities(
+    model: BaselineModel,
+    probabilities: dict[str, list[list[float]]],
+) -> dict[str, list[list[float]]]:
+    expanded: dict[str, list[list[float]]] = {}
+    for head in HEAD_NAMES:
+        width = len(HEAD_VALUES[head])
+        classes = [int(value) for value in model.heads[head].classes_]
+        rows = []
+        for row in probabilities[head]:
+            if len(row) != len(classes):
+                raise ValueError(f"{head} probability/class width mismatch")
+            full = [0.0] * width
+            for class_id, value in zip(classes, row, strict=True):
+                if not 0 <= class_id < width:
+                    raise ValueError(f"{head} class id outside W25 contract")
+                full[class_id] = float(value)
+            rows.append(full)
+        expanded[head] = rows
+    return expanded
 
 
 def predict_w12_bert_mini(
