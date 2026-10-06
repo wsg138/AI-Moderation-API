@@ -95,3 +95,34 @@ def test_dynamic_collation_pads_only_to_longest_batch_member() -> None:
     assert batch["attention_mask"][1].tolist() == [1, 1, 0]
     for name in HEAD_NAMES:
         assert batch[name].tolist() == [0, 1]
+
+
+class _FakeModel:
+    def __init__(self) -> None:
+        self.loaded = None
+
+    def state_dict(self):
+        return {"weight": torch.tensor([1.0])}
+
+    def load_state_dict(self, state) -> None:
+        self.loaded = state
+
+
+def test_fit_stops_after_two_stale_dev_epochs(monkeypatch) -> None:
+    from workers.w25 import neural
+
+    losses = iter([1.0, 1.2, 1.4, 0.1])
+    monkeypatch.setattr(neural, "_train_epoch", lambda *args: 0.5)
+    monkeypatch.setattr(neural, "_dev_loss", lambda *args: next(losses))
+    model = _FakeModel()
+    result = neural._fit(
+        model,
+        object(),
+        (object(), object()),
+        object(),
+        torch.device("cpu"),
+        epochs=5,
+    )
+    assert result.best_dev_loss == 1.0
+    assert len(result.history) == 3
+    assert model.loaded is not None

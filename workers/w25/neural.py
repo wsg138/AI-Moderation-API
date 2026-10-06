@@ -203,6 +203,7 @@ def _fit(
     best_loss = float("inf")
     best_state = None
     history = []
+    stale_epochs = 0
     for epoch in range(epochs):
         train_loss = _train_epoch(model, train_loader, optimizer, device)
         dev_loss = _dev_loss(model, dev_loader, device)
@@ -214,6 +215,11 @@ def _fit(
         if dev_loss < best_loss:
             best_loss = dev_loss
             best_state = copy.deepcopy(model.state_dict())
+            stale_epochs = 0
+        else:
+            stale_epochs += 1
+        if stale_epochs >= 2:
+            break
     if best_state is None:
         raise RuntimeError("no neural checkpoint selected")
     model.load_state_dict(best_state)
