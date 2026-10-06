@@ -346,18 +346,13 @@ def test_composed_performance_report_includes_all_runtime_dimensions(tmp_path) -
         queue_requests=4,
         timeout_ms=1000.0,
     )
-    assert {
+    assert set(report) == {
         "concurrency_1",
         "concurrency_realistic",
         "startup",
         "queue_pressure",
         "artifact_size_bytes",
-        "p95_ms",
-        "steady_rss_bytes",
-        "startup_p95_ms",
-    } <= set(report)
-    assert report["p95_ms"] == report["concurrency_realistic"]["p95_ms"]
-    assert report["steady_rss_bytes"] == report["concurrency_realistic"]["steady_rss_bytes"]
+    }
     assert report["artifact_size_bytes"] == 4
 
 
