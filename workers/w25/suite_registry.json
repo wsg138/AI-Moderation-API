@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "status": "blocked_pending_context_and_time_suites",
+  "suites": {
+    "balanced_policy": {
+      "status": "ready",
+      "required": true,
+      "sources": [
+        {
+          "kind": "w11",
+          "partition": "test"
+        }
+      ],
+      "notes": "Deterministic max-20-per-label view of frozen W11 test; unsupported/rare labels retain their actual lower support.",
+      "selection": {
+        "kind": "label_cap",
+        "max_per_label": 20
+      }
+    },
+    "real_distribution": {
+      "status": "ready",
+      "required": true,
+      "sources": [
+        {
+          "kind": "admitted",
+          "path": "W26_real_chat_curated_training_PRIVATE_v2.jsonl",
+          "partition": "test"
+        }
+      ],
+      "notes": "Frozen W26 private human-adjudicated real-chat test partition: 566 records (557 ALLOW / 9 BLOCK). Raw text remains private and hash-pinned."
+    },
+    "adversarial_evasion": {
+      "status": "ready",
+      "required": true,
+      "sources": [
+        {
+          "kind": "w11",
+          "partition": "frozen_adversarial"
+        },
+        {
+          "kind": "admitted",
+          "path": "data/candidates/W21-adversarial-evasion.jsonl",
+          "partition": "test"
+        }
+      ],
+      "notes": "Combines W11 frozen adversarial with W21 untouched family holdout."
+    },
+    "context": {
+      "status": "pending_real_chat_mirror_controls",
+      "required": true,
+      "sources": [],
+      "notes": "Reserved for independently reviewed W22 real context, timing, target, channel/profile, and mirror-control holdout."
+    },
+    "time_based_real_chat": {
+      "status": "pending_real_chat",
+      "required": true,
+      "sources": [],
+      "notes": "Required because a later protected real-chat period now exists; use a separately frozen human-reviewed sample disjoint from W26 test and the context suite."
+    }
+  },
+  "notes": [
+    "W20 is not a W25 development/comparison suite and remains unseen until one-shot acceptance.",
+    "W11 test is used only for the label-capped balanced policy suite after development choices are frozen.",
+    "W11 frozen-adversarial plus W21 untouched families form the separate adversarial/evasion suite.",
+    "W26 private test is the real-distribution suite and preserves its production-shaped ALLOW-heavy imbalance.",
+    "Final ranking requires every required suite to be ready and fingerprint-identical across candidates.",
+    "Independent context/mirror and later-period time-based suites remain the two required comparison blockers."
+  ]
+}

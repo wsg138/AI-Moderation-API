@@ -1,0 +1,36 @@
+{
+  "contract": "w26-real-chat-private-admission-v1",
+  "source_filename": "W26_real_chat_curated_training_PRIVATE_v2.jsonl",
+  "source_sha256": "bc013c6859c7cb835ba92d8dce6c8b97d1d4b0fac7cbdd3dc618fcecc84c9ec3",
+  "partition_manifest_filename": "W26_real_chat_partitions_PRIVATE.json",
+  "partition_manifest_sha256": "e096f92f463406f12545f5682abf755aed2de8537484b663b1fc5ac4931017d5",
+  "record_count": 3561,
+  "family_count": 3098,
+  "partition_counts": {
+    "train": 2489,
+    "development": 506,
+    "test": 566
+  },
+  "partition_action_distribution": {
+    "train": {
+      "ALLOW": 2437,
+      "BLOCK": 51,
+      "REVIEW": 1
+    },
+    "development": {
+      "ALLOW": 499,
+      "REVIEW": 2,
+      "BLOCK": 5
+    },
+    "test": {
+      "ALLOW": 557,
+      "BLOCK": 9
+    }
+  },
+  "quarantined_record_count": 1,
+  "quarantined_message_ids": [
+    "m_e03c019c258511f4e0c0e6cb"
+  ],
+  "private_data": true,
+  "safe_to_commit_raw_text": false
+}

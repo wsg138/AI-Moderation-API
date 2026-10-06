@@ -1,0 +1,276 @@
+name: w25-bakeoff
+
+on:
+  workflow_dispatch:
+    inputs:
+      data_mode:
+        description: Public Actions uses W11 smoke data only; private W26 stays local
+        required: true
+        default: w11-smoke
+        type: choice
+        options:
+          - w11-smoke
+      epochs:
+        description: Neural training epochs
+        required: true
+        default: "1"
+        type: string
+      run_neural:
+        description: Run neural candidate matrix
+        required: true
+        default: false
+        type: boolean
+      run_lexical:
+        description: Run word+character TF-IDF ablation
+        required: true
+        default: true
+        type: boolean
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      include_admitted: ${{ steps.mode.outputs.include_admitted }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Enforce public Actions privacy boundary
+        id: mode
+        shell: bash
+        run: |
+          python -m workers.w25.run_bakeoff preflight
+          echo "include_admitted=" >> "$GITHUB_OUTPUT"
+
+  baselines:
+    needs: preflight
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: workers/w12/requirements-evidence.txt
+      - name: Install experiment dependencies
+        run: python -m pip install --disable-pip-version-check -r workers/w12/requirements-evidence.txt
+      - name: Evaluate current W12 word-only baseline
+        run: >-
+          python -m workers.w25.run_bakeoff baseline
+          --candidate w12-word-tfidf
+          ${{ needs.preflight.outputs.include_admitted }}
+      - name: Download exact W12 BERT Mini artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: w12-bert-mini-3aac90ca8d0d57ca2174a852f961c6b753e7205d
+          path: workers/w12
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          run-id: 37225843627
+      - name: Evaluate exact W12 BERT Mini baseline
+        run: >-
+          python -m workers.w25.run_bakeoff baseline
+          --candidate w12-bert-mini
+          --checkpoint workers/w12/artifacts/bert-mini-seed42.pt
+          ${{ needs.preflight.outputs.include_admitted }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: w25-current-w12-baselines
+          path: |
+            workers/w25/artifacts/w12-word-tfidf/
+            workers/w25/artifacts/w12-bert-mini/
+          if-no-files-found: error
+
+  lexical:
+    needs: preflight
+    if: ${{ inputs.run_lexical }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install experiment dependencies
+        run: python -m pip install --disable-pip-version-check -r workers/w12/requirements-evidence.txt
+      - name: Run word+character ablation
+        run: >-
+          python -m workers.w25.run_bakeoff lexical
+          --seed 42
+          --variant raw
+          ${{ needs.preflight.outputs.include_admitted }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: w25-word-char-tfidf
+          path: workers/w25/artifacts/word-char-tfidf/
+          if-no-files-found: error
+
+  neural:
+    needs: preflight
+    if: ${{ inputs.run_neural }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    strategy:
+      fail-fast: false
+      matrix:
+        seed: [42, 138, 2026]
+        candidate:
+          - modernbert-raw
+          - modernbert-normalized
+          - deberta-xsmall
+          - deberta-small
+          - canine
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install experiment dependencies
+        run: python -m pip install --disable-pip-version-check -r workers/w12/requirements-evidence.txt
+      - name: Resolve neural configuration
+        id: config
+        shell: bash
+        run: |
+          case "${{ matrix.candidate }}" in
+            modernbert-raw)
+              echo "model=modernbert-base" >> "$GITHUB_OUTPUT"
+              echo "variant=raw" >> "$GITHUB_OUTPUT"
+              echo "max_length=1024" >> "$GITHUB_OUTPUT"
+              ;;
+            modernbert-normalized)
+              echo "model=modernbert-base" >> "$GITHUB_OUTPUT"
+              echo "variant=raw+normalized" >> "$GITHUB_OUTPUT"
+              echo "max_length=1024" >> "$GITHUB_OUTPUT"
+              ;;
+            deberta-xsmall)
+              echo "model=deberta-v3-xsmall" >> "$GITHUB_OUTPUT"
+              echo "variant=raw" >> "$GITHUB_OUTPUT"
+              echo "max_length=512" >> "$GITHUB_OUTPUT"
+              ;;
+            deberta-small)
+              echo "model=deberta-v3-small" >> "$GITHUB_OUTPUT"
+              echo "variant=raw" >> "$GITHUB_OUTPUT"
+              echo "max_length=512" >> "$GITHUB_OUTPUT"
+              ;;
+            canine)
+              echo "model=canine-s" >> "$GITHUB_OUTPUT"
+              echo "variant=raw" >> "$GITHUB_OUTPUT"
+              echo "max_length=2048" >> "$GITHUB_OUTPUT"
+              ;;
+          esac
+      - name: Train and evaluate neural shard
+        run: >-
+          python -m workers.w25.run_bakeoff neural
+          --model-key ${{ steps.config.outputs.model }}
+          --seed ${{ matrix.seed }}
+          --variant ${{ steps.config.outputs.variant }}
+          --max-length ${{ steps.config.outputs.max_length }}
+          --epochs ${{ inputs.epochs }}
+          ${{ needs.preflight.outputs.include_admitted }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: w25-${{ matrix.candidate }}-seed-${{ matrix.seed }}
+          path: workers/w25/artifacts/${{ steps.config.outputs.model }}/seed-${{ matrix.seed }}/
+          if-no-files-found: error
+
+
+  compose:
+    needs: [preflight, neural]
+    if: ${{ inputs.run_neural }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install experiment dependencies
+        run: python -m pip install --disable-pip-version-check -r workers/w12/requirements-evidence.txt
+      - name: Download ModernBERT seed artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: w25-modernbert-*-seed-*
+          path: workers/w25/inputs/modernbert
+      - name: Download DeBERTa seed artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: w25-deberta-*-seed-*
+          path: workers/w25/inputs/deberta
+      - name: Select development variants across all seeds
+        shell: bash
+        run: |
+          mkdir -p workers/w25/artifacts/selection
+          python -m workers.w25.run_bakeoff modernbert-select \
+            --raw-report workers/w25/inputs/modernbert/w25-modernbert-raw-seed-42/raw/dev-report.json \
+            --raw-report workers/w25/inputs/modernbert/w25-modernbert-raw-seed-138/raw/dev-report.json \
+            --raw-report workers/w25/inputs/modernbert/w25-modernbert-raw-seed-2026/raw/dev-report.json \
+            --normalized-report workers/w25/inputs/modernbert/w25-modernbert-normalized-seed-42/raw-normalized/dev-report.json \
+            --normalized-report workers/w25/inputs/modernbert/w25-modernbert-normalized-seed-138/raw-normalized/dev-report.json \
+            --normalized-report workers/w25/inputs/modernbert/w25-modernbert-normalized-seed-2026/raw-normalized/dev-report.json \
+            --output workers/w25/artifacts/selection/modernbert.json
+          python -m workers.w25.run_bakeoff deberta-select \
+            --xsmall-report workers/w25/inputs/deberta/w25-deberta-xsmall-seed-42/raw/dev-report.json \
+            --xsmall-report workers/w25/inputs/deberta/w25-deberta-xsmall-seed-138/raw/dev-report.json \
+            --xsmall-report workers/w25/inputs/deberta/w25-deberta-xsmall-seed-2026/raw/dev-report.json \
+            --small-report workers/w25/inputs/deberta/w25-deberta-small-seed-42/raw/dev-report.json \
+            --small-report workers/w25/inputs/deberta/w25-deberta-small-seed-138/raw/dev-report.json \
+            --small-report workers/w25/inputs/deberta/w25-deberta-small-seed-2026/raw/dev-report.json \
+            --output workers/w25/artifacts/selection/deberta.json
+      - name: Resolve selected artifact names
+        id: selected
+        shell: bash
+        run: |
+          modern=$(python -c "import json; print(json.load(open('workers/w25/artifacts/selection/modernbert.json'))['selected'])")
+          deberta=$(python -c "import json; print(json.load(open('workers/w25/artifacts/selection/deberta.json'))['selected'])")
+          if [[ "$modern" == "modernbert-normalized" ]]; then
+            echo "modern_name=modernbert-normalized" >> "$GITHUB_OUTPUT"
+            echo "modern_variant=raw+normalized" >> "$GITHUB_OUTPUT"
+            echo "modern_dir=raw-normalized" >> "$GITHUB_OUTPUT"
+          else
+            echo "modern_name=modernbert-raw" >> "$GITHUB_OUTPUT"
+            echo "modern_variant=raw" >> "$GITHUB_OUTPUT"
+            echo "modern_dir=raw" >> "$GITHUB_OUTPUT"
+          fi
+          if [[ "$deberta" == "deberta-v3-small" ]]; then
+            echo "deberta_name=deberta-small" >> "$GITHUB_OUTPUT"
+          else
+            echo "deberta_name=deberta-xsmall" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Build fusion and cascade development candidates
+        shell: bash
+        run: |
+          set -euo pipefail
+          data_flag="${{ needs.preflight.outputs.include_admitted }}"
+          for seed in 42 138 2026; do
+            modern_root="workers/w25/inputs/modernbert/w25-${{ steps.selected.outputs.modern_name }}-seed-$seed/${{ steps.selected.outputs.modern_dir }}"
+            deberta_root="workers/w25/inputs/deberta/w25-${{ steps.selected.outputs.deberta_name }}-seed-$seed/raw"
+            python -m workers.w25.run_bakeoff fusion \
+              --seed "$seed" \
+              --variant "${{ steps.selected.outputs.modern_variant }}" \
+              --train-embeddings "$modern_root/train-embeddings.npy" \
+              --dev-embeddings "$modern_root/dev-embeddings.npy" \
+              $data_flag
+            python -m workers.w25.run_bakeoff cascade \
+              --stage-a "$deberta_root/dev-bundle.json" \
+              --stage-b "$modern_root/dev-bundle.json" \
+              --name "precision-cascade/seed-$seed" \
+              $data_flag
+          done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: w25-composed-development-candidates
+          path: |
+            workers/w25/artifacts/selection/
+            workers/w25/artifacts/modernbert-lexical-fusion/
+            workers/w25/artifacts/precision-cascade/
+          if-no-files-found: error

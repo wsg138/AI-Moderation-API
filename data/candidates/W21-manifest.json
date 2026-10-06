@@ -1,0 +1,76 @@
+{
+  "version": "w21-candidate-v1",
+  "status": "candidate_only_not_admitted",
+  "record_count": 500,
+  "family_count": 25,
+  "id_range": "G21-0001..G21-0500",
+  "generated_from": "data/candidates/W21-seeds.json",
+  "generator": "tools/w21_generate_candidates.py",
+  "qa_range": "G21:1-500",
+  "distributions": {
+    "domain": {
+      "benign_hard_negative": 20,
+      "dangerous_instructions": 60,
+      "doxxing": 40,
+      "gameplay_violence": 20,
+      "harassment": 60,
+      "hate_reference": 20,
+      "hate_slur": 40,
+      "real_world_threat": 60,
+      "self_harm": 60,
+      "sexual_content": 60,
+      "sexual_minor": 20,
+      "staff_abuse": 20,
+      "staff_criticism_negative": 20
+    },
+    "label": {
+      "DANGEROUS_REAL_WORLD_INSTRUCTIONS": 20,
+      "DOXXING": 40,
+      "GAMEPLAY_VIOLENCE": 20,
+      "LOW_LEVEL_HARASSMENT": 20,
+      "REAL_WORLD_THREAT": 60,
+      "SAFE": 120,
+      "SELF_HARM_INSTRUCTION": 20,
+      "SELF_HARM_INTENT": 20,
+      "SEVERE_HARASSMENT": 40,
+      "SEXUAL_CONTENT": 40,
+      "SEXUAL_MINOR": 20,
+      "SLUR_USE": 40,
+      "STAFF_TARGETED_ABUSE": 20,
+      "THIRD_PARTY_SELF_HARM_CONCERN": 20
+    },
+    "action": {
+      "ALLOW": 200,
+      "BLOCK": 300
+    },
+    "platform_hint": {
+      "discord": 280,
+      "minecraft": 220
+    },
+    "channel_profile": {
+      "discord_general": 280,
+      "minecraft_private": 80,
+      "minecraft_public": 140
+    },
+    "strike": {
+      "false": 280,
+      "true": 220
+    },
+    "containment": {
+      "MUTE": 60,
+      "NONE": 440
+    },
+    "support_flow": {
+      "NONE": 460,
+      "SELF_HARM_CHECK": 40
+    }
+  },
+  "protections": {
+    "w20_acceptance_inspected": false,
+    "owner_golden_used_as_generation_source": false,
+    "w11_heldouts_used_as_generation_source": false,
+    "w12_prediction_failures_used_as_generation_source": false,
+    "automatic_training_admission": false
+  },
+  "lexical_note": "Slur-specific W21 seeds use a policy-safe placeholder token; W21 does not introduce a new explicit slur lexicon."
+}
