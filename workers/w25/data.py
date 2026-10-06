@@ -116,7 +116,11 @@ def verify_admitted_source(source: AdmittedSource) -> Path:
         raise ValueError("admitted source must name a reviewer")
     if not source.frozen_group_field.strip():
         raise ValueError("admitted source must define its frozen group field")
-    if source.role in TRAINING_ROLES:
+    if (
+        source.role in TRAINING_ROLES
+        or source.partition_manifest is not None
+        or source.partition_manifest_sha256 is not None
+    ):
         _verified_partition_manifest(source)
     return source_path
 
@@ -217,7 +221,7 @@ def _record_to_example(record: dict[str, Any], source: AdmittedSource) -> Modera
 
 def _verified_partition_manifest(source: AdmittedSource) -> Path:
     if not source.partition_manifest or not source.partition_manifest_sha256:
-        raise ValueError("training sources require a hash-pinned partition manifest")
+        raise ValueError("partitioned sources require a hash-pinned partition manifest")
     storage = source.partition_manifest_storage or source.storage
     return _verified_source_file(
         source.partition_manifest,
