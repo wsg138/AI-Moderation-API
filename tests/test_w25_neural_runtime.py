@@ -125,10 +125,10 @@ class _FakeModel:
         self.loaded = state
 
 
-def test_fit_stops_after_two_stale_dev_epochs(monkeypatch) -> None:
+def test_fit_runs_all_requested_epochs_and_keeps_best_state(monkeypatch) -> None:
     from workers.w25 import neural
 
-    losses = iter([1.0, 1.2, 1.4, 0.1])
+    losses = iter([1.0, 1.2, 1.4, 0.8, 0.9])
     monkeypatch.setattr(neural, "_train_epoch", lambda *args: 0.5)
     monkeypatch.setattr(neural, "_dev_loss", lambda *args: next(losses))
     model = _FakeModel()
@@ -140,6 +140,6 @@ def test_fit_stops_after_two_stale_dev_epochs(monkeypatch) -> None:
         torch.device("cpu"),
         epochs=5,
     )
-    assert result.best_dev_loss == 1.0
-    assert len(result.history) == 3
+    assert result.best_dev_loss == 0.8
+    assert len(result.history) == 5
     assert model.loaded is not None
