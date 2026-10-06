@@ -12,6 +12,7 @@ runtime-data/
 production-data/
 chat-logs/
 moderation-events/
+mining-work/
 *.sqlite
 *.sqlite3
 *.db
