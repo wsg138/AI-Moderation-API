@@ -26,7 +26,7 @@ class _Tokenizer:
         assert truncation is True  # nosec B101
         assert max_length > 0  # nosec B101
         assert padding is False  # nosec B101
-        assert return_tensors == "pt"  # nosec B101
+        assert return_tensors == "pt"  # nosec B101 - test fixture assertion  # nosec B101
         return {
             "input_ids": torch.tensor([[1, 2]], dtype=torch.long),
             "attention_mask": torch.ones((1, 2), dtype=torch.long),
@@ -34,7 +34,7 @@ class _Tokenizer:
 
     def pad(self, inputs, *, padding, return_tensors):
         assert padding is True  # nosec B101
-        assert return_tensors == "pt"
+        assert return_tensors == "pt"  # nosec B101 - test fixture assertion
         width = max(len(row["input_ids"]) for row in inputs)
         input_ids = []
         attention_mask = []
@@ -131,8 +131,15 @@ def test_fit_runs_all_requested_epochs_and_keeps_best_state(monkeypatch) -> None
     from workers.w25 import neural
 
     losses = iter([1.0, 1.2, 1.4, 0.8, 0.9])
-    monkeypatch.setattr(neural, "_train_epoch", lambda *args: 0.5)
-    monkeypatch.setattr(neural, "_dev_loss", lambda *args: next(losses))
+
+    def train_epoch(*_args) -> float:
+        return 0.5
+
+    def dev_loss(*_args) -> float:
+        return next(losses)
+
+    monkeypatch.setattr(neural, "_train_epoch", train_epoch)
+    monkeypatch.setattr(neural, "_dev_loss", dev_loss)
     model = _FakeModel()
     result = neural._fit(
         cast(Any, model),

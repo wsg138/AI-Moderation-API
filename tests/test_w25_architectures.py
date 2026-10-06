@@ -88,7 +88,7 @@ def test_cascade_verifier_can_block_without_stage_a_consensus() -> None:
     stage_a = _bundle([[0.60, 0.30, 0.10]], [[0.99, 0.01]])
     stage_b = _bundle([[0.02, 0.97, 0.01]], [[0.99, 0.01]])
     result, routed = combine_cascade(stage_a, stage_b, CascadeThresholds())
-    assert routed == [True]  # nosec B101
+    assert routed == [True]  # nosec B101 - pytest assertion  # nosec B101
     assert HEAD_VALUES["action"][result.predictions["action"][0]] == "BLOCK"  # nosec B101
 
 
@@ -96,22 +96,22 @@ def test_cascade_disagreement_defaults_to_review() -> None:
     stage_a = _bundle([[0.30, 0.60, 0.10]], [[0.99, 0.01]])
     stage_b = _bundle([[0.70, 0.20, 0.10]], [[0.99, 0.01]])
     result, routed = combine_cascade(stage_a, stage_b, CascadeThresholds())
-    assert routed == [True]
+    assert routed == [True]  # nosec B101 - pytest assertion
     assert HEAD_VALUES["action"][result.predictions["action"][0]] == "REVIEW"  # nosec B101
-    assert result.predictions["strike"][0] == 0  # nosec B101
+    assert result.predictions["strike"][0] == 0  # nosec B101 - pytest assertion  # nosec B101
 
 
 def test_cascade_requires_both_stages_for_strike() -> None:
     stage_a = _bundle([[0.02, 0.97, 0.01]], [[0.01, 0.99]])
     stage_b = _bundle([[0.02, 0.97, 0.01]], [[0.20, 0.80]])
     result, _ = combine_cascade(stage_a, stage_b, CascadeThresholds())
-    assert result.predictions["strike"][0] == 0
+    assert result.predictions["strike"][0] == 0  # nosec B101 - pytest assertion
 
 
 def test_attack_harness_is_deterministic_and_covers_required_character_families() -> None:
     first = attack_variants("sample message")
     second = attack_variants("sample message")
-    assert first == second  # nosec B101
+    assert first == second  # nosec B101 - pytest assertion  # nosec B101
     assert {  # nosec B101
         "case",
         "spacing",
@@ -192,7 +192,7 @@ def test_selective_policy_routes_uncertain_block_to_review() -> None:
     selected, abstained = apply_selective_policy(bundle, thresholds)
     assert abstained == [True]  # nosec B101
     assert HEAD_VALUES["action"][selected.predictions["action"][0]] == "REVIEW"  # nosec B101
-    assert selected.predictions["strike"][0] == 0  # nosec B101
+    assert selected.predictions["strike"][0] == 0  # nosec B101 - pytest assertion  # nosec B101
 
 
 def test_selective_policy_requires_block_before_strike() -> None:
@@ -200,7 +200,7 @@ def test_selective_policy_requires_block_before_strike() -> None:
     thresholds = SelectiveThresholds(0.90, 0.995, 0.999, 0.50)
     selected, _ = apply_selective_policy(bundle, thresholds)
     assert HEAD_VALUES["action"][selected.predictions["action"][0]] == "ALLOW"  # nosec B101
-    assert selected.predictions["strike"][0] == 0
+    assert selected.predictions["strike"][0] == 0  # nosec B101 - pytest assertion
 
 
 def test_threshold_fitting_fails_closed_when_precision_floor_is_unmet() -> None:
@@ -214,8 +214,8 @@ def test_threshold_fitting_fails_closed_when_precision_floor_is_unmet() -> None:
         [[0.01, 0.99], [0.01, 0.99], [0.01, 0.99]],
     )
     thresholds = fit_selective_thresholds(examples, bundle)
-    assert thresholds.block == 1.0  # nosec B101
-    assert thresholds.strike == 1.0  # nosec B101
+    assert thresholds.block == 1.0  # nosec B101 - pytest assertion  # nosec B101
+    assert thresholds.strike == 1.0  # nosec B101 - pytest assertion  # nosec B101
 
 
 def test_cascade_safety_override_survives_probability_recalibration() -> None:
@@ -250,8 +250,8 @@ def test_cascade_threshold_fitting_fails_closed_on_false_positive_pressure() -> 
         [[0.01, 0.99], [0.01, 0.99], [0.01, 0.99]],
     )
     thresholds = fit_cascade_thresholds(examples, stage_a, stage_b)
-    assert thresholds.block == 1.0
-    assert thresholds.strike == 1.0
+    assert thresholds.block == 1.0  # nosec B101 - pytest assertion
+    assert thresholds.strike == 1.0  # nosec B101 - pytest assertion
 
 
 def test_serialized_attacks_preserve_profile_and_context_markers() -> None:
@@ -310,7 +310,7 @@ def test_train_only_augmentation_is_deterministic_and_label_preserving() -> None
     )
     first = augment_training_examples([example])
     second = augment_training_examples([example])
-    assert first == second
+    assert first == second  # nosec B101 - pytest assertion
     assert len(first) == 2  # nosec B101
     generated = first[1]
     assert generated.example_id.startswith("train-1::w25-adv::")  # nosec B101

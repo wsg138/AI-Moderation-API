@@ -93,20 +93,32 @@ def _alternating_case(text: str) -> str:
     return "".join(next(cycle)(char) if char.isalpha() else char for char in text)
 
 
+def _space_word(word: str) -> str:
+    return " ".join(word)
+
+
+def _punctuate_word(word: str) -> str:
+    return ".".join(word)
+
+
+def _repeat_word(word: str) -> str:
+    return "".join(char * 2 for char in word)
+
+
+def _zero_width_word(word: str) -> str:
+    return "\u200b".join(word)
+
+
 def _space_letters(text: str) -> str:
-    return _rewrite_first_word(text, lambda word: " ".join(word))
+    return _rewrite_first_word(text, _space_word)
 
 
 def _punctuate(text: str) -> str:
-    return _rewrite_first_word(text, lambda word: ".".join(word))
+    return _rewrite_first_word(text, _punctuate_word)
 
 
 def _repeat_letters(text: str) -> str:
-    return _rewrite_first_word(text, lambda word: "".join(char * 2 for char in word))
-
-
-def _insert_separator(text: str, separator: str) -> str:
-    return _rewrite_first_word(text, lambda word: separator.join(word))
+    return _rewrite_first_word(text, _repeat_word)
 
 
 def _single_typo(text: str) -> str:
@@ -129,7 +141,7 @@ def _unicode_confusable(text: str) -> str:
 
 
 def _zero_width(text: str) -> str:
-    return _insert_separator(text, "\u200b")
+    return _rewrite_first_word(text, _zero_width_word)
 
 
 _ATTACK_TRANSFORMS: dict[str, Callable[[str], str]] = {

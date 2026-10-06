@@ -268,3 +268,18 @@ file, directory, rule, or analyzer exclusion is used.
 | 8e36ac059d3b1330b3be6618415043f0 | Bandit_B101 | tests/test_w25_neural_runtime.py:109 | Pytest assertion; exact flagged line uses nosec B101. |
 | 2d6b4f7641b071ac3287dbba6b369949 | Bandit_B311 | workers/w25/neural.py:95 | Seeded experiment shuffle, not cryptographic randomness; exact call uses nosec B311. |
 | cde3702f81e8c977bdaf5092ccdfaebc | Bandit_B101 | tests/test_w25_neural_runtime.py:86 | Pytest assertion; exact flagged line uses nosec B101. |
+
+## Follow-up exact-line suppressions after the static-analysis refactor
+
+These seven test-only assertions moved or were introduced after the original Codacy
+issue-ID export. Each is suppressed on its exact line only; no file/rule exclusion
+was added.
+
+- tests/test_w25_architectures.py: routed-mask equality assertion.
+- tests/test_w25_architectures.py: cascade strike rejection assertion.
+- tests/test_w25_architectures.py: selective strike rejection assertion.
+- tests/test_w25_architectures.py: fitted BLOCK fallback threshold assertion.
+- tests/test_w25_architectures.py: fitted STRIKE fallback threshold assertion.
+- tests/test_w25_architectures.py: deterministic attack-generation equality assertion.
+- tests/test_w25_neural_runtime.py: tokenizer fixture return-tensor contract assertion.
+
