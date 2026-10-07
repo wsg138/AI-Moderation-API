@@ -5,7 +5,9 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 
-_ALLOWED_PERMISSIONS = frozenset({"moderate", "review:read", "review:write", "review:admin"})
+_ALLOWED_PERMISSIONS = frozenset(
+    {"moderate", "review:read", "review:write", "review:admin", "support:context"}
+)
 
 
 @dataclass(frozen=True, slots=True)
