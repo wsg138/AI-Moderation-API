@@ -11,6 +11,7 @@ from workers.w25.contract import HEAD_NAMES  # noqa: E402 - skip torch before ne
 from workers.w25.neural import (  # noqa: E402 - optional evidence dependency
     LengthBucketBatchSampler,
     ModerationDataset,
+    MultiTaskEncoder,
     _collate_batch,
 )
 
@@ -114,6 +115,25 @@ def test_length_bucket_sampler_groups_similar_lengths_deterministically() -> Non
         frozenset((4, 5)),
         frozenset((3, 1)),
     }
+
+
+class _HalfEncoder(torch.nn.Module):
+    def __init__(self) -> None:
+        super().__init__()
+        self.weight = torch.nn.Parameter(torch.ones(1, dtype=torch.float16))
+        self.config = type("Config", (), {"hidden_size": 4})()
+
+
+def test_deberta_encoder_is_promoted_to_float32(monkeypatch) -> None:
+    from workers.w25 import neural
+
+    monkeypatch.setattr(
+        neural.AutoModel,
+        "from_pretrained",
+        lambda *_args, **_kwargs: _HalfEncoder(),
+    )
+    model = MultiTaskEncoder("deberta-v3-xsmall")
+    assert next(model.encoder.parameters()).dtype == torch.float32  # nosec B101
 
 
 class _FakeModel:

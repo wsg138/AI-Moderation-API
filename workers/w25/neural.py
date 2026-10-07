@@ -107,6 +107,8 @@ class MultiTaskEncoder(nn.Module):
             revision=spec.revision,
             trust_remote_code=False,
         )
+        if model_key.startswith("deberta-v3-"):
+            self.encoder = self.encoder.float()
         hidden = int(self.encoder.config.hidden_size)
         self.dropout = nn.Dropout(0.1)
         self.heads = nn.ModuleDict(
