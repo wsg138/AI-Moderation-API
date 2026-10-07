@@ -100,6 +100,7 @@ class LengthBucketBatchSampler(Sampler[list[int]]):
 class MultiTaskEncoder(nn.Module):
     def __init__(self, model_key: str) -> None:
         super().__init__()
+        self.model_key = model_key
         spec = MODEL_SPECS[model_key]
         self.encoder = AutoModel.from_pretrained(
             spec.hf_id,
@@ -264,12 +265,16 @@ def _train_epoch(model, loader, optimizer, device: torch.device) -> float:
     total = 0.0
     for batch in loader:
         optimizer.zero_grad(set_to_none=True)
-        with _autocast(device):
+        with _autocast(device, model):
             logits, _ = model(
                 batch["input_ids"].to(device, non_blocking=True),
                 batch["attention_mask"].to(device, non_blocking=True),
             )
             loss = _multihead_loss(logits, batch, device)
+        if not torch.isfinite(loss):
+            raise FloatingPointError(
+                f"non-finite training loss for {model.model_key}"
+            )
         loss.backward()
         torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
         optimizer.step()
@@ -282,17 +287,28 @@ def _dev_loss(model, loader, device: torch.device) -> float:
     total = 0.0
     with torch.no_grad():
         for batch in loader:
-            with _autocast(device):
+            with _autocast(device, model):
                 logits, _ = model(
                     batch["input_ids"].to(device), batch["attention_mask"].to(device)
                 )
                 loss = _multihead_loss(logits, batch, device)
+            if not torch.isfinite(loss):
+                raise FloatingPointError(
+                    f"non-finite development loss for {model.model_key}"
+                )
             total += float(loss.detach().cpu())
     return total / max(len(loader), 1)
 
 
-def _autocast(device: torch.device):
-    if device.type != "cuda":
+def _autocast(
+    device: torch.device,
+    model: MultiTaskEncoder | None = None,
+):
+    if (
+        device.type != "cuda"
+        or model is None
+        or model.model_key.startswith("deberta-v3-")
+    ):
         return nullcontext()
     return torch.autocast(device_type="cuda", dtype=torch.bfloat16)
 
