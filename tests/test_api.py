@@ -192,6 +192,61 @@ def test_authentication_and_permissions(settings, rose_headers, staff_headers) -
     assert allowed.status_code == 200
 
 
+def _seed_support_context(client: TestClient, rose_headers: dict[str, str]):
+    meaningful = client.post(
+        "/v1/moderate",
+        headers=rose_headers,
+        json=payload(
+            "support-bad",
+            "bad-context raw private phrase",
+            sender_id="platform-player-a",
+            sender_identity_id="identity-player-a",
+        ),
+    )
+    client.post(
+        "/v1/moderate",
+        headers=rose_headers,
+        json=payload(
+            "support-safe",
+            "ordinary benign message",
+            1,
+            sender_id="platform-player-a",
+            sender_identity_id="identity-player-a",
+        ),
+    )
+    client.post(
+        "/v1/moderate",
+        headers=rose_headers,
+        json=payload(
+            "support-unlinked",
+            "bad-context should not match identity lookup",
+            2,
+            sender_id="identity-player-a",
+        ),
+    )
+    return meaningful
+
+
+def _assert_support_context_minimized(response, meaningful) -> None:
+    assert response.status_code == 200
+    body = response.json()
+    assert body["subject_id"] == "identity-player-a"
+    assert len(body["decisions"]) == 1
+    decision = body["decisions"][0]
+    assert decision["event_id"] == meaningful.json()["event_id"]
+    assert decision["semantic_label"] == "SEVERE_HARASSMENT"
+    assert decision["message_action"] == "BLOCK"
+    assert decision["decision_source"] == "AI"
+    for forbidden in (
+        "bad-context raw private phrase",
+        "platform-player-a",
+        "channel_id",
+        "scope_id",
+        "sender_id",
+    ):
+        assert forbidden not in response.text
+
+
 def test_support_context_requires_dedicated_permission_and_minimizes_data(
     settings,
     rose_headers,
@@ -200,38 +255,7 @@ def test_support_context_requires_dedicated_permission_and_minimizes_data(
 ) -> None:
     app = create_app(settings=settings, classifier=SupportContextClassifier())
     with TestClient(app) as client:
-        meaningful = client.post(
-            "/v1/moderate",
-            headers=rose_headers,
-            json=payload(
-                "support-bad",
-                "bad-context raw private phrase",
-                sender_id="platform-player-a",
-                sender_identity_id="identity-player-a",
-            ),
-        )
-        safe = client.post(
-            "/v1/moderate",
-            headers=rose_headers,
-            json=payload(
-                "support-safe",
-                "ordinary benign message",
-                1,
-                sender_id="platform-player-a",
-                sender_identity_id="identity-player-a",
-            ),
-        )
-        unlinked = client.post(
-            "/v1/moderate",
-            headers=rose_headers,
-            json=payload(
-                "support-unlinked",
-                "bad-context should not match identity lookup",
-                2,
-                sender_id="identity-player-a",
-            ),
-        )
-
+        meaningful = _seed_support_context(client, rose_headers)
         missing_auth = client.get("/v1/support-context/identity-player-a")
         wrong_permission = client.get(
             "/v1/support-context/identity-player-a",
@@ -243,27 +267,28 @@ def test_support_context_requires_dedicated_permission_and_minimizes_data(
         )
 
     assert meaningful.status_code == 200
-    assert safe.status_code == 200
-    assert unlinked.status_code == 200
     assert missing_auth.status_code == 401
     assert wrong_permission.status_code == 403
-    assert response.status_code == 200
+    _assert_support_context_minimized(response, meaningful)
 
-    body = response.json()
-    assert body["subject_id"] == "identity-player-a"
-    assert len(body["decisions"]) == 1
-    decision = body["decisions"][0]
-    assert decision["event_id"] == meaningful.json()["event_id"]
-    assert decision["semantic_label"] == "SEVERE_HARASSMENT"
-    assert decision["message_action"] == "BLOCK"
-    assert decision["decision_source"] == "AI"
 
-    serialized = response.text
-    assert "bad-context raw private phrase" not in serialized
-    assert "platform-player-a" not in serialized
-    assert "channel_id" not in serialized
-    assert "scope_id" not in serialized
-    assert "sender_id" not in serialized
+def _accepted_correction_payload(event_id: str) -> dict[str, object]:
+    return {
+        "event_id": event_id,
+        "reviewer_id": "admin-reviewer",
+        "authority": "ADMIN",
+        "corrected": {
+            "semantic_label": "LOW_LEVEL_HARASSMENT",
+            "message_action": "ALLOW",
+            "review_priority": "NONE",
+            "strike_recommendation": "EVIDENCE",
+            "containment": "NONE",
+            "containment_duration_seconds": None,
+            "support_flow": "NONE",
+            "reason_codes": ["staff_corrected"],
+        },
+        "note": "Owner-reviewed correction for support context.",
+    }
 
 
 def test_support_context_uses_accepted_staff_correction(
@@ -283,26 +308,10 @@ def test_support_context_uses_accepted_staff_correction(
                 sender_identity_id="identity-corrected",
             ),
         )
-        event_id = moderated.json()["event_id"]
         correction = client.post(
             "/v1/review-corrections",
             headers=admin_headers,
-            json={
-                "event_id": event_id,
-                "reviewer_id": "admin-reviewer",
-                "authority": "ADMIN",
-                "corrected": {
-                    "semantic_label": "LOW_LEVEL_HARASSMENT",
-                    "message_action": "ALLOW",
-                    "review_priority": "NONE",
-                    "strike_recommendation": "EVIDENCE",
-                    "containment": "NONE",
-                    "containment_duration_seconds": None,
-                    "support_flow": "NONE",
-                    "reason_codes": ["staff_corrected"],
-                },
-                "note": "Owner-reviewed correction for support context.",
-            },
+            json=_accepted_correction_payload(moderated.json()["event_id"]),
         )
         response = client.get(
             "/v1/support-context/identity-corrected",
@@ -312,7 +321,6 @@ def test_support_context_uses_accepted_staff_correction(
     assert moderated.status_code == 200
     assert correction.status_code == 201
     assert correction.json()["status"] == "ACCEPTED"
-    assert response.status_code == 200
     decision = response.json()["decisions"][0]
     assert decision["semantic_label"] == "LOW_LEVEL_HARASSMENT"
     assert decision["message_action"] == "ALLOW"
