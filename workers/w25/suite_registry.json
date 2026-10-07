@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "status": "ready",
+  "suites": {
+    "balanced_policy": {
+      "status": "ready",
+      "required": true,
+      "sources": [
+        {
+          "kind": "w11",
+          "partition": "test"
+        }
+      ],
+      "notes": "Deterministic max-20-per-label view of frozen W11 test; unsupported/rare labels retain their actual lower support.",
+      "selection": {
+        "kind": "label_cap",
+        "max_per_label": 20
+      }
+    },
+    "real_distribution": {
+      "status": "ready",
+      "required": true,
+      "sources": [
+        {
+          "kind": "admitted",
+          "path": "W26_real_chat_curated_training_PRIVATE_v2.jsonl",
+          "partition": "test"
+        }
+      ],
+      "notes": "Frozen W26 private human-adjudicated real-chat test partition: 566 records (557 ALLOW / 9 BLOCK). Raw text remains private and hash-pinned."
+    },
+    "adversarial_evasion": {
+      "status": "ready",
+      "required": true,
+      "sources": [
+        {
+          "kind": "w11",
+          "partition": "frozen_adversarial"
+        },
+        {
+          "kind": "admitted",
+          "path": "data/candidates/W21-adversarial-evasion.jsonl",
+          "partition": "test"
+        }
+      ],
+      "notes": "Combines W11 frozen adversarial with W21 untouched family holdout."
+    },
+    "context": {
+      "status": "ready",
+      "required": true,
+      "sources": [
+        {
+          "kind": "admitted",
+          "path": "W27_real_chat_frozen_validation_PRIVATE.jsonl",
+          "partition": "context"
+        }
+      ],
+      "notes": "Frozen W27 later-period context suite: 600 family-isolated records (588 ALLOW / 11 BLOCK / 1 REVIEW), including multi-speaker history, private/Discord contexts, retry/evasion patterns, and cross-platform duplicate controls. Canonical mirror double-count suppression remains a W24 incident-linker responsibility rather than a classifier label."
+    },
+    "time_based_real_chat": {
+      "status": "ready",
+      "required": true,
+      "sources": [
+        {
+          "kind": "admitted",
+          "path": "W27_real_chat_frozen_validation_PRIVATE.jsonl",
+          "partition": "time_based"
+        }
+      ],
+      "notes": "Frozen W27 later-period time-based suite from 2026-08-26 through 2026-09-09: 2,998 family-isolated records (2,989 ALLOW / 9 BLOCK). A separate strict novel-target analysis contains 2,733 targets absent from W26 train+development."
+    }
+  },
+  "notes": [
+    "W20 is not a W25 development/comparison suite and remains unseen until one-shot acceptance.",
+    "W11 test is used only for the label-capped balanced policy suite after development choices are frozen.",
+    "W11 frozen-adversarial plus W21 untouched families form the separate adversarial/evasion suite.",
+    "W26 private test is the real-distribution suite and preserves its production-shaped ALLOW-heavy imbalance.",
+    "W27 supplies independent later-period context and time-based real-chat suites; two unresolved animal/pet-harm policy-gap rows are quarantined.",
+    "W27 context and time-based partitions are family-disjoint and were frozen without W25 model predictions.",
+    "Canonical mirror/double-count suppression is separately covered by the W24 incident-linker prototype; W25 context evidence measures classifier-visible context/channel behavior.",
+    "Final ranking requires every candidate to use fingerprint-identical copies of all five frozen suites."
+  ]
+}

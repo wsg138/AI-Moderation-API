@@ -1,0 +1,45 @@
+{
+  "contract": "w27-real-chat-frozen-validation-v1",
+  "private_data": true,
+  "safe_to_commit_raw_text": false,
+  "source_filename": "W27_real_chat_frozen_validation_PRIVATE.jsonl",
+  "source_sha256": "e9e414b4b7a21d9deaba9612159d1bdfb62b10420d5584584dfa5e9a522c0d37",
+  "partition_manifest_filename": "W27_real_chat_frozen_validation_partitions_PRIVATE.json",
+  "partition_manifest_sha256": "95193616746bb74b8a14c7af3cf190b2b360e78ce4ada1d813728574d2240705",
+  "record_count": 3598,
+  "family_count": 2528,
+  "policy_gap_quarantine_count": 2,
+  "context": {
+    "n": 600,
+    "action_distribution": {
+      "ALLOW": 588,
+      "BLOCK": 11,
+      "REVIEW": 1
+    },
+    "channel_distribution": {
+      "discord_gaming": 40,
+      "minecraft_private": 102,
+      "minecraft_public": 458
+    }
+  },
+  "time_based_real_chat": {
+    "n": 2998,
+    "action_distribution": {
+      "ALLOW": 2989,
+      "BLOCK": 9
+    },
+    "channel_distribution": {
+      "discord_gaming": 52,
+      "minecraft_private": 995,
+      "minecraft_public": 1951
+    },
+    "novel_target_vs_w26_train_dev_count": 2733
+  },
+  "notes": [
+    "W27 was human/worker-adjudicated without W25 model predictions.",
+    "Two unresolved animal/pet-harm policy-gap rows are quarantined and excluded from ranking.",
+    "Context and time-based partitions are family-disjoint.",
+    "Canonical mirror/double-count behavior is a runtime incident-linker concern and is separately covered by W24.",
+    "W20 remains untouched."
+  ]
+}

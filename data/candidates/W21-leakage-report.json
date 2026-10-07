@@ -1,0 +1,23 @@
+{
+  "status": "pass",
+  "candidate_records": 500,
+  "accepted_records": 4552,
+  "family_count": 25,
+  "compared_against": [
+    "data/synthetic/G01..G09",
+    "data/eval/owner-policy-v1.jsonl"
+  ],
+  "candidate_qa": {
+    "errors": 0,
+    "warnings": 0,
+    "exact_duplicate_groups": 0,
+    "internal_near_candidates": 922
+  },
+  "near_threshold": 0.92,
+  "trivial_threshold": 0.985,
+  "exact_collisions": [],
+  "near_candidates": [],
+  "trivial_near_collisions": [],
+  "note": "W20 acceptance data was not inspected or included in this audit.",
+  "verification": "Enforced by the PR service-ci W21 QA/leakage step; final exact-head status is reported on the PR."
+}

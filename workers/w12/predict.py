@@ -9,7 +9,12 @@ from torch.utils.data import DataLoader
 
 from workers.w12.baseline import train_baseline
 from workers.w12.dataset import ModerationExample, load_partition
-from workers.w12.train_encoder import CANDIDATES, ModerationDataset, MultiTaskBert, load_candidate_tokenizer
+from workers.w12.train_encoder import (
+    CANDIDATES,
+    ModerationDataset,
+    MultiTaskBert,
+    load_candidate_tokenizer,
+)
 
 ARTIFACT_DIR = Path(__file__).resolve().parent / "artifacts"
 HEAD_NAMES = ("label", "action", "review_priority", "strike", "containment", "support_flow")

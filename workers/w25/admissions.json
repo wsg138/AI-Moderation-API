@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "status": "ready",
+  "sources": [
+    {
+      "path": "data/candidates/W21-adversarial-evasion.jsonl",
+      "sha256": "4fcffc4cecc87b0d9acaad4e409d2c52cdc09b90811263433c06436d0c8c523c",
+      "role": "adversarial_training",
+      "reviewed_by": "W25 independent admission review",
+      "frozen_group_field": "family_id",
+      "partition_manifest": "data/integration/W25-W21-adversarial-split.json",
+      "partition_manifest_sha256": "087588150b349913a76d3d65862bcd418ec6d4ebe7630357f76eda898d8d9d34"
+    },
+    {
+      "path": "W26_real_chat_curated_training_PRIVATE_v2.jsonl",
+      "sha256": "bc013c6859c7cb835ba92d8dce6c8b97d1d4b0fac7cbdd3dc618fcecc84c9ec3",
+      "role": "real_chat_training",
+      "reviewed_by": "W26 six-shard Policy-v1 adjudication plus coordinator structural/privacy QA",
+      "frozen_group_field": "family_id",
+      "storage": "private",
+      "partition_manifest": "W26_real_chat_partitions_PRIVATE.json",
+      "partition_manifest_sha256": "e096f92f463406f12545f5682abf755aed2de8537484b663b1fc5ac4931017d5",
+      "partition_manifest_storage": "private"
+    },
+    {
+      "path": "W27_real_chat_frozen_validation_PRIVATE.jsonl",
+      "sha256": "e9e414b4b7a21d9deaba9612159d1bdfb62b10420d5584584dfa5e9a522c0d37",
+      "role": "validation_only",
+      "reviewed_by": "W27 six-shard Policy-v1 adjudication plus coordinator positive-row, policy-gap, leakage, and structural QA",
+      "frozen_group_field": "family_id",
+      "storage": "private",
+      "partition_manifest": "W27_real_chat_frozen_validation_partitions_PRIVATE.json",
+      "partition_manifest_sha256": "95193616746bb74b8a14c7af3cf190b2b360e78ce4ada1d813728574d2240705",
+      "partition_manifest_storage": "private"
+    }
+  ],
+  "notes": [
+    "W20 acceptance data is never admissible for W25 development or selection.",
+    "W21 is admitted only under the W25-owned frozen family split: 220 train, 100 development, 180 test.",
+    "W21 slur placeholder families test evasion mechanics, not comprehensive production slur lexicon robustness.",
+    "W26 contributes 3,561 human-adjudicated real-chat development records through a hash-pinned private source; raw production-derived text must never be committed to the public repository.",
+    "W26 connected records that share context-message IDs or exact normalized target text before freezing 3,098 family groups; split counts are 2,489 train / 506 development / 566 test.",
+    "One W26 policy-gap record ('should we rep bomb him?') is quarantined and excluded from admission pending an owner policy decision.",
+    "W27 is validation-only and contributes 3,598 independently adjudicated later-period records: 600 context and 2,998 time-based real-chat. Its role is deliberately excluded from TRAINING_ROLES.",
+    "Two W27 real-animal/pet harm records remain quarantined because Policy-v1 does not settle that edge.",
+    "W27 context and time-based partitions are family-disjoint; W20 remains untouched.",
+    "Admissions and all required W25 classifier comparison suites are frozen and ready for a private-host bakeoff."
+  ]
+}
