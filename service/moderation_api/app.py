@@ -244,24 +244,6 @@ def _register_review_queue(
         return ReviewQueueResponse(items=await store.list_review_items(limit))
 
 
-def _register_support_context(
-    app: FastAPI,
-    store: ModerationStore,
-    dependency: AuthDependency,
-) -> None:
-    @app.get(
-        "/v1/support-context/{subject_id}",
-        response_model=SupportContextResponse,
-    )
-    async def support_context(
-        subject_id: Annotated[str, Path(min_length=1, max_length=200)],
-        _: Annotated[Principal, Depends(dependency)],
-        limit: Annotated[int, Query(ge=1, le=25)] = 10,
-    ) -> SupportContextResponse:
-        decisions = await store.list_support_context(subject_id, limit)
-        return SupportContextResponse(subject_id=subject_id, decisions=decisions)
-
-
 def _register_correction_write(
     app: FastAPI,
     store: ModerationStore,
@@ -315,5 +297,22 @@ def _authorize_correction_authority(
 def _optional_string(value: object) -> str | None:
     return str(value) if value else None
 
+
+def _register_support_context(
+    app: FastAPI,
+    store: ModerationStore,
+    dependency: AuthDependency,
+) -> None:
+    @app.get(
+        "/v1/support-context/{subject_id}",
+        response_model=SupportContextResponse,
+    )
+    async def support_context(
+        subject_id: Annotated[str, Path(min_length=1, max_length=200)],
+        _: Annotated[Principal, Depends(dependency)],
+        limit: Annotated[int, Query(ge=1, le=25)] = 10,
+    ) -> SupportContextResponse:
+        decisions = await store.list_support_context(subject_id, limit)
+        return SupportContextResponse(subject_id=subject_id, decisions=decisions)
 
 app = create_app()
