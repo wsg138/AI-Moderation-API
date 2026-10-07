@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import sqlite3
 
-LATEST_SCHEMA_VERSION = 2
+LATEST_SCHEMA_VERSION = 3
 
 
 class MigrationError(RuntimeError):
@@ -183,6 +183,8 @@ def migrate(connection: sqlite3.Connection) -> int:
             _apply_v1(connection)
         if current < 2:
             _apply_v2(connection)
+        if current < 3:
+            _apply_v3(connection)
         connection.execute(f"PRAGMA user_version = {LATEST_SCHEMA_VERSION}")
         connection.commit()
     except Exception as exc:
@@ -228,6 +230,14 @@ def _apply_v2(connection: sqlite3.Connection) -> None:
            SET reservation_token=COALESCE(reservation_token,event_id),
                reservation_updated_at=COALESCE(reservation_updated_at,created_at)
            WHERE status='PENDING'"""
+    )
+
+
+def _apply_v3(connection: sqlite3.Connection) -> None:
+    connection.execute(
+        """CREATE INDEX IF NOT EXISTS idx_events_sender_identity_time
+           ON moderation_events(sender_identity_id, occurred_at DESC)
+           WHERE sender_identity_id IS NOT NULL"""
     )
 
 

@@ -194,3 +194,156 @@ def test_multi_sender_incident_representation(settings, rose_headers) -> None:
     with sqlite3.connect(settings.database_path) as connection:
         assert connection.execute("SELECT COUNT(*) FROM incidents").fetchone()[0] == 1
         assert connection.execute("SELECT COUNT(*) FROM incident_events").fetchone()[0] == 2
+
+
+class SupportContextClassifier:
+    async def classify(self, item: ClassificationInput):
+        if item.current.text.startswith("bad-context"):
+            return result(
+                action=MessageAction.BLOCK,
+                label=Label.SEVERE_HARASSMENT,
+                review=ReviewPriority.NORMAL,
+                strike=StrikeRecommendation.STRIKE,
+                reasons=("support_history_test",),
+            )
+        return result()
+
+    def health(self) -> dict[str, object]:
+        return {"ready": True, "mode": "test", "model_version": "support-context-v1"}
+
+def _seed_support_context(client: TestClient, rose_headers: dict[str, str]):
+    meaningful = client.post(
+        "/v1/moderate",
+        headers=rose_headers,
+        json=payload(
+            "support-bad",
+            "bad-context raw private phrase",
+            sender_id="platform-player-a",
+            sender_identity_id="identity-player-a",
+        ),
+    )
+    client.post(
+        "/v1/moderate",
+        headers=rose_headers,
+        json=payload(
+            "support-safe",
+            "ordinary benign message",
+            1,
+            sender_id="platform-player-a",
+            sender_identity_id="identity-player-a",
+        ),
+    )
+    client.post(
+        "/v1/moderate",
+        headers=rose_headers,
+        json=payload(
+            "support-unlinked",
+            "bad-context should not match identity lookup",
+            2,
+            sender_id="identity-player-a",
+        ),
+    )
+    return meaningful
+
+
+def _assert_support_context_minimized(response, meaningful) -> None:
+    assert response.status_code == 200  # nosec B101  # nosemgrep
+    body = response.json()
+    assert body["subject_id"] == "identity-player-a"  # nosec B101  # nosemgrep
+    assert len(body["decisions"]) == 1  # nosec B101  # nosemgrep
+    decision = body["decisions"][0]
+    assert decision["event_id"] == meaningful.json()["event_id"]  # nosec B101  # nosemgrep
+    assert decision["semantic_label"] == "SEVERE_HARASSMENT"  # nosec B101  # nosemgrep
+    assert decision["message_action"] == "BLOCK"  # nosec B101  # nosemgrep
+    assert decision["decision_source"] == "AI"  # nosec B101  # nosemgrep
+    for forbidden in (
+        "bad-context raw private phrase",
+        "platform-player-a",
+        "channel_id",
+        "scope_id",
+        "sender_id",
+    ):
+        assert forbidden not in response.text  # nosec B101  # nosemgrep
+
+
+def test_support_context_requires_dedicated_permission_and_minimizes_data(
+    settings,
+    rose_headers,
+    staff_headers,
+    support_headers,
+) -> None:
+    app = create_app(settings=settings, classifier=SupportContextClassifier())
+    with TestClient(app) as client:
+        meaningful = _seed_support_context(client, rose_headers)
+        missing_auth = client.get("/v1/support-context/identity-player-a")
+        wrong_permission = client.get(
+            "/v1/support-context/identity-player-a",
+            headers=staff_headers,
+        )
+        response = client.get(
+            "/v1/support-context/identity-player-a?limit=10",
+            headers=support_headers,
+        )
+
+    assert meaningful.status_code == 200  # nosec B101  # nosemgrep
+    assert missing_auth.status_code == 401  # nosec B101  # nosemgrep
+    assert wrong_permission.status_code == 403  # nosec B101  # nosemgrep
+    _assert_support_context_minimized(response, meaningful)
+
+
+def _accepted_correction_payload(event_id: str) -> dict[str, object]:
+    return {
+        "event_id": event_id,
+        "reviewer_id": "admin-reviewer",
+        "authority": "ADMIN",
+        "corrected": {
+            "semantic_label": "LOW_LEVEL_HARASSMENT",
+            "message_action": "ALLOW",
+            "review_priority": "NONE",
+            "strike_recommendation": "EVIDENCE",
+            "containment": "NONE",
+            "containment_duration_seconds": None,
+            "support_flow": "NONE",
+            "reason_codes": ["staff_corrected"],
+        },
+        "note": "Owner-reviewed correction for support context.",
+    }
+
+
+def test_support_context_uses_accepted_staff_correction(
+    settings,
+    rose_headers,
+    admin_headers,
+    support_headers,
+) -> None:
+    app = create_app(settings=settings, classifier=SupportContextClassifier())
+    with TestClient(app) as client:
+        moderated = client.post(
+            "/v1/moderate",
+            headers=rose_headers,
+            json=payload(
+                "support-corrected",
+                "bad-context corrected later",
+                sender_identity_id="identity-corrected",
+            ),
+        )
+        correction = client.post(
+            "/v1/review-corrections",
+            headers=admin_headers,
+            json=_accepted_correction_payload(moderated.json()["event_id"]),
+        )
+        response = client.get(
+            "/v1/support-context/identity-corrected",
+            headers=support_headers,
+        )
+
+    assert moderated.status_code == 200  # nosec B101  # nosemgrep
+    assert correction.status_code == 201  # nosec B101  # nosemgrep
+    assert correction.json()["status"] == "ACCEPTED"  # nosec B101  # nosemgrep
+    decision = response.json()["decisions"][0]
+    assert decision["semantic_label"] == "LOW_LEVEL_HARASSMENT"  # nosec B101  # nosemgrep
+    assert decision["message_action"] == "ALLOW"  # nosec B101  # nosemgrep
+    assert decision["strike_recommendation"] == "EVIDENCE"  # nosec B101  # nosemgrep
+    assert decision["reason_codes"] == ["staff_corrected"]  # nosec B101  # nosemgrep
+    assert decision["decision_source"] == "ACCEPTED_CORRECTION"  # nosec B101  # nosemgrep
+

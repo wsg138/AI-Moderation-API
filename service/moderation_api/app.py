@@ -2,7 +2,7 @@ from collections.abc import AsyncIterator, Awaitable, Callable
 from contextlib import asynccontextmanager
 from typing import Annotated
 
-from fastapi import Depends, FastAPI, HTTPException, Query, status
+from fastapi import Depends, FastAPI, HTTPException, Path, Query, status
 from fastapi.responses import JSONResponse
 
 from .advisory import (
@@ -26,6 +26,7 @@ from .models import (
     ModerationRequest,
     ModerationResponse,
     ReviewQueueResponse,
+    SupportContextResponse,
 )
 from .runtime import ModerationRuntime, ProcessingTimeout, RequestQueueFull
 from .storage import (
@@ -66,9 +67,11 @@ def create_app(
     moderate_auth = permission_dependency(authenticator, "moderate")
     review_read_auth = permission_dependency(authenticator, "review:read")
     review_write_auth = permission_dependency(authenticator, "review:write")
+    support_context_auth = permission_dependency(authenticator, "support:context")
     _register_health(app, store, runtime, advisory_enabled)
     _register_moderation(app, runtime, moderate_auth)
     _register_reviews(app, store, review_read_auth, review_write_auth)
+    _register_support_context(app, store, support_context_auth)
     return app
 
 
@@ -294,5 +297,22 @@ def _authorize_correction_authority(
 def _optional_string(value: object) -> str | None:
     return str(value) if value else None
 
+
+def _register_support_context(
+    app: FastAPI,
+    store: ModerationStore,
+    dependency: AuthDependency,
+) -> None:
+    @app.get(
+        "/v1/support-context/{subject_id}",
+        response_model=SupportContextResponse,
+    )
+    async def support_context(
+        subject_id: Annotated[str, Path(min_length=1, max_length=200)],
+        _: Annotated[Principal, Depends(dependency)],
+        limit: Annotated[int, Query(ge=1, le=25)] = 10,
+    ) -> SupportContextResponse:
+        decisions = await store.list_support_context(subject_id, limit)
+        return SupportContextResponse(subject_id=subject_id, decisions=decisions)
 
 app = create_app()

@@ -122,6 +122,11 @@ class CorrectionVote(StrEnum):
     REJECT = "REJECT"
 
 
+class SupportDecisionSource(StrEnum):
+    AI = "AI"
+    ACCEPTED_CORRECTION = "ACCEPTED_CORRECTION"
+
+
 class MemoryKind(StrEnum):
     INCIDENT = "INCIDENT"
     STRIKE_EVIDENCE = "STRIKE_EVIDENCE"
@@ -316,6 +321,25 @@ class ReviewItem(ApiModel):
 
 class ReviewQueueResponse(ApiModel):
     items: list[ReviewItem]
+
+
+class SupportContextDecision(ApiModel):
+    event_id: str
+    occurred_at: datetime
+    platform: Platform
+    semantic_label: Label
+    message_action: MessageAction
+    review_priority: ReviewPriority
+    strike_recommendation: StrikeRecommendation
+    containment: Containment
+    support_flow: SupportFlow
+    reason_codes: list[ReasonCode] = Field(default_factory=list, max_length=32)
+    decision_source: SupportDecisionSource
+
+
+class SupportContextResponse(ApiModel):
+    subject_id: ShortId
+    decisions: list[SupportContextDecision]
 
 
 class HealthResponse(ApiModel):

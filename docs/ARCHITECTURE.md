@@ -74,7 +74,13 @@ A rehydration failure keeps readiness false and forces moderation into fail-open
 
 SQLite stores raw private runtime events, structured decision evidence, OpenAI advisory results, incidents, durable memories, identity links, and correction workflow state.
 
-Schema changes are versioned with transactional `PRAGMA user_version` migrations. Migration failure rolls back instead of deleting/recreating the database. A newer unsupported schema is rejected.
+Schema changes are versioned with transactional `PRAGMA user_version` migrations. Migration failure rolls back instead of deleting/recreating the database. A newer unsupported schema is rejected. Schema v3 adds only the partial authoritative-identity/time index used by the bounded support-context read; it does not rewrite moderation decisions.
+
+## Support enrichment boundary
+
+Support may optionally request privacy-minimized historical decision metadata through the dedicated `support:context` permission. The lookup key is an authoritative `sender_identity_id`; there is no username or raw-sender fallback. Raw message text, neighboring context, channel/scope IDs, and platform sender IDs remain inside the moderation service. Accepted staff corrections are treated as the effective decision for this read.
+
+Support availability never participates in live moderation decisions, and moderation unavailability must degrade support enrichment to no context rather than block support.
 
 ## Review/corrections
 
