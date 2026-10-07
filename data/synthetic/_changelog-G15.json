@@ -1,0 +1,65 @@
+[
+ {
+  "example_id": "G15-0048",
+  "action": "rewrite",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "reason": "'be there' spaced is not threatening content; rewrote target to 'b e w a r e' (genuine vague menace)"
+ },
+ {
+  "example_id": "G15-0333",
+  "action": "rewrite",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "reason": "original exchange was a non-sequitur ('ur floor' -> 'break the floor'); rewrote opener for coherence"
+ },
+ {
+  "example_id": "G15-0496",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "asking 'is this emoji allowed' is a policy question, not a violation; innocuous -> SAFE per owner philosophy"
+ },
+ {
+  "example_id": "G15-0164",
+  "action": "relabel",
+  "old_label": "SEVERE_HARASSMENT",
+  "new_label": "LOW_LEVEL_HARASSMENT",
+  "reason": "'you're useless' is a single mild insult; SEVERE over-labels it and contradicts 'eres un idiota'->LOW_LEVEL"
+ },
+ {
+  "example_id": "G15-0381",
+  "action": "relabel",
+  "old_label": "REAL_WORLD_THREAT",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "reason": "vague menace with no real-world cue; contradicts G15-0474 ('youll see'->AMBIGUOUS); obfuscation != threat"
+ },
+ {
+  "example_id": "G15-0091",
+  "action": "relabel",
+  "old_label": "REAL_WORLD_THREAT",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "reason": "'come here now' contains no threat and no real-world cue; obfuscation alone doesn't make it REAL_WORLD_THREAT"
+ },
+ {
+  "example_id": "G15-0300",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "reason": "reason_codes: removed obfuscated_evasion (plain vagueness, no evasion technique)"
+ },
+ {
+  "example_id": "G15-0480",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "reason": "reason_codes: removed obfuscated_evasion (plain vagueness, no evasion technique)"
+ },
+ {
+  "example_id": "G15-0491",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "reason": "reason_codes: removed explicit_real_world_cue (no real-world cue in the text)"
+ }
+]

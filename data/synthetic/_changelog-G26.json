@@ -1,0 +1,177 @@
+[
+ {
+  "example_id": "G26-0476",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "heated-but-civil community moment with no harassment; over-cautious review routing"
+ },
+ {
+  "example_id": "G26-0477",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "heated-but-civil community moment with no harassment; over-cautious review routing"
+ },
+ {
+  "example_id": "G26-0478",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "heated-but-civil community moment with no harassment; over-cautious review routing"
+ },
+ {
+  "example_id": "G26-0479",
+  "action": "difficulty",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "reason": "absurd difficulty rating corrected"
+ },
+ {
+  "example_id": "G26-0480",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "heated-but-civil community moment with no harassment; over-cautious review routing"
+ },
+ {
+  "example_id": "G26-0481",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "heated-but-civil community moment with no harassment; over-cautious review routing"
+ },
+ {
+  "example_id": "G26-0482",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "heated-but-civil community moment with no harassment; over-cautious review routing"
+ },
+ {
+  "example_id": "G26-0483",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "heated-but-civil community moment with no harassment; over-cautious review routing"
+ },
+ {
+  "example_id": "G26-0484",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "heated-but-civil community moment with no harassment; over-cautious review routing"
+ },
+ {
+  "example_id": "G26-0485",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "heated-but-civil community moment with no harassment; over-cautious review routing"
+ },
+ {
+  "example_id": "G26-0486",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "heated-but-civil community moment with no harassment; over-cautious review routing"
+ },
+ {
+  "example_id": "G26-0487",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "heated-but-civil community moment with no harassment; over-cautious review routing"
+ },
+ {
+  "example_id": "G26-0488",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "heated-but-civil community moment with no harassment; over-cautious review routing"
+ },
+ {
+  "example_id": "G26-0489",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "heated-but-civil community moment with no harassment; over-cautious review routing"
+ },
+ {
+  "example_id": "G26-0490",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "heated-but-civil community moment with no harassment; over-cautious review routing"
+ },
+ {
+  "example_id": "G26-0491",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "heated-but-civil community moment with no harassment; over-cautious review routing"
+ },
+ {
+  "example_id": "G26-0492",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "heated-but-civil community moment with no harassment; over-cautious review routing"
+ },
+ {
+  "example_id": "G26-0493",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "heated-but-civil community moment with no harassment; over-cautious review routing"
+ },
+ {
+  "example_id": "G26-0494",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "heated-but-civil community moment with no harassment; over-cautious review routing"
+ },
+ {
+  "example_id": "G26-0495",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "heated-but-civil community moment with no harassment; over-cautious review routing"
+ },
+ {
+  "example_id": "G26-0496",
+  "action": "rewrite",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "civil disagreement; removed generation-artifact prefix"
+ },
+ {
+  "example_id": "G26-0497",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "heated-but-civil community moment with no harassment; over-cautious review routing"
+ },
+ {
+  "example_id": "G26-0498",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "heated-but-civil community moment with no harassment; over-cautious review routing"
+ },
+ {
+  "example_id": "G26-0499",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "heated-but-civil community moment with no harassment; over-cautious review routing"
+ },
+ {
+  "example_id": "G26-0500",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "heated-but-civil community moment with no harassment; over-cautious review routing"
+ }
+]

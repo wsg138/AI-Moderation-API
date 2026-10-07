@@ -1,0 +1,37 @@
+[
+ {
+  "example_id": "G13-0463",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "STAFF_TARGETED_ABUSE",
+  "reason": "kys directed at staff after mute: policy mandates block; AMBIGUOUS_REVIEW was wrong"
+ },
+ {
+  "example_id": "G13-0478",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "sarcastic staff criticism is good-faith criticism per policy s8, not abuse"
+ },
+ {
+  "example_id": "G13-0493",
+  "action": "relabel",
+  "old_label": "STAFF_TARGETED_ABUSE",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "reason": "'you're dead to me' is dismissive, not a threat/insult; BLOCK+strike over-labels it"
+ },
+ {
+  "example_id": "G13-0355",
+  "action": "relabel",
+  "old_label": "STAFF_TARGETED_ABUSE",
+  "new_label": "STAFF_TARGETED_ABUSE",
+  "reason": "reason_codes: removed targeted_violence/explicit_real_world_cue (kys is self_harm_instruction, not real-world violence); support_flow NONE"
+ },
+ {
+  "example_id": "G13-0026",
+  "action": "relabel",
+  "old_label": "STAFF_TARGETED_ABUSE",
+  "new_label": "STAFF_TARGETED_ABUSE",
+  "reason": "reason_codes/notes: hypothetical 'if I were you I'd kys' is an insult, not a self-harm instruction"
+ }
+]

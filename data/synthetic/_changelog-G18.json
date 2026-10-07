@@ -1,0 +1,452 @@
+[
+ {
+  "example_id": "G18-0003",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "old_difficulty": "medium",
+  "new_difficulty": "easy",
+  "reason": "Friendly mutual roast with laughing/accepting response \u2014 innocuous."
+ },
+ {
+  "example_id": "G18-0012",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "old_difficulty": "easy",
+  "new_difficulty": "easy",
+  "reason": "Game venting with no target \u2014 innocuous."
+ },
+ {
+  "example_id": "G18-0043",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "old_difficulty": "hard",
+  "new_difficulty": "easy",
+  "reason": "Clean dispute with no insults or abuse \u2014 innocuous."
+ },
+ {
+  "example_id": "G18-0044",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "old_difficulty": "easy",
+  "new_difficulty": "easy",
+  "reason": "Game venting with no target \u2014 innocuous."
+ },
+ {
+  "example_id": "G18-0049",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "old_difficulty": "easy",
+  "new_difficulty": "easy",
+  "reason": "Self-directed sarcasm / playful sarcasm \u2014 innocuous."
+ },
+ {
+  "example_id": "G18-0060",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "old_difficulty": "medium",
+  "new_difficulty": "easy",
+  "reason": "Game-death dark humor in Minecraft context \u2014 innocuous."
+ },
+ {
+  "example_id": "G18-0061",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "old_difficulty": "easy",
+  "new_difficulty": "easy",
+  "reason": "Game venting with no target \u2014 innocuous."
+ },
+ {
+  "example_id": "G18-0062",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "old_difficulty": "easy",
+  "new_difficulty": "easy",
+  "reason": "Game venting with no target \u2014 innocuous."
+ },
+ {
+  "example_id": "G18-0073",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "old_difficulty": "hard",
+  "new_difficulty": "easy",
+  "reason": "Clean dispute with no insults or abuse \u2014 innocuous."
+ },
+ {
+  "example_id": "G18-0076",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "old_difficulty": "medium",
+  "new_difficulty": "easy",
+  "reason": "Friendly mutual roast with laughing/accepting response \u2014 innocuous."
+ },
+ {
+  "example_id": "G18-0089",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "old_difficulty": "medium",
+  "new_difficulty": "easy",
+  "reason": "Game-death dark humor in Minecraft context \u2014 innocuous."
+ },
+ {
+  "example_id": "G18-0094",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "old_difficulty": "hard",
+  "new_difficulty": "easy",
+  "reason": "Clean dispute with no insults or abuse \u2014 innocuous."
+ },
+ {
+  "example_id": "G18-0102",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "old_difficulty": "medium",
+  "new_difficulty": "easy",
+  "reason": "Clean dispute with no insults or abuse \u2014 innocuous."
+ },
+ {
+  "example_id": "G18-0131",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "old_difficulty": "medium",
+  "new_difficulty": "easy",
+  "reason": "Game-death dark humor in Minecraft context \u2014 innocuous."
+ },
+ {
+  "example_id": "G18-0145",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "old_difficulty": "hard",
+  "new_difficulty": "easy",
+  "reason": "Clean dispute with no insults or abuse \u2014 innocuous."
+ },
+ {
+  "example_id": "G18-0155",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "old_difficulty": "medium",
+  "new_difficulty": "easy",
+  "reason": "Self-directed sarcasm / playful sarcasm \u2014 innocuous."
+ },
+ {
+  "example_id": "G18-0165",
+  "action": "difficulty",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "old_difficulty": "hard",
+  "new_difficulty": "medium",
+  "reason": "Genuinely tone-dependent (personal jab / dismissive); stays ambiguous."
+ },
+ {
+  "example_id": "G18-0184",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "old_difficulty": "easy",
+  "new_difficulty": "easy",
+  "reason": "Friendly mutual roast with laughing/accepting response \u2014 innocuous."
+ },
+ {
+  "example_id": "G18-0185",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "old_difficulty": "easy",
+  "new_difficulty": "easy",
+  "reason": "Game-death dark humor in Minecraft context \u2014 innocuous."
+ },
+ {
+  "example_id": "G18-0188",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "old_difficulty": "easy",
+  "new_difficulty": "easy",
+  "reason": "Self-directed sarcasm / playful sarcasm \u2014 innocuous."
+ },
+ {
+  "example_id": "G18-0195",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "old_difficulty": "easy",
+  "new_difficulty": "easy",
+  "reason": "Game venting with no target \u2014 innocuous."
+ },
+ {
+  "example_id": "G18-0203",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "old_difficulty": "medium",
+  "new_difficulty": "easy",
+  "reason": "Self-directed sarcasm / playful sarcasm \u2014 innocuous."
+ },
+ {
+  "example_id": "G18-0231",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "old_difficulty": "hard",
+  "new_difficulty": "easy",
+  "reason": "Friendly mutual roast with laughing/accepting response \u2014 innocuous."
+ },
+ {
+  "example_id": "G18-0265",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "old_difficulty": "easy",
+  "new_difficulty": "easy",
+  "reason": "Self-directed sarcasm / playful sarcasm \u2014 innocuous."
+ },
+ {
+  "example_id": "G18-0267",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "old_difficulty": "hard",
+  "new_difficulty": "easy",
+  "reason": "Self-directed sarcasm / playful sarcasm \u2014 innocuous."
+ },
+ {
+  "example_id": "G18-0305",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "old_difficulty": "medium",
+  "new_difficulty": "easy",
+  "reason": "Game venting with no target \u2014 innocuous."
+ },
+ {
+  "example_id": "G18-0308",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "old_difficulty": "medium",
+  "new_difficulty": "easy",
+  "reason": "Self-directed sarcasm / playful sarcasm \u2014 innocuous."
+ },
+ {
+  "example_id": "G18-0326",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "old_difficulty": "medium",
+  "new_difficulty": "easy",
+  "reason": "Friendly mutual roast with laughing/accepting response \u2014 innocuous."
+ },
+ {
+  "example_id": "G18-0330",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "old_difficulty": "medium",
+  "new_difficulty": "easy",
+  "reason": "Game-death dark humor in Minecraft context \u2014 innocuous."
+ },
+ {
+  "example_id": "G18-0347",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "old_difficulty": "easy",
+  "new_difficulty": "easy",
+  "reason": "Self-directed sarcasm / playful sarcasm \u2014 innocuous."
+ },
+ {
+  "example_id": "G18-0348",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "old_difficulty": "hard",
+  "new_difficulty": "easy",
+  "reason": "Clean dispute with no insults or abuse \u2014 innocuous."
+ },
+ {
+  "example_id": "G18-0367",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "old_difficulty": "medium",
+  "new_difficulty": "easy",
+  "reason": "Friendly mutual roast with laughing/accepting response \u2014 innocuous."
+ },
+ {
+  "example_id": "G18-0370",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "old_difficulty": "medium",
+  "new_difficulty": "easy",
+  "reason": "Self-directed sarcasm / playful sarcasm \u2014 innocuous."
+ },
+ {
+  "example_id": "G18-0373",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "old_difficulty": "medium",
+  "new_difficulty": "easy",
+  "reason": "Friendly mutual roast with laughing/accepting response \u2014 innocuous."
+ },
+ {
+  "example_id": "G18-0382",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "old_difficulty": "medium",
+  "new_difficulty": "easy",
+  "reason": "Game-death dark humor in Minecraft context \u2014 innocuous."
+ },
+ {
+  "example_id": "G18-0383",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "old_difficulty": "easy",
+  "new_difficulty": "easy",
+  "reason": "Self-directed sarcasm / playful sarcasm \u2014 innocuous."
+ },
+ {
+  "example_id": "G18-0400",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "old_difficulty": "easy",
+  "new_difficulty": "easy",
+  "reason": "Clean dispute with no insults or abuse \u2014 innocuous."
+ },
+ {
+  "example_id": "G18-0401",
+  "action": "difficulty",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "old_difficulty": "medium",
+  "new_difficulty": "medium",
+  "reason": "Genuinely tone-dependent (personal jab / dismissive); stays ambiguous."
+ },
+ {
+  "example_id": "G18-0402",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "old_difficulty": "easy",
+  "new_difficulty": "easy",
+  "reason": "Game venting with no target \u2014 innocuous."
+ },
+ {
+  "example_id": "G18-0407",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "old_difficulty": "hard",
+  "new_difficulty": "easy",
+  "reason": "Game venting with no target \u2014 innocuous."
+ },
+ {
+  "example_id": "G18-0408",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "old_difficulty": "medium",
+  "new_difficulty": "easy",
+  "reason": "Game-death dark humor in Minecraft context \u2014 innocuous."
+ },
+ {
+  "example_id": "G18-0413",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "old_difficulty": "medium",
+  "new_difficulty": "easy",
+  "reason": "Game venting with no target \u2014 innocuous."
+ },
+ {
+  "example_id": "G18-0428",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "old_difficulty": "medium",
+  "new_difficulty": "easy",
+  "reason": "Clean dispute with no insults or abuse \u2014 innocuous."
+ },
+ {
+  "example_id": "G18-0454",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "old_difficulty": "medium",
+  "new_difficulty": "easy",
+  "reason": "Game venting with no target \u2014 innocuous."
+ },
+ {
+  "example_id": "G18-0459",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "old_difficulty": "medium",
+  "new_difficulty": "easy",
+  "reason": "Game-death dark humor in Minecraft context \u2014 innocuous."
+ },
+ {
+  "example_id": "G18-0474",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "old_difficulty": "medium",
+  "new_difficulty": "easy",
+  "reason": "Friendly mutual roast with laughing/accepting response \u2014 innocuous."
+ },
+ {
+  "example_id": "G18-0478",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "old_difficulty": "medium",
+  "new_difficulty": "easy",
+  "reason": "Friendly mutual roast with laughing/accepting response \u2014 innocuous."
+ },
+ {
+  "example_id": "G18-0489",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "old_difficulty": "easy",
+  "new_difficulty": "easy",
+  "reason": "Game-death dark humor in Minecraft context \u2014 innocuous."
+ },
+ {
+  "example_id": "G18-0497",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "old_difficulty": "medium",
+  "new_difficulty": "easy",
+  "reason": "Friendly mutual roast with laughing/accepting response \u2014 innocuous."
+ },
+ {
+  "example_id": "G18-0498",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "old_difficulty": "hard",
+  "new_difficulty": "easy",
+  "reason": "Game-death dark humor in Minecraft context \u2014 innocuous."
+ }
+]

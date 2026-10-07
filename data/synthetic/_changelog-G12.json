@@ -1,0 +1,730 @@
+[
+ {
+  "example_id": "G12-0477",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "Ordinary friendly gameplay chat; no age focus, no secrecy, no predatory signals. A single innocuous message is never a violation."
+ },
+ {
+  "example_id": "G12-0478",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "Ordinary friendly gameplay chat; no age focus, no secrecy, no predatory signals. A single innocuous message is never a violation."
+ },
+ {
+  "example_id": "G12-0480",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "Ordinary friendly gameplay chat; no age focus, no secrecy, no predatory signals. A single innocuous message is never a violation."
+ },
+ {
+  "example_id": "G12-0481",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "Ordinary friendly gameplay chat; no age focus, no secrecy, no predatory signals. A single innocuous message is never a violation."
+ },
+ {
+  "example_id": "G12-0482",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "Ordinary friendly gameplay chat; no age focus, no secrecy, no predatory signals. A single innocuous message is never a violation."
+ },
+ {
+  "example_id": "G12-0483",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "Ordinary friendly gameplay chat; no age focus, no secrecy, no predatory signals. A single innocuous message is never a violation."
+ },
+ {
+  "example_id": "G12-0484",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "Ordinary friendly gameplay chat; no age focus, no secrecy, no predatory signals. A single innocuous message is never a violation."
+ },
+ {
+  "example_id": "G12-0485",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "Ordinary friendly gameplay chat; no age focus, no secrecy, no predatory signals. A single innocuous message is never a violation."
+ },
+ {
+  "example_id": "G12-0492",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "Ordinary friendly gameplay chat; no age focus, no secrecy, no predatory signals. A single innocuous message is never a violation."
+ },
+ {
+  "example_id": "G12-0496",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "Ordinary friendly gameplay chat; no age focus, no secrecy, no predatory signals. A single innocuous message is never a violation."
+ },
+ {
+  "example_id": "G12-0498",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "Ordinary friendly gameplay chat; no age focus, no secrecy, no predatory signals. A single innocuous message is never a violation."
+ },
+ {
+  "example_id": "G12-0494",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "Ordinary friendly gameplay chat; no predatory signals. (B's reply repaired for coherence.)"
+ },
+ {
+  "example_id": "G12-0338",
+  "action": "rewrite",
+  "old_label": "GROOMING",
+  "new_label": "GROOMING",
+  "reason": "added STAFF age context required to support the grooming label; bare location question alone is not grooming"
+ },
+ {
+  "example_id": "G12-0001",
+  "action": "ok",
+  "old_label": "GROOMING",
+  "new_label": "GROOMING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0002",
+  "action": "ok",
+  "old_label": "GROOMING",
+  "new_label": "GROOMING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0004",
+  "action": "ok",
+  "old_label": "GROOMING",
+  "new_label": "GROOMING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0010",
+  "action": "ok",
+  "old_label": "GROOMING",
+  "new_label": "GROOMING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0011",
+  "action": "ok",
+  "old_label": "GROOMING",
+  "new_label": "GROOMING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0030",
+  "action": "ok",
+  "old_label": "GROOMING",
+  "new_label": "GROOMING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0033",
+  "action": "ok",
+  "old_label": "GROOMING",
+  "new_label": "GROOMING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0036",
+  "action": "ok",
+  "old_label": "GROOMING",
+  "new_label": "GROOMING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0037",
+  "action": "ok",
+  "old_label": "GROOMING",
+  "new_label": "GROOMING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0041",
+  "action": "ok",
+  "old_label": "GROOMING",
+  "new_label": "GROOMING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0044",
+  "action": "ok",
+  "old_label": "GROOMING",
+  "new_label": "GROOMING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0055",
+  "action": "ok",
+  "old_label": "GROOMING",
+  "new_label": "GROOMING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0058",
+  "action": "ok",
+  "old_label": "GROOMING",
+  "new_label": "GROOMING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0062",
+  "action": "ok",
+  "old_label": "GROOMING",
+  "new_label": "GROOMING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0065",
+  "action": "ok",
+  "old_label": "GROOMING",
+  "new_label": "GROOMING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0066",
+  "action": "ok",
+  "old_label": "GROOMING",
+  "new_label": "GROOMING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0079",
+  "action": "ok",
+  "old_label": "GROOMING",
+  "new_label": "GROOMING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0081",
+  "action": "ok",
+  "old_label": "GROOMING",
+  "new_label": "GROOMING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0083",
+  "action": "ok",
+  "old_label": "GROOMING",
+  "new_label": "GROOMING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0085",
+  "action": "ok",
+  "old_label": "GROOMING",
+  "new_label": "GROOMING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0092",
+  "action": "ok",
+  "old_label": "GROOMING",
+  "new_label": "GROOMING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0102",
+  "action": "ok",
+  "old_label": "GROOMING",
+  "new_label": "GROOMING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0103",
+  "action": "ok",
+  "old_label": "GROOMING",
+  "new_label": "GROOMING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0109",
+  "action": "ok",
+  "old_label": "GROOMING",
+  "new_label": "GROOMING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0113",
+  "action": "ok",
+  "old_label": "GROOMING",
+  "new_label": "GROOMING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0116",
+  "action": "ok",
+  "old_label": "GROOMING",
+  "new_label": "GROOMING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0118",
+  "action": "ok",
+  "old_label": "GROOMING",
+  "new_label": "GROOMING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0123",
+  "action": "ok",
+  "old_label": "GROOMING",
+  "new_label": "GROOMING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0124",
+  "action": "ok",
+  "old_label": "GROOMING",
+  "new_label": "GROOMING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0127",
+  "action": "ok",
+  "old_label": "GROOMING",
+  "new_label": "GROOMING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0135",
+  "action": "ok",
+  "old_label": "GROOMING",
+  "new_label": "GROOMING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0136",
+  "action": "ok",
+  "old_label": "GROOMING",
+  "new_label": "GROOMING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0151",
+  "action": "ok",
+  "old_label": "GROOMING",
+  "new_label": "GROOMING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0153",
+  "action": "ok",
+  "old_label": "GROOMING",
+  "new_label": "GROOMING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0158",
+  "action": "ok",
+  "old_label": "GROOMING",
+  "new_label": "GROOMING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0160",
+  "action": "ok",
+  "old_label": "GROOMING",
+  "new_label": "GROOMING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0166",
+  "action": "ok",
+  "old_label": "GROOMING",
+  "new_label": "GROOMING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0174",
+  "action": "ok",
+  "old_label": "GROOMING",
+  "new_label": "GROOMING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0186",
+  "action": "ok",
+  "old_label": "GROOMING",
+  "new_label": "GROOMING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0192",
+  "action": "ok",
+  "old_label": "GROOMING",
+  "new_label": "GROOMING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0205",
+  "action": "ok",
+  "old_label": "GROOMING",
+  "new_label": "GROOMING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0217",
+  "action": "ok",
+  "old_label": "GROOMING",
+  "new_label": "GROOMING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0223",
+  "action": "ok",
+  "old_label": "GROOMING",
+  "new_label": "GROOMING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0225",
+  "action": "ok",
+  "old_label": "GROOMING",
+  "new_label": "GROOMING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0232",
+  "action": "ok",
+  "old_label": "GROOMING",
+  "new_label": "GROOMING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0233",
+  "action": "ok",
+  "old_label": "GROOMING",
+  "new_label": "GROOMING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0244",
+  "action": "ok",
+  "old_label": "GROOMING",
+  "new_label": "GROOMING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0249",
+  "action": "ok",
+  "old_label": "GROOMING",
+  "new_label": "GROOMING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0251",
+  "action": "ok",
+  "old_label": "GROOMING",
+  "new_label": "GROOMING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0257",
+  "action": "ok",
+  "old_label": "GROOMING",
+  "new_label": "GROOMING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0260",
+  "action": "ok",
+  "old_label": "GROOMING",
+  "new_label": "GROOMING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0265",
+  "action": "ok",
+  "old_label": "GROOMING",
+  "new_label": "GROOMING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0271",
+  "action": "ok",
+  "old_label": "GROOMING",
+  "new_label": "GROOMING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0272",
+  "action": "ok",
+  "old_label": "GROOMING",
+  "new_label": "GROOMING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0273",
+  "action": "ok",
+  "old_label": "GROOMING",
+  "new_label": "GROOMING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0277",
+  "action": "ok",
+  "old_label": "GROOMING",
+  "new_label": "GROOMING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0282",
+  "action": "ok",
+  "old_label": "GROOMING",
+  "new_label": "GROOMING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0284",
+  "action": "ok",
+  "old_label": "GROOMING",
+  "new_label": "GROOMING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0291",
+  "action": "ok",
+  "old_label": "GROOMING",
+  "new_label": "GROOMING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0302",
+  "action": "ok",
+  "old_label": "GROOMING",
+  "new_label": "GROOMING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0307",
+  "action": "ok",
+  "old_label": "GROOMING",
+  "new_label": "GROOMING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0311",
+  "action": "ok",
+  "old_label": "GROOMING",
+  "new_label": "GROOMING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0312",
+  "action": "ok",
+  "old_label": "GROOMING",
+  "new_label": "GROOMING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0321",
+  "action": "ok",
+  "old_label": "GROOMING",
+  "new_label": "GROOMING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0328",
+  "action": "ok",
+  "old_label": "GROOMING",
+  "new_label": "GROOMING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0333",
+  "action": "ok",
+  "old_label": "GROOMING",
+  "new_label": "GROOMING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0344",
+  "action": "ok",
+  "old_label": "GROOMING",
+  "new_label": "GROOMING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0354",
+  "action": "ok",
+  "old_label": "GROOMING",
+  "new_label": "GROOMING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0363",
+  "action": "ok",
+  "old_label": "GROOMING",
+  "new_label": "GROOMING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0366",
+  "action": "ok",
+  "old_label": "GROOMING",
+  "new_label": "GROOMING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0369",
+  "action": "ok",
+  "old_label": "GROOMING",
+  "new_label": "GROOMING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0370",
+  "action": "ok",
+  "old_label": "GROOMING",
+  "new_label": "GROOMING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0374",
+  "action": "ok",
+  "old_label": "GROOMING",
+  "new_label": "GROOMING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0375",
+  "action": "ok",
+  "old_label": "GROOMING",
+  "new_label": "GROOMING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0387",
+  "action": "ok",
+  "old_label": "GROOMING",
+  "new_label": "GROOMING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0390",
+  "action": "ok",
+  "old_label": "GROOMING",
+  "new_label": "GROOMING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0391",
+  "action": "ok",
+  "old_label": "GROOMING",
+  "new_label": "GROOMING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0393",
+  "action": "ok",
+  "old_label": "GROOMING",
+  "new_label": "GROOMING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0399",
+  "action": "ok",
+  "old_label": "GROOMING",
+  "new_label": "GROOMING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0479",
+  "action": "ok",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0486",
+  "action": "ok",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0487",
+  "action": "ok",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0488",
+  "action": "ok",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0489",
+  "action": "ok",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0490",
+  "action": "ok",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0491",
+  "action": "ok",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0493",
+  "action": "ok",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0495",
+  "action": "ok",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0497",
+  "action": "ok",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0499",
+  "action": "ok",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G12-0500",
+  "action": "ok",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "reason": "label and content verified correct"
+ }
+]

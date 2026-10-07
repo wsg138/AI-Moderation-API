@@ -1,0 +1,86 @@
+[
+ {
+  "example_id": "G14-0485",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "pure whereabouts question, no worry language, no self-harm content: innocuous, not review-worthy"
+ },
+ {
+  "example_id": "G14-0486",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "pure whereabouts question, no worry language, no self-harm content: innocuous, not review-worthy"
+ },
+ {
+  "example_id": "G14-0488",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "pure whereabouts question, no worry language, no self-harm content: innocuous, not review-worthy"
+ },
+ {
+  "example_id": "G14-0489",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "pure whereabouts question, no worry language, no self-harm content: innocuous, not review-worthy"
+ },
+ {
+  "example_id": "G14-0490",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "pure whereabouts question, no worry language, no self-harm content: innocuous, not review-worthy"
+ },
+ {
+  "example_id": "G14-0497",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "pure whereabouts question, no worry language, no self-harm content: innocuous, not review-worthy"
+ },
+ {
+  "example_id": "G14-0498",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "pure whereabouts question, no worry language, no self-harm content: innocuous, not review-worthy"
+ },
+ {
+  "example_id": "G14-0499",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "pure whereabouts question, no worry language, no self-harm content: innocuous, not review-worthy"
+ },
+ {
+  "example_id": "G14-0500",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "pure whereabouts question, no worry language, no self-harm content: innocuous, not review-worthy"
+ },
+ {
+  "example_id": "G14-0105",
+  "action": "rewrite",
+  "old_label": "THIRD_PARTY_SELF_HARM_CONCERN",
+  "new_label": "THIRD_PARTY_SELF_HARM_CONCERN",
+  "reason": "pronoun mismatch: ShulkerSue referred to as 'he'; corrected to 'she'"
+ },
+ {
+  "example_id": "G14-0343",
+  "action": "rewrite",
+  "old_label": "THIRD_PARTY_SELF_HARM_CONCERN",
+  "new_label": "THIRD_PARTY_SELF_HARM_CONCERN",
+  "reason": "pronoun mismatch: Olivia referred to as 'he'; corrected to 'she'"
+ },
+ {
+  "example_id": "G14-0344",
+  "action": "rewrite",
+  "old_label": "THIRD_PARTY_SELF_HARM_CONCERN",
+  "new_label": "THIRD_PARTY_SELF_HARM_CONCERN",
+  "reason": "pronoun mismatch: AxolotlAmy referred to as 'he'; corrected to 'she'"
+ }
+]
