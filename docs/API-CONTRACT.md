@@ -17,6 +17,11 @@ Credentials and allowlisted permissions come only from `AI_MOD_CLIENTS_JSON`. Su
 - `review:read`
 - `review:write`
 - `review:admin`
+- `support:context`
+
+`support:context` is a dedicated read-only permission for privacy-minimized
+support enrichment. It does not grant review queue/event detail access or any
+moderation mutation capability.
 
 `review:admin` is required when a correction request claims `authority=ADMIN`. Normal staff cannot obtain immediate-override behavior merely by setting the JSON field.
 
@@ -151,6 +156,44 @@ The following cannot cause a blocking decision by default:
 - OpenAI advisory failure/saturation/timeout.
 
 Internal failures return `message_action=ALLOW`, `ingestion_status=FAIL_OPEN`, `degraded=true`, and a structured `fallback_state` when a response can safely be produced. Queue/deadline failures return `503` and explicitly require the client to fail open. A decision is never returned as `BLOCK` if its durable finalization fails.
+
+## Support-context read API
+
+### `GET /v1/support-context/{subject_id}`
+
+Requires `support:context`.
+
+This endpoint is intentionally narrower than the staff review API. The path
+`subject_id` must be an authoritative canonical identity previously supplied
+as `sender_identity_id` by a trusted moderation client. The service does not
+match ordinary usernames or raw platform sender IDs as a fallback.
+
+The response contains at most 25 recent meaningful finalized decisions and
+never includes raw message text, neighboring chat, channel/scope identifiers,
+raw platform sender IDs, or arbitrary moderation database rows. Each returned
+item is limited to:
+
+- event ID and occurrence time;
+- platform;
+- semantic label;
+- message action;
+- review priority;
+- strike recommendation;
+- containment;
+- support flow;
+- bounded reason codes;
+- whether the effective decision comes from the original AI result or an
+  accepted staff correction.
+
+Benign baseline `SAFE + ALLOW` outcomes are omitted unless another decision
+dimension is meaningful. `FAIL_OPEN` results and exempt-channel content are
+excluded. When staff has an accepted correction, the corrected decision is the
+effective support-context result; the original AI outcome is not returned as
+current truth.
+
+This is optional enrichment only. A support client must fail soft when the
+endpoint is unavailable and must never make live moderation depend on support
+availability.
 
 ## Review and correction API
 
