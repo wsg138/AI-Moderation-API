@@ -69,22 +69,6 @@ class IncidentClassifier:
         return {"ready": True, "mode": "test", "model_version": "incident-v1"}
 
 
-class SupportContextClassifier:
-    async def classify(self, item: ClassificationInput):
-        if item.current.text.startswith("bad-context"):
-            return result(
-                action=MessageAction.BLOCK,
-                label=Label.SEVERE_HARASSMENT,
-                review=ReviewPriority.NORMAL,
-                strike=StrikeRecommendation.STRIKE,
-                reasons=("support_history_test",),
-            )
-        return result()
-
-    def health(self) -> dict[str, object]:
-        return {"ready": True, "mode": "test", "model_version": "support-context-v1"}
-
-
 def test_separated_decision_dimensions_and_retroactive_ids(settings, rose_headers) -> None:
     app = create_app(settings=settings, classifier=SplitClassifier())
     with TestClient(app) as client:
@@ -191,6 +175,41 @@ def test_authentication_and_permissions(settings, rose_headers, staff_headers) -
     assert forbidden.status_code == 403
     assert allowed.status_code == 200
 
+
+def test_multi_sender_incident_representation(settings, rose_headers) -> None:
+    app = create_app(settings=settings, classifier=IncidentClassifier())
+    with TestClient(app) as client:
+        first = client.post(
+            "/v1/moderate",
+            headers=rose_headers,
+            json=payload("a", "leave", sender_id="a", target_ids=["target-b"]),
+        )
+        second = client.post(
+            "/v1/moderate",
+            headers=rose_headers,
+            json=payload("b", "go", 1, sender_id="c", target_ids=["target-b"]),
+        )
+    assert first.json()["incident"]["incident_id"] == second.json()["incident"]["incident_id"]
+    assert second.json()["incident"]["kind"] == "DOGPILE"
+    with sqlite3.connect(settings.database_path) as connection:
+        assert connection.execute("SELECT COUNT(*) FROM incidents").fetchone()[0] == 1
+        assert connection.execute("SELECT COUNT(*) FROM incident_events").fetchone()[0] == 2
+
+
+class SupportContextClassifier:
+    async def classify(self, item: ClassificationInput):
+        if item.current.text.startswith("bad-context"):
+            return result(
+                action=MessageAction.BLOCK,
+                label=Label.SEVERE_HARASSMENT,
+                review=ReviewPriority.NORMAL,
+                strike=StrikeRecommendation.STRIKE,
+                reasons=("support_history_test",),
+            )
+        return result()
+
+    def health(self) -> dict[str, object]:
+        return {"ready": True, "mode": "test", "model_version": "support-context-v1"}
 
 def _seed_support_context(client: TestClient, rose_headers: dict[str, str]):
     meaningful = client.post(
@@ -328,22 +347,3 @@ def test_support_context_uses_accepted_staff_correction(
     assert decision["reason_codes"] == ["staff_corrected"]
     assert decision["decision_source"] == "ACCEPTED_CORRECTION"
 
-
-def test_multi_sender_incident_representation(settings, rose_headers) -> None:
-    app = create_app(settings=settings, classifier=IncidentClassifier())
-    with TestClient(app) as client:
-        first = client.post(
-            "/v1/moderate",
-            headers=rose_headers,
-            json=payload("a", "leave", sender_id="a", target_ids=["target-b"]),
-        )
-        second = client.post(
-            "/v1/moderate",
-            headers=rose_headers,
-            json=payload("b", "go", 1, sender_id="c", target_ids=["target-b"]),
-        )
-    assert first.json()["incident"]["incident_id"] == second.json()["incident"]["incident_id"]
-    assert second.json()["incident"]["kind"] == "DOGPILE"
-    with sqlite3.connect(settings.database_path) as connection:
-        assert connection.execute("SELECT COUNT(*) FROM incidents").fetchone()[0] == 1
-        assert connection.execute("SELECT COUNT(*) FROM incident_events").fetchone()[0] == 2
