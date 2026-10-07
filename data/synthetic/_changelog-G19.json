@@ -1,0 +1,254 @@
+[
+ {
+  "example_id": "G19-0109",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "Private-conversation request with no sexual content; innocuous on its own."
+ },
+ {
+  "example_id": "G19-0119",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "Affectionate statement with no sexual content."
+ },
+ {
+  "example_id": "G19-0122",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "Affectionate statement with no sexual content."
+ },
+ {
+  "example_id": "G19-0125",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "Friendly invitation with no sexual content."
+ },
+ {
+  "example_id": "G19-0139",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "Affectionate statement with no sexual content."
+ },
+ {
+  "example_id": "G19-0170",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "Affectionate statement; platonic reading is natural."
+ },
+ {
+  "example_id": "G19-0178",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "Romantic confession with no sexual content."
+ },
+ {
+  "example_id": "G19-0188",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "Compliment with no sexual content."
+ },
+ {
+  "example_id": "G19-0193",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "Romantic-coded compliment with no sexual content."
+ },
+ {
+  "example_id": "G19-0232",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "Compliment with no sexual content."
+ },
+ {
+  "example_id": "G19-0240",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "Affectionate statement; platonic reading is natural."
+ },
+ {
+  "example_id": "G19-0274",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "Compliment with no sexual content."
+ },
+ {
+  "example_id": "G19-0308",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "Private-conversation request with no sexual content; innocuous on its own."
+ },
+ {
+  "example_id": "G19-0332",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "Friendly invitation with no sexual content."
+ },
+ {
+  "example_id": "G19-0351",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "Affectionate statement with no sexual content."
+ },
+ {
+  "example_id": "G19-0358",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "Compliment with no sexual content."
+ },
+ {
+  "example_id": "G19-0365",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "Affectionate statement with no sexual content."
+ },
+ {
+  "example_id": "G19-0376",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "Romantic implication with no sexual content."
+ },
+ {
+  "example_id": "G19-0395",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "Affectionate statement with no sexual content."
+ },
+ {
+  "example_id": "G19-0401",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "Romantic-coded compliment with no sexual content."
+ },
+ {
+  "example_id": "G19-0412",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "Affectionate statement with no sexual content."
+ },
+ {
+  "example_id": "G19-0449",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "Affectionate statement with no sexual content."
+ },
+ {
+  "example_id": "G19-0451",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "Romantic confession with no sexual content."
+ },
+ {
+  "example_id": "G19-0184",
+  "action": "relabel",
+  "old_label": "SEXUAL_CONTENT",
+  "new_label": "SAFE",
+  "reason": "Romantic confession ('like like you'); no sexual content."
+ },
+ {
+  "example_id": "G19-0347",
+  "action": "relabel",
+  "old_label": "SEXUAL_CONTENT",
+  "new_label": "SAFE",
+  "reason": "Crush declaration; romantic, not sexual."
+ },
+ {
+  "example_id": "G19-0282",
+  "action": "relabel",
+  "old_label": "SEXUAL_CONTENT",
+  "new_label": "SAFE",
+  "reason": "'Would date' is romantic interest, not sexual content."
+ },
+ {
+  "example_id": "G19-0417",
+  "action": "relabel",
+  "old_label": "SEXUAL_CONTENT",
+  "new_label": "SAFE",
+  "reason": "Joking marriage proposal; romantic, not sexual."
+ },
+ {
+  "example_id": "G19-0348",
+  "action": "relabel",
+  "old_label": "SEXUAL_CONTENT",
+  "new_label": "SAFE",
+  "reason": "Possessive banter with willing participation; romantic, not sexual."
+ },
+ {
+  "example_id": "G19-0345",
+  "action": "relabel",
+  "old_label": "SEXUAL_CONTENT",
+  "new_label": "SAFE",
+  "reason": "Possessive banter with willing participation; romantic, not sexual."
+ },
+ {
+  "example_id": "G19-0175",
+  "action": "relabel",
+  "old_label": "SEXUAL_CONTENT",
+  "new_label": "SAFE",
+  "reason": "Romantic interest plus in-game meetup request; no sexual content, no threat, no unwanted-contact evidence."
+ },
+ {
+  "example_id": "G19-0094",
+  "action": "relabel",
+  "old_label": "SEXUAL_CONTENT",
+  "new_label": "SAFE",
+  "reason": "Romantic interest plus in-game meetup request; no sexual content, no threat, no unwanted-contact evidence."
+ },
+ {
+  "example_id": "G19-0431",
+  "action": "relabel",
+  "old_label": "SEXUAL_CONTENT",
+  "new_label": "SAFE",
+  "reason": "Romantic interest plus in-game meetup request; no sexual content, no threat, no unwanted-contact evidence."
+ },
+ {
+  "example_id": "G19-0086",
+  "action": "relabel",
+  "old_label": "SEXUAL_CONTENT",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "reason": "unwanted-contact pattern, not sexual content"
+ },
+ {
+  "example_id": "G19-0269",
+  "action": "relabel",
+  "old_label": "SEXUAL_CONTENT",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "reason": "unwanted-contact pattern, not sexual content"
+ },
+ {
+  "example_id": "G19-0100",
+  "action": "difficulty",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "reason": "difficulty hard -> medium"
+ },
+ {
+  "example_id": "G19-0213",
+  "action": "difficulty",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "reason": "difficulty adversarial -> medium"
+ }
+]

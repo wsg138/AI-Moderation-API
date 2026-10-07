@@ -1,0 +1,493 @@
+[
+ {
+  "example_id": "G16-0482",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "old_difficulty": "hard",
+  "new_difficulty": "easy",
+  "reason": "Boundary-setting with no insult content ('im not playing with you anymore') \u2014 allowed ordinary behavior."
+ },
+ {
+  "example_id": "G16-0485",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "old_difficulty": "hard",
+  "new_difficulty": "easy",
+  "reason": "Untargeted venting ('im tired of this team') \u2014 no insult directed at a person; allowed."
+ },
+ {
+  "example_id": "G16-0488",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "old_difficulty": "adversarial",
+  "new_difficulty": "easy",
+  "reason": "Boundary-setting ('im muting you') \u2014 player control, not abuse; allowed."
+ },
+ {
+  "example_id": "G16-0489",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "old_difficulty": "hard",
+  "new_difficulty": "easy",
+  "reason": "Untargeted venting ('whatever, enjoy the loss') \u2014 allowed."
+ },
+ {
+  "example_id": "G16-0492",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "old_difficulty": "hard",
+  "new_difficulty": "easy",
+  "reason": "Report statement with no quid pro quo ('im reporting you for throwing') \u2014 reporting is allowed."
+ },
+ {
+  "example_id": "G16-0496",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "old_difficulty": "adversarial",
+  "new_difficulty": "easy",
+  "reason": "Game directive ('stop talking and play') \u2014 rude but not an insult; allowed ordinary toxicity."
+ },
+ {
+  "example_id": "G16-0498",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "old_difficulty": "adversarial",
+  "new_difficulty": "easy",
+  "reason": "Untargeted venting ('im leaving, this team is hopeless') \u2014 allowed."
+ },
+ {
+  "example_id": "G16-0476",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "LOW_LEVEL_HARASSMENT",
+  "old_difficulty": "adversarial",
+  "new_difficulty": "easy",
+  "reason": "Single mild targeted insult ('youre actually terrible') \u2014 LOW_LEVEL per severity scale, not review-worthy."
+ },
+ {
+  "example_id": "G16-0478",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "LOW_LEVEL_HARASSMENT",
+  "old_difficulty": "hard",
+  "new_difficulty": "easy",
+  "reason": "Single mild jab ('im done carrying you') \u2014 LOW_LEVEL."
+ },
+ {
+  "example_id": "G16-0479",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "LOW_LEVEL_HARASSMENT",
+  "old_difficulty": "hard",
+  "new_difficulty": "easy",
+  "reason": "Single mild targeted jab ('everyone knows youre the problem') \u2014 LOW_LEVEL."
+ },
+ {
+  "example_id": "G16-0480",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "LOW_LEVEL_HARASSMENT",
+  "old_difficulty": "hard",
+  "new_difficulty": "easy",
+  "reason": "Accusation of throwing ('stop feeding') \u2014 mild insult, LOW_LEVEL."
+ },
+ {
+  "example_id": "G16-0481",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "LOW_LEVEL_HARASSMENT",
+  "old_difficulty": "adversarial",
+  "new_difficulty": "easy",
+  "reason": "Single mild blame jab ('youre the reason we lost') \u2014 LOW_LEVEL."
+ },
+ {
+  "example_id": "G16-0484",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "LOW_LEVEL_HARASSMENT",
+  "old_difficulty": "hard",
+  "new_difficulty": "easy",
+  "reason": "Single mild jab ('do you even try') \u2014 LOW_LEVEL."
+ },
+ {
+  "example_id": "G16-0486",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "LOW_LEVEL_HARASSMENT",
+  "old_difficulty": "hard",
+  "new_difficulty": "easy",
+  "reason": "Single mild jab ('that was embarrassing to watch') \u2014 LOW_LEVEL."
+ },
+ {
+  "example_id": "G16-0490",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "LOW_LEVEL_HARASSMENT",
+  "old_difficulty": "hard",
+  "new_difficulty": "easy",
+  "reason": "Single mild accusation ('youre not even trying to win') \u2014 LOW_LEVEL."
+ },
+ {
+  "example_id": "G16-0491",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "LOW_LEVEL_HARASSMENT",
+  "old_difficulty": "adversarial",
+  "new_difficulty": "easy",
+  "reason": "Single mild targeted jab ('this is why nobody queues with you') \u2014 LOW_LEVEL."
+ },
+ {
+  "example_id": "G16-0493",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "LOW_LEVEL_HARASSMENT",
+  "old_difficulty": "adversarial",
+  "new_difficulty": "easy",
+  "reason": "Condescending single jab ('learn to play before queuing ranked') \u2014 LOW_LEVEL."
+ },
+ {
+  "example_id": "G16-0494",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "LOW_LEVEL_HARASSMENT",
+  "old_difficulty": "adversarial",
+  "new_difficulty": "easy",
+  "reason": "Single mild insult ('youre dead weight') \u2014 LOW_LEVEL."
+ },
+ {
+  "example_id": "G16-0495",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "LOW_LEVEL_HARASSMENT",
+  "old_difficulty": "adversarial",
+  "new_difficulty": "easy",
+  "reason": "Single mild jab ('id rather play with bots') \u2014 LOW_LEVEL."
+ },
+ {
+  "example_id": "G16-0497",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "LOW_LEVEL_HARASSMENT",
+  "old_difficulty": "hard",
+  "new_difficulty": "easy",
+  "reason": "Single mild complaint about a person ('your mic is so annoying') \u2014 LOW_LEVEL."
+ },
+ {
+  "example_id": "G16-0499",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "LOW_LEVEL_HARASSMENT",
+  "old_difficulty": "hard",
+  "new_difficulty": "easy",
+  "reason": "Single mild jab ('you got lucky, dont get cocky') \u2014 LOW_LEVEL."
+ },
+ {
+  "example_id": "G16-0500",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "LOW_LEVEL_HARASSMENT",
+  "old_difficulty": "adversarial",
+  "new_difficulty": "easy",
+  "reason": "Single mild gameplay jab ('worst clutch attempt ever') \u2014 LOW_LEVEL."
+ },
+ {
+  "example_id": "G16-0477",
+  "action": "difficulty",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "old_difficulty": "hard",
+  "new_difficulty": "medium",
+  "reason": "Sarcasm-vs-praise genuinely unclear without tone; stays ambiguous, difficulty hard->medium."
+ },
+ {
+  "example_id": "G16-0483",
+  "action": "difficulty",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "old_difficulty": "adversarial",
+  "new_difficulty": "hard",
+  "reason": "Sarcastic 'nice play' genuinely unclear; stays ambiguous, difficulty adversarial->hard."
+ },
+ {
+  "example_id": "G16-0487",
+  "action": "difficulty",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "old_difficulty": "hard",
+  "new_difficulty": "medium",
+  "reason": "'you always do this' too vague to call; stays ambiguous, difficulty hard->medium."
+ },
+ {
+  "example_id": "G16-0136",
+  "action": "target_fix",
+  "old_label": "SEVERE_HARASSMENT",
+  "new_label": "SEVERE_HARASSMENT",
+  "old_difficulty": "medium",
+  "new_difficulty": "medium",
+  "reason": "target was B's mild pile-on; actual severe message is A's 'youre pathetic, delete the game'",
+  "old_target_index": 4,
+  "new_target_index": 3
+ },
+ {
+  "example_id": "G16-0020",
+  "action": "target_fix",
+  "old_label": "SEVERE_HARASSMENT",
+  "new_label": "SEVERE_HARASSMENT",
+  "old_difficulty": "easy",
+  "new_difficulty": "easy",
+  "reason": "target was mild stat jab; actual severe message is A's 'waste of a party slot'",
+  "old_target_index": 4,
+  "new_target_index": 3
+ },
+ {
+  "example_id": "G16-0056",
+  "action": "target_fix",
+  "old_label": "SEVERE_HARASSMENT",
+  "new_label": "SEVERE_HARASSMENT",
+  "old_difficulty": "hard",
+  "new_difficulty": "hard",
+  "reason": "target was mild complaint; actual severe message is A's 'touch grass, embarrassing yourself'",
+  "old_target_index": 6,
+  "new_target_index": 5
+ },
+ {
+  "example_id": "G16-0177",
+  "action": "target_fix",
+  "old_label": "SEVERE_HARASSMENT",
+  "new_label": "SEVERE_HARASSMENT",
+  "old_difficulty": "medium",
+  "new_difficulty": "medium",
+  "reason": "target was B's mild jab; actual severe message is A's 'even your own party doesnt want you'",
+  "old_target_index": 5,
+  "new_target_index": 4
+ },
+ {
+  "example_id": "G16-0023",
+  "action": "target_fix",
+  "old_label": "SEVERE_HARASSMENT",
+  "new_label": "SEVERE_HARASSMENT",
+  "old_difficulty": "medium",
+  "new_difficulty": "medium",
+  "reason": "target was '+1 get him out'; actual severe message is A's 'no lobby will ever want you'",
+  "old_target_index": 6,
+  "new_target_index": 5
+ },
+ {
+  "example_id": "G16-0001",
+  "action": "target_fix",
+  "old_label": "SEVERE_HARASSMENT",
+  "new_label": "SEVERE_HARASSMENT",
+  "old_difficulty": "adversarial",
+  "new_difficulty": "adversarial",
+  "reason": "target was mild stat jab; actual severe message is A's 'even the mobs play better than you'",
+  "old_target_index": 7,
+  "new_target_index": 5
+ },
+ {
+  "example_id": "G16-0101",
+  "action": "target_fix",
+  "old_label": "SEVERE_HARASSMENT",
+  "new_label": "SEVERE_HARASSMENT",
+  "old_difficulty": "medium",
+  "new_difficulty": "medium",
+  "reason": "target was 'bet lets do it'; actual severe message is A's false-report coordination call",
+  "old_target_index": 3,
+  "new_target_index": 1
+ },
+ {
+  "example_id": "G16-0187",
+  "action": "target_fix",
+  "old_label": "SEVERE_HARASSMENT",
+  "new_label": "SEVERE_HARASSMENT",
+  "old_difficulty": "medium",
+  "new_difficulty": "medium",
+  "reason": "target was mild complaint; actual severe message is A's 'make every lobby miserable for you'",
+  "old_target_index": 4,
+  "new_target_index": 3
+ },
+ {
+  "example_id": "G16-0154",
+  "action": "target_fix",
+  "old_label": "SEVERE_HARASSMENT",
+  "new_label": "SEVERE_HARASSMENT",
+  "old_difficulty": "adversarial",
+  "new_difficulty": "adversarial",
+  "reason": "target was B's mild jab; actual severe message is A's 'nobody likes you, thats why you queue solo'",
+  "old_target_index": 4,
+  "new_target_index": 3
+ },
+ {
+  "example_id": "G16-0159",
+  "action": "target_fix",
+  "old_label": "SEVERE_HARASSMENT",
+  "new_label": "SEVERE_HARASSMENT",
+  "old_difficulty": "medium",
+  "new_difficulty": "medium",
+  "reason": "target was mild complaint; actual severe message is A's 'quit the server, everyone would celebrate'",
+  "old_target_index": 5,
+  "new_target_index": 4
+ },
+ {
+  "example_id": "G16-0156",
+  "action": "target_fix",
+  "old_label": "SEVERE_HARASSMENT",
+  "new_label": "SEVERE_HARASSMENT",
+  "old_difficulty": "hard",
+  "new_difficulty": "hard",
+  "reason": "target was B's mild jab; actual severe message is A's 'youre pathetic, delete the game'",
+  "old_target_index": 5,
+  "new_target_index": 4
+ },
+ {
+  "example_id": "G16-0092",
+  "action": "target_fix",
+  "old_label": "SEVERE_HARASSMENT",
+  "new_label": "SEVERE_HARASSMENT",
+  "old_difficulty": "easy",
+  "new_difficulty": "easy",
+  "reason": "target was 'bet lets do it'; actual severe message is A's 'spam report him' call",
+  "old_target_index": 3,
+  "new_target_index": 1
+ },
+ {
+  "example_id": "G16-0155",
+  "action": "target_fix",
+  "old_label": "SEVERE_HARASSMENT",
+  "new_label": "SEVERE_HARASSMENT",
+  "old_difficulty": "medium",
+  "new_difficulty": "medium",
+  "reason": "target was mild stat jab; actual severe message is A's 'waste of oxygen, log off forever'",
+  "old_target_index": 5,
+  "new_target_index": 4
+ },
+ {
+  "example_id": "G16-0090",
+  "action": "target_fix",
+  "old_label": "SEVERE_HARASSMENT",
+  "new_label": "SEVERE_HARASSMENT",
+  "old_difficulty": "hard",
+  "new_difficulty": "hard",
+  "reason": "target was 'reporting as we speak'; actual severe message is A's 'spam report him' call",
+  "old_target_index": 3,
+  "new_target_index": 1
+ },
+ {
+  "example_id": "G16-0066",
+  "action": "target_fix",
+  "old_label": "SEVERE_HARASSMENT",
+  "new_label": "SEVERE_HARASSMENT",
+  "old_difficulty": "easy",
+  "new_difficulty": "easy",
+  "reason": "target was mild complaint; actual severe message is A's 'even the mobs play better than you'",
+  "old_target_index": 7,
+  "new_target_index": 5
+ },
+ {
+  "example_id": "G16-0064",
+  "action": "target_fix",
+  "old_label": "SEVERE_HARASSMENT",
+  "new_label": "SEVERE_HARASSMENT",
+  "old_difficulty": "medium",
+  "new_difficulty": "medium",
+  "reason": "target was repeated mild jab; actual severe message is A's 'genuinely pathetic, log off'",
+  "old_target_index": 7,
+  "new_target_index": 5
+ },
+ {
+  "example_id": "G16-0396",
+  "action": "relabel",
+  "old_label": "LOW_LEVEL_HARASSMENT",
+  "new_label": "SAFE",
+  "old_difficulty": "medium",
+  "new_difficulty": "easy",
+  "reason": "'you got outplayed there ngl' is game-performance assessment, allowed per policy s7"
+ },
+ {
+  "example_id": "G16-0374",
+  "action": "relabel",
+  "old_label": "LOW_LEVEL_HARASSMENT",
+  "new_label": "SAFE",
+  "old_difficulty": "adversarial",
+  "new_difficulty": "easy",
+  "reason": "'you had him and let him reset' is game critique, allowed per policy s7"
+ },
+ {
+  "example_id": "G16-0363",
+  "action": "relabel",
+  "old_label": "LOW_LEVEL_HARASSMENT",
+  "new_label": "SAFE",
+  "old_difficulty": "adversarial",
+  "new_difficulty": "easy",
+  "reason": "'tough matchup for you honestly' is sympathetic game talk, allowed"
+ },
+ {
+  "example_id": "G16-0369",
+  "action": "relabel",
+  "old_label": "LOW_LEVEL_HARASSMENT",
+  "new_label": "SAFE",
+  "old_difficulty": "medium",
+  "new_difficulty": "easy",
+  "reason": "'yikes that was a bad push' is game critique, allowed per policy s7"
+ },
+ {
+  "example_id": "G16-0378",
+  "action": "relabel",
+  "old_label": "LOW_LEVEL_HARASSMENT",
+  "new_label": "SAFE",
+  "old_difficulty": "hard",
+  "new_difficulty": "easy",
+  "reason": "'tough break on the rng there' is sympathetic, not even a jab \u2014 allowed"
+ },
+ {
+  "example_id": "G16-0384",
+  "action": "relabel",
+  "old_label": "LOW_LEVEL_HARASSMENT",
+  "new_label": "SAFE",
+  "old_difficulty": "medium",
+  "new_difficulty": "easy",
+  "reason": "'sloppy endgame from you' is game critique, allowed per policy s7"
+ },
+ {
+  "example_id": "G16-0157",
+  "action": "difficulty",
+  "old_label": "SEVERE_HARASSMENT",
+  "new_label": "SEVERE_HARASSMENT",
+  "old_difficulty": "adversarial",
+  "new_difficulty": "hard",
+  "reason": "clear escalation arc, not genuinely adversarial"
+ },
+ {
+  "example_id": "G16-0348",
+  "action": "difficulty",
+  "old_label": "SEVERE_HARASSMENT",
+  "new_label": "SEVERE_HARASSMENT",
+  "old_difficulty": "adversarial",
+  "new_difficulty": "hard",
+  "reason": "explicit spawn-camp threat is clear-cut, not adversarial"
+ },
+ {
+  "example_id": "G16-0306",
+  "action": "rewrite",
+  "old_label": "SEVERE_HARASSMENT",
+  "new_label": "SEVERE_HARASSMENT",
+  "old_difficulty": "easy",
+  "new_difficulty": "easy",
+  "reason": "exact duplicate message sent twice in a row; varied the second for realism"
+ },
+ {
+  "example_id": "G16-0260",
+  "action": "rewrite",
+  "old_label": "SEVERE_HARASSMENT",
+  "new_label": "SEVERE_HARASSMENT",
+  "old_difficulty": "easy",
+  "new_difficulty": "easy",
+  "reason": "exact duplicate message sent twice in a row; varied the second for realism"
+ }
+]

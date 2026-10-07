@@ -1,0 +1,251 @@
+[
+ {
+  "example_id": "G17-0428",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "old_difficulty": "adversarial",
+  "new_difficulty": "easy",
+  "reason": "Defending someone's right to political opinion about a country \u2014 pro-speech, not hate."
+ },
+ {
+  "example_id": "G17-0429",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "old_difficulty": "adversarial",
+  "new_difficulty": "easy",
+  "reason": "De-escalation ('both sides need to calm down') \u2014 clearly not hate."
+ },
+ {
+  "example_id": "G17-0448",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "old_difficulty": "medium",
+  "new_difficulty": "easy",
+  "reason": "Polite guild chat language rule ('english only please') \u2014 normal server administration, no animus."
+ },
+ {
+  "example_id": "G17-0450",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "old_difficulty": "medium",
+  "new_difficulty": "easy",
+  "reason": "Polite global-chat language request \u2014 normal server administration, no animus."
+ },
+ {
+  "example_id": "G17-0463",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "old_difficulty": "medium",
+  "new_difficulty": "easy",
+  "reason": "Polite genuine comprehension difficulty ('sorry i genuinely can't understand') \u2014 no mockery."
+ },
+ {
+  "example_id": "G17-0464",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "old_difficulty": "medium",
+  "new_difficulty": "easy",
+  "reason": "Polite request to repeat ('can you type that again?') \u2014 no mockery."
+ },
+ {
+  "example_id": "G17-0465",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "old_difficulty": "hard",
+  "new_difficulty": "easy",
+  "reason": "Frustrated but legitimate communication difficulty after repeated attempts \u2014 not identity-targeted."
+ },
+ {
+  "example_id": "G17-0466",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "old_difficulty": "hard",
+  "new_difficulty": "easy",
+  "reason": "Good-faith request ('maybe type it in english? i really can't follow') \u2014 no mockery."
+ },
+ {
+  "example_id": "G17-0438",
+  "action": "difficulty",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "old_difficulty": "adversarial",
+  "new_difficulty": "hard",
+  "reason": "'where are you REALLY from' microaggression is a standard hard case, not adversarial"
+ },
+ {
+  "example_id": "G17-0439",
+  "action": "difficulty",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "old_difficulty": "adversarial",
+  "new_difficulty": "hard",
+  "reason": "'speak english well for a foreigner' microaggression is a standard hard case"
+ },
+ {
+  "example_id": "G17-0459",
+  "action": "difficulty",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "old_difficulty": "hard",
+  "new_difficulty": "medium",
+  "reason": "'jewish players are so smart with redstone' is a textbook positive stereotype"
+ },
+ {
+  "example_id": "G17-0460",
+  "action": "difficulty",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "old_difficulty": "hard",
+  "new_difficulty": "medium",
+  "reason": "'black players have the best energy' is a textbook positive stereotype"
+ },
+ {
+  "example_id": "G17-0461",
+  "action": "difficulty",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "old_difficulty": "adversarial",
+  "new_difficulty": "hard",
+  "reason": "gender essentialism ('just how brains work') is a hard call, not adversarial"
+ },
+ {
+  "example_id": "G17-0462",
+  "action": "difficulty",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "old_difficulty": "adversarial",
+  "new_difficulty": "hard",
+  "reason": "racial essentialism ('genetics') is a hard call, not adversarial"
+ },
+ {
+  "example_id": "G17-0467",
+  "action": "difficulty",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "old_difficulty": "adversarial",
+  "new_difficulty": "hard",
+  "reason": "'do you even speak english? be honest' condescension is hard, not adversarial"
+ },
+ {
+  "example_id": "G17-0468",
+  "action": "difficulty",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "old_difficulty": "adversarial",
+  "new_difficulty": "hard",
+  "reason": "'are you just confusing' condescension is hard, not adversarial"
+ },
+ {
+  "example_id": "G17-0500",
+  "action": "difficulty",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "old_difficulty": "adversarial",
+  "new_difficulty": "hard",
+  "reason": "'half the guild can also leave' exclusionary rudeness is hard, not adversarial"
+ },
+ {
+  "example_id": "G17-0314",
+  "action": "relabel",
+  "old_label": "HATE",
+  "new_label": "SAFE",
+  "old_difficulty": "adversarial",
+  "new_difficulty": "easy",
+  "reason": "'we tried multilingual chat once, it was chaos. never again' states a server policy experience \u2014 no identity target, no mockery."
+ },
+ {
+  "example_id": "G17-0128",
+  "action": "relabel",
+  "old_label": "HATE",
+  "new_label": "LOW_LEVEL_HARASSMENT",
+  "old_difficulty": "medium",
+  "new_difficulty": "medium",
+  "reason": "'comedy is dead because of people like you' is generic rudeness with no identity target \u2014 mild insult, not hate."
+ },
+ {
+  "example_id": "G17-0159",
+  "action": "relabel",
+  "old_label": "HATE",
+  "new_label": "LOW_LEVEL_HARASSMENT",
+  "old_difficulty": "adversarial",
+  "new_difficulty": "adversarial",
+  "reason": "'it's called roasting, your generation wouldn't understand' is a mild age jab defending unseen content \u2014 LOW_LEVEL, not hate."
+ },
+ {
+  "example_id": "G17-0325",
+  "action": "relabel",
+  "old_label": "HATE",
+  "new_label": "LOW_LEVEL_HARASSMENT",
+  "old_difficulty": "hard",
+  "new_difficulty": "hard",
+  "reason": "'sure, someone has to lose first round' is a mild put-down with no identity content \u2014 LOW_LEVEL, not hate."
+ },
+ {
+  "example_id": "G17-0259",
+  "action": "relabel",
+  "old_label": "HATE",
+  "new_label": "LOW_LEVEL_HARASSMENT",
+  "old_difficulty": "hard",
+  "new_difficulty": "hard",
+  "reason": "'cool story, now fix your mic' is rude dismissal, not identity hate \u2014 LOW_LEVEL."
+ },
+ {
+  "example_id": "G17-0205",
+  "action": "relabel",
+  "old_label": "HATE",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "old_difficulty": "adversarial",
+  "new_difficulty": "adversarial",
+  "reason": "'i'm just describing reality, don't shoot the messenger' defends unseen content \u2014 cannot judge hate without it."
+ },
+ {
+  "example_id": "G17-0287",
+  "action": "relabel",
+  "old_label": "HATE",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "old_difficulty": "adversarial",
+  "new_difficulty": "adversarial",
+  "reason": "'i can't be racist, i've been bullied myself' is a deflection referencing unseen content \u2014 cannot judge hate without it."
+ },
+ {
+  "example_id": "G17-0473",
+  "action": "target_fix",
+  "old_label": "LOW_LEVEL_HARASSMENT",
+  "new_label": "LOW_LEVEL_HARASSMENT",
+  "old_difficulty": "medium",
+  "new_difficulty": "medium",
+  "reason": "target was de-escalation ('ok that's fair, 1v1 me'); actual jab is 'your english is worse'",
+  "old_target_index": 2,
+  "new_target_index": 1
+ },
+ {
+  "example_id": "G17-0142",
+  "action": "target_fix",
+  "old_label": "HATE",
+  "new_label": "HATE",
+  "old_difficulty": "hard",
+  "new_difficulty": "hard",
+  "reason": "target was joke-defense; actual hate is 'disabled players should stick to creative mode'",
+  "old_target_index": 2,
+  "new_target_index": 0
+ },
+ {
+  "example_id": "G17-0133",
+  "action": "target_fix",
+  "old_label": "HATE",
+  "new_label": "HATE",
+  "old_difficulty": "hard",
+  "new_difficulty": "hard",
+  "reason": "target was joke-defense; actual hate is 'do muslims even play games or just pray all day'",
+  "old_target_index": 2,
+  "new_target_index": 0
+ }
+]

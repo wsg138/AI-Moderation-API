@@ -1,0 +1,730 @@
+[
+ {
+  "example_id": "G11-0012",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "First name only with no other identifiers; no personal information disclosed. Missing context is not proof of wrongdoing."
+ },
+ {
+  "example_id": "G11-0070",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "First name only with no other identifiers; no personal information disclosed. Missing context is not proof of wrongdoing."
+ },
+ {
+  "example_id": "G11-0074",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "First name only with no other identifiers; no personal information disclosed. Missing context is not proof of wrongdoing."
+ },
+ {
+  "example_id": "G11-0168",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "First name only with no other identifiers; no personal information disclosed. Missing context is not proof of wrongdoing."
+ },
+ {
+  "example_id": "G11-0202",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "First name only with no other identifiers; no personal information disclosed. Missing context is not proof of wrongdoing."
+ },
+ {
+  "example_id": "G11-0259",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "First name only with no other identifiers; no personal information disclosed. Missing context is not proof of wrongdoing."
+ },
+ {
+  "example_id": "G11-0310",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "First name only with no other identifiers; no personal information disclosed. Missing context is not proof of wrongdoing."
+ },
+ {
+  "example_id": "G11-0399",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "First name only with no other identifiers; no personal information disclosed. Missing context is not proof of wrongdoing."
+ },
+ {
+  "example_id": "G11-0415",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "First name only with no other identifiers; no personal information disclosed. Missing context is not proof of wrongdoing."
+ },
+ {
+  "example_id": "G11-0464",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "First name only with no other identifiers; no personal information disclosed. Missing context is not proof of wrongdoing."
+ },
+ {
+  "example_id": "G11-0098",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "Claims shared school without naming it; no identifiers published."
+ },
+ {
+  "example_id": "G11-0106",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "Claims shared school without naming it; no identifiers published."
+ },
+ {
+  "example_id": "G11-0193",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "Claims shared school without naming it; no identifiers published."
+ },
+ {
+  "example_id": "G11-0295",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "Claims shared school without naming it; no identifiers published."
+ },
+ {
+  "example_id": "G11-0405",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "Claims shared school without naming it; no identifiers published."
+ },
+ {
+  "example_id": "G11-0104",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "Vague proximity claim with no actionable detail; no identifiers published."
+ },
+ {
+  "example_id": "G11-0127",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "Vague proximity claim with no actionable detail; no identifiers published."
+ },
+ {
+  "example_id": "G11-0158",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "Vague proximity claim with no actionable detail; no identifiers published."
+ },
+ {
+  "example_id": "G11-0163",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "Vague proximity claim with no actionable detail; no identifiers published."
+ },
+ {
+  "example_id": "G11-0412",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "Vague proximity claim with no actionable detail; no identifiers published."
+ },
+ {
+  "example_id": "G11-0365",
+  "action": "difficulty",
+  "old_label": "DOXXING",
+  "new_label": "DOXXING",
+  "reason": "difficulty adversarial->hard: explicit dox threat, no obfuscation or tricky framing"
+ },
+ {
+  "example_id": "G11-0432",
+  "action": "difficulty",
+  "old_label": "DOXXING",
+  "new_label": "DOXXING",
+  "reason": "difficulty adversarial->hard: explicit dox threat, no obfuscation or tricky framing"
+ },
+ {
+  "example_id": "G11-0006",
+  "action": "ok",
+  "old_label": "DOXXING",
+  "new_label": "DOXXING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G11-0023",
+  "action": "ok",
+  "old_label": "DOXXING",
+  "new_label": "DOXXING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G11-0035",
+  "action": "ok",
+  "old_label": "DOXXING",
+  "new_label": "DOXXING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G11-0040",
+  "action": "ok",
+  "old_label": "DOXXING",
+  "new_label": "DOXXING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G11-0046",
+  "action": "ok",
+  "old_label": "DOXXING",
+  "new_label": "DOXXING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G11-0047",
+  "action": "ok",
+  "old_label": "DOXXING",
+  "new_label": "DOXXING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G11-0051",
+  "action": "ok",
+  "old_label": "DOXXING",
+  "new_label": "DOXXING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G11-0063",
+  "action": "ok",
+  "old_label": "DOXXING",
+  "new_label": "DOXXING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G11-0077",
+  "action": "ok",
+  "old_label": "DOXXING",
+  "new_label": "DOXXING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G11-0078",
+  "action": "ok",
+  "old_label": "DOXXING",
+  "new_label": "DOXXING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G11-0079",
+  "action": "ok",
+  "old_label": "DOXXING",
+  "new_label": "DOXXING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G11-0094",
+  "action": "ok",
+  "old_label": "DOXXING",
+  "new_label": "DOXXING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G11-0095",
+  "action": "ok",
+  "old_label": "DOXXING",
+  "new_label": "DOXXING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G11-0097",
+  "action": "ok",
+  "old_label": "DOXXING",
+  "new_label": "DOXXING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G11-0103",
+  "action": "ok",
+  "old_label": "DOXXING",
+  "new_label": "DOXXING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G11-0108",
+  "action": "ok",
+  "old_label": "DOXXING",
+  "new_label": "DOXXING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G11-0110",
+  "action": "ok",
+  "old_label": "DOXXING",
+  "new_label": "DOXXING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G11-0114",
+  "action": "ok",
+  "old_label": "DOXXING",
+  "new_label": "DOXXING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G11-0137",
+  "action": "ok",
+  "old_label": "DOXXING",
+  "new_label": "DOXXING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G11-0139",
+  "action": "ok",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G11-0142",
+  "action": "ok",
+  "old_label": "DOXXING",
+  "new_label": "DOXXING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G11-0147",
+  "action": "ok",
+  "old_label": "DOXXING",
+  "new_label": "DOXXING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G11-0155",
+  "action": "ok",
+  "old_label": "DOXXING",
+  "new_label": "DOXXING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G11-0156",
+  "action": "ok",
+  "old_label": "DOXXING",
+  "new_label": "DOXXING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G11-0159",
+  "action": "ok",
+  "old_label": "DOXXING",
+  "new_label": "DOXXING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G11-0166",
+  "action": "ok",
+  "old_label": "DOXXING",
+  "new_label": "DOXXING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G11-0167",
+  "action": "ok",
+  "old_label": "DOXXING",
+  "new_label": "DOXXING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G11-0169",
+  "action": "ok",
+  "old_label": "DOXXING",
+  "new_label": "DOXXING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G11-0170",
+  "action": "ok",
+  "old_label": "DOXXING",
+  "new_label": "DOXXING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G11-0171",
+  "action": "ok",
+  "old_label": "DOXXING",
+  "new_label": "DOXXING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G11-0178",
+  "action": "ok",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G11-0201",
+  "action": "ok",
+  "old_label": "DOXXING",
+  "new_label": "DOXXING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G11-0207",
+  "action": "ok",
+  "old_label": "DOXXING",
+  "new_label": "DOXXING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G11-0216",
+  "action": "ok",
+  "old_label": "DOXXING",
+  "new_label": "DOXXING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G11-0229",
+  "action": "ok",
+  "old_label": "DOXXING",
+  "new_label": "DOXXING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G11-0241",
+  "action": "ok",
+  "old_label": "DOXXING",
+  "new_label": "DOXXING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G11-0243",
+  "action": "ok",
+  "old_label": "DOXXING",
+  "new_label": "DOXXING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G11-0245",
+  "action": "ok",
+  "old_label": "DOXXING",
+  "new_label": "DOXXING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G11-0250",
+  "action": "ok",
+  "old_label": "DOXXING",
+  "new_label": "DOXXING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G11-0252",
+  "action": "ok",
+  "old_label": "DOXXING",
+  "new_label": "DOXXING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G11-0253",
+  "action": "ok",
+  "old_label": "DOXXING",
+  "new_label": "DOXXING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G11-0268",
+  "action": "ok",
+  "old_label": "DOXXING",
+  "new_label": "DOXXING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G11-0271",
+  "action": "ok",
+  "old_label": "DOXXING",
+  "new_label": "DOXXING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G11-0289",
+  "action": "ok",
+  "old_label": "DOXXING",
+  "new_label": "DOXXING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G11-0291",
+  "action": "ok",
+  "old_label": "DOXXING",
+  "new_label": "DOXXING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G11-0294",
+  "action": "ok",
+  "old_label": "DOXXING",
+  "new_label": "DOXXING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G11-0312",
+  "action": "ok",
+  "old_label": "DOXXING",
+  "new_label": "DOXXING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G11-0315",
+  "action": "ok",
+  "old_label": "DOXXING",
+  "new_label": "DOXXING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G11-0321",
+  "action": "ok",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G11-0322",
+  "action": "ok",
+  "old_label": "DOXXING",
+  "new_label": "DOXXING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G11-0333",
+  "action": "ok",
+  "old_label": "DOXXING",
+  "new_label": "DOXXING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G11-0337",
+  "action": "ok",
+  "old_label": "DOXXING",
+  "new_label": "DOXXING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G11-0338",
+  "action": "ok",
+  "old_label": "DOXXING",
+  "new_label": "DOXXING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G11-0339",
+  "action": "ok",
+  "old_label": "DOXXING",
+  "new_label": "DOXXING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G11-0348",
+  "action": "ok",
+  "old_label": "DOXXING",
+  "new_label": "DOXXING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G11-0350",
+  "action": "ok",
+  "old_label": "DOXXING",
+  "new_label": "DOXXING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G11-0354",
+  "action": "ok",
+  "old_label": "DOXXING",
+  "new_label": "DOXXING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G11-0357",
+  "action": "ok",
+  "old_label": "DOXXING",
+  "new_label": "DOXXING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G11-0366",
+  "action": "ok",
+  "old_label": "DOXXING",
+  "new_label": "DOXXING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G11-0372",
+  "action": "ok",
+  "old_label": "DOXXING",
+  "new_label": "DOXXING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G11-0379",
+  "action": "ok",
+  "old_label": "DOXXING",
+  "new_label": "DOXXING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G11-0392",
+  "action": "ok",
+  "old_label": "DOXXING",
+  "new_label": "DOXXING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G11-0396",
+  "action": "ok",
+  "old_label": "DOXXING",
+  "new_label": "DOXXING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G11-0398",
+  "action": "ok",
+  "old_label": "DOXXING",
+  "new_label": "DOXXING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G11-0400",
+  "action": "ok",
+  "old_label": "DOXXING",
+  "new_label": "DOXXING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G11-0401",
+  "action": "ok",
+  "old_label": "DOXXING",
+  "new_label": "DOXXING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G11-0404",
+  "action": "ok",
+  "old_label": "DOXXING",
+  "new_label": "DOXXING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G11-0416",
+  "action": "ok",
+  "old_label": "DOXXING",
+  "new_label": "DOXXING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G11-0433",
+  "action": "ok",
+  "old_label": "DOXXING",
+  "new_label": "DOXXING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G11-0434",
+  "action": "ok",
+  "old_label": "DOXXING",
+  "new_label": "DOXXING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G11-0437",
+  "action": "ok",
+  "old_label": "DOXXING",
+  "new_label": "DOXXING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G11-0441",
+  "action": "ok",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G11-0448",
+  "action": "ok",
+  "old_label": "DOXXING",
+  "new_label": "DOXXING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G11-0457",
+  "action": "ok",
+  "old_label": "DOXXING",
+  "new_label": "DOXXING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G11-0461",
+  "action": "ok",
+  "old_label": "DOXXING",
+  "new_label": "DOXXING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G11-0467",
+  "action": "ok",
+  "old_label": "DOXXING",
+  "new_label": "DOXXING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G11-0478",
+  "action": "ok",
+  "old_label": "DOXXING",
+  "new_label": "DOXXING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G11-0479",
+  "action": "ok",
+  "old_label": "DOXXING",
+  "new_label": "DOXXING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G11-0481",
+  "action": "ok",
+  "old_label": "DOXXING",
+  "new_label": "DOXXING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G11-0483",
+  "action": "ok",
+  "old_label": "DOXXING",
+  "new_label": "DOXXING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G11-0492",
+  "action": "ok",
+  "old_label": "DOXXING",
+  "new_label": "DOXXING",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G11-0498",
+  "action": "ok",
+  "old_label": "DOXXING",
+  "new_label": "DOXXING",
+  "reason": "label and content verified correct"
+ }
+]

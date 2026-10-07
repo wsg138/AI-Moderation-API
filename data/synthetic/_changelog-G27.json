@@ -1,0 +1,170 @@
+[
+ {
+  "example_id": "G27-0024",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "single innocuous/ambiguous DM with no violation content; never flaggable alone per owner ruling"
+ },
+ {
+  "example_id": "G27-0033",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "single innocuous/ambiguous DM with no violation content; never flaggable alone per owner ruling"
+ },
+ {
+  "example_id": "G27-0041",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "single innocuous/ambiguous DM with no violation content; never flaggable alone per owner ruling"
+ },
+ {
+  "example_id": "G27-0070",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "single innocuous/ambiguous DM with no violation content; never flaggable alone per owner ruling"
+ },
+ {
+  "example_id": "G27-0094",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "single innocuous/ambiguous DM with no violation content; never flaggable alone per owner ruling"
+ },
+ {
+  "example_id": "G27-0102",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "single innocuous/ambiguous DM with no violation content; never flaggable alone per owner ruling"
+ },
+ {
+  "example_id": "G27-0143",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "single innocuous/ambiguous DM with no violation content; never flaggable alone per owner ruling"
+ },
+ {
+  "example_id": "G27-0172",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "single innocuous/ambiguous DM with no violation content; never flaggable alone per owner ruling"
+ },
+ {
+  "example_id": "G27-0179",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "single innocuous/ambiguous DM with no violation content; never flaggable alone per owner ruling"
+ },
+ {
+  "example_id": "G27-0191",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "single innocuous/ambiguous DM with no violation content; never flaggable alone per owner ruling"
+ },
+ {
+  "example_id": "G27-0195",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "single innocuous/ambiguous DM with no violation content; never flaggable alone per owner ruling"
+ },
+ {
+  "example_id": "G27-0214",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "single innocuous/ambiguous DM with no violation content; never flaggable alone per owner ruling"
+ },
+ {
+  "example_id": "G27-0216",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "single innocuous/ambiguous DM with no violation content; never flaggable alone per owner ruling"
+ },
+ {
+  "example_id": "G27-0225",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "single innocuous/ambiguous DM with no violation content; never flaggable alone per owner ruling"
+ },
+ {
+  "example_id": "G27-0237",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "single innocuous/ambiguous DM with no violation content; never flaggable alone per owner ruling"
+ },
+ {
+  "example_id": "G27-0250",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "single innocuous/ambiguous DM with no violation content; never flaggable alone per owner ruling"
+ },
+ {
+  "example_id": "G27-0271",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "single innocuous/ambiguous DM with no violation content; never flaggable alone per owner ruling"
+ },
+ {
+  "example_id": "G27-0333",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "single innocuous/ambiguous DM with no violation content; never flaggable alone per owner ruling"
+ },
+ {
+  "example_id": "G27-0340",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "single innocuous/ambiguous DM with no violation content; never flaggable alone per owner ruling"
+ },
+ {
+  "example_id": "G27-0341",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "single innocuous/ambiguous DM with no violation content; never flaggable alone per owner ruling"
+ },
+ {
+  "example_id": "G27-0373",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "single innocuous/ambiguous DM with no violation content; never flaggable alone per owner ruling"
+ },
+ {
+  "example_id": "G27-0389",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "single innocuous/ambiguous DM with no violation content; never flaggable alone per owner ruling"
+ },
+ {
+  "example_id": "G27-0411",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "single innocuous/ambiguous DM with no violation content; never flaggable alone per owner ruling"
+ },
+ {
+  "example_id": "G27-0466",
+  "action": "difficulty",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "reason": "absurd difficulty rating corrected"
+ }
+]

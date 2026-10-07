@@ -1,0 +1,737 @@
+[
+ {
+  "example_id": "G10-0048",
+  "action": "rewrite",
+  "old_label": "BLACKMAIL",
+  "new_label": "BLACKMAIL",
+  "reason": "Repaired garbled demand (missing verb). Label unchanged."
+ },
+ {
+  "example_id": "G10-0052",
+  "action": "rewrite",
+  "old_label": "BLACKMAIL",
+  "new_label": "BLACKMAIL",
+  "reason": "Repaired garbled demand (missing verb). Label unchanged."
+ },
+ {
+  "example_id": "G10-0479",
+  "action": "relabel",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "SAFE",
+  "reason": "Single admiring message with no threat, demand, or menace; pattern-adjacent is not a violation."
+ },
+ {
+  "example_id": "G10-0004",
+  "action": "difficulty",
+  "old_label": "BLACKMAIL",
+  "new_label": "BLACKMAIL",
+  "reason": "difficulty hard->easy: single-message explicit demand+threat"
+ },
+ {
+  "example_id": "G10-0017",
+  "action": "difficulty",
+  "old_label": "BLACKMAIL",
+  "new_label": "BLACKMAIL",
+  "reason": "difficulty adversarial->hard: same 3-msg template as G10-0013/hard"
+ },
+ {
+  "example_id": "G10-0023",
+  "action": "difficulty",
+  "old_label": "BLACKMAIL",
+  "new_label": "BLACKMAIL",
+  "reason": "difficulty hard->easy: single-message explicit demand+threat"
+ },
+ {
+  "example_id": "G10-0184",
+  "action": "difficulty",
+  "old_label": "BLACKMAIL",
+  "new_label": "BLACKMAIL",
+  "reason": "difficulty hard->easy: single-message explicit demand+threat"
+ },
+ {
+  "example_id": "G10-0190",
+  "action": "difficulty",
+  "old_label": "BLACKMAIL",
+  "new_label": "BLACKMAIL",
+  "reason": "difficulty hard->easy: single-message explicit demand+threat"
+ },
+ {
+  "example_id": "G10-0187",
+  "action": "difficulty",
+  "old_label": "BLACKMAIL",
+  "new_label": "BLACKMAIL",
+  "reason": "difficulty adversarial->hard: explicit pay-or-publish structure, feigned casualness only"
+ },
+ {
+  "example_id": "G10-0360",
+  "action": "difficulty",
+  "old_label": "BLACKMAIL",
+  "new_label": "BLACKMAIL",
+  "reason": "difficulty hard->adversarial: spaced-out obfuscation requires decoding"
+ },
+ {
+  "example_id": "G10-0374",
+  "action": "difficulty",
+  "old_label": "BLACKMAIL",
+  "new_label": "BLACKMAIL",
+  "reason": "difficulty adversarial->hard: minimal setup, explicit demand+consequence"
+ },
+ {
+  "example_id": "G10-0380",
+  "action": "difficulty",
+  "old_label": "BLACKMAIL",
+  "new_label": "BLACKMAIL",
+  "reason": "difficulty adversarial->hard: explicit demand, implicit threat carried by context"
+ },
+ {
+  "example_id": "G10-0389",
+  "action": "difficulty",
+  "old_label": "BLACKMAIL",
+  "new_label": "BLACKMAIL",
+  "reason": "difficulty adversarial->hard: same 4-msg buildup template as G10-0378/hard"
+ },
+ {
+  "example_id": "G10-0470",
+  "action": "difficulty",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "reason": "difficulty adversarial->hard: vague menace, not genuinely tricky to parse"
+ },
+ {
+  "example_id": "G10-0472",
+  "action": "difficulty",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "reason": "difficulty adversarial->hard: vague menace, not genuinely tricky to parse"
+ },
+ {
+  "example_id": "G10-0478",
+  "action": "difficulty",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "reason": "difficulty adversarial->hard: vague menace, not genuinely tricky to parse"
+ },
+ {
+  "example_id": "G10-0482",
+  "action": "difficulty",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "reason": "difficulty adversarial->hard: vague menace, not genuinely tricky to parse"
+ },
+ {
+  "example_id": "G10-0484",
+  "action": "difficulty",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "reason": "difficulty adversarial->hard: vague menace, not genuinely tricky to parse"
+ },
+ {
+  "example_id": "G10-0013",
+  "action": "ok",
+  "old_label": "BLACKMAIL",
+  "new_label": "BLACKMAIL",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0014",
+  "action": "ok",
+  "old_label": "BLACKMAIL",
+  "new_label": "BLACKMAIL",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0016",
+  "action": "ok",
+  "old_label": "BLACKMAIL",
+  "new_label": "BLACKMAIL",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0024",
+  "action": "ok",
+  "old_label": "BLACKMAIL",
+  "new_label": "BLACKMAIL",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0036",
+  "action": "ok",
+  "old_label": "BLACKMAIL",
+  "new_label": "BLACKMAIL",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0041",
+  "action": "ok",
+  "old_label": "BLACKMAIL",
+  "new_label": "BLACKMAIL",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0045",
+  "action": "ok",
+  "old_label": "BLACKMAIL",
+  "new_label": "BLACKMAIL",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0050",
+  "action": "ok",
+  "old_label": "BLACKMAIL",
+  "new_label": "BLACKMAIL",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0053",
+  "action": "ok",
+  "old_label": "BLACKMAIL",
+  "new_label": "BLACKMAIL",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0058",
+  "action": "ok",
+  "old_label": "BLACKMAIL",
+  "new_label": "BLACKMAIL",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0064",
+  "action": "ok",
+  "old_label": "BLACKMAIL",
+  "new_label": "BLACKMAIL",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0072",
+  "action": "ok",
+  "old_label": "BLACKMAIL",
+  "new_label": "BLACKMAIL",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0080",
+  "action": "ok",
+  "old_label": "BLACKMAIL",
+  "new_label": "BLACKMAIL",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0082",
+  "action": "ok",
+  "old_label": "BLACKMAIL",
+  "new_label": "BLACKMAIL",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0084",
+  "action": "ok",
+  "old_label": "BLACKMAIL",
+  "new_label": "BLACKMAIL",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0099",
+  "action": "ok",
+  "old_label": "BLACKMAIL",
+  "new_label": "BLACKMAIL",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0102",
+  "action": "ok",
+  "old_label": "BLACKMAIL",
+  "new_label": "BLACKMAIL",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0108",
+  "action": "ok",
+  "old_label": "BLACKMAIL",
+  "new_label": "BLACKMAIL",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0111",
+  "action": "ok",
+  "old_label": "BLACKMAIL",
+  "new_label": "BLACKMAIL",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0112",
+  "action": "ok",
+  "old_label": "BLACKMAIL",
+  "new_label": "BLACKMAIL",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0113",
+  "action": "ok",
+  "old_label": "BLACKMAIL",
+  "new_label": "BLACKMAIL",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0115",
+  "action": "ok",
+  "old_label": "BLACKMAIL",
+  "new_label": "BLACKMAIL",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0117",
+  "action": "ok",
+  "old_label": "BLACKMAIL",
+  "new_label": "BLACKMAIL",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0120",
+  "action": "ok",
+  "old_label": "BLACKMAIL",
+  "new_label": "BLACKMAIL",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0126",
+  "action": "ok",
+  "old_label": "BLACKMAIL",
+  "new_label": "BLACKMAIL",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0136",
+  "action": "ok",
+  "old_label": "BLACKMAIL",
+  "new_label": "BLACKMAIL",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0137",
+  "action": "ok",
+  "old_label": "BLACKMAIL",
+  "new_label": "BLACKMAIL",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0141",
+  "action": "ok",
+  "old_label": "BLACKMAIL",
+  "new_label": "BLACKMAIL",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0143",
+  "action": "ok",
+  "old_label": "BLACKMAIL",
+  "new_label": "BLACKMAIL",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0149",
+  "action": "ok",
+  "old_label": "BLACKMAIL",
+  "new_label": "BLACKMAIL",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0151",
+  "action": "ok",
+  "old_label": "BLACKMAIL",
+  "new_label": "BLACKMAIL",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0173",
+  "action": "ok",
+  "old_label": "BLACKMAIL",
+  "new_label": "BLACKMAIL",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0175",
+  "action": "ok",
+  "old_label": "BLACKMAIL",
+  "new_label": "BLACKMAIL",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0177",
+  "action": "ok",
+  "old_label": "BLACKMAIL",
+  "new_label": "BLACKMAIL",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0182",
+  "action": "ok",
+  "old_label": "BLACKMAIL",
+  "new_label": "BLACKMAIL",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0186",
+  "action": "ok",
+  "old_label": "BLACKMAIL",
+  "new_label": "BLACKMAIL",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0194",
+  "action": "ok",
+  "old_label": "BLACKMAIL",
+  "new_label": "BLACKMAIL",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0195",
+  "action": "ok",
+  "old_label": "BLACKMAIL",
+  "new_label": "BLACKMAIL",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0215",
+  "action": "ok",
+  "old_label": "BLACKMAIL",
+  "new_label": "BLACKMAIL",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0217",
+  "action": "ok",
+  "old_label": "BLACKMAIL",
+  "new_label": "BLACKMAIL",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0230",
+  "action": "ok",
+  "old_label": "BLACKMAIL",
+  "new_label": "BLACKMAIL",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0233",
+  "action": "ok",
+  "old_label": "BLACKMAIL",
+  "new_label": "BLACKMAIL",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0236",
+  "action": "ok",
+  "old_label": "BLACKMAIL",
+  "new_label": "BLACKMAIL",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0259",
+  "action": "ok",
+  "old_label": "BLACKMAIL",
+  "new_label": "BLACKMAIL",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0275",
+  "action": "ok",
+  "old_label": "BLACKMAIL",
+  "new_label": "BLACKMAIL",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0280",
+  "action": "ok",
+  "old_label": "BLACKMAIL",
+  "new_label": "BLACKMAIL",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0283",
+  "action": "ok",
+  "old_label": "BLACKMAIL",
+  "new_label": "BLACKMAIL",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0288",
+  "action": "ok",
+  "old_label": "BLACKMAIL",
+  "new_label": "BLACKMAIL",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0296",
+  "action": "ok",
+  "old_label": "BLACKMAIL",
+  "new_label": "BLACKMAIL",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0302",
+  "action": "ok",
+  "old_label": "BLACKMAIL",
+  "new_label": "BLACKMAIL",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0303",
+  "action": "ok",
+  "old_label": "BLACKMAIL",
+  "new_label": "BLACKMAIL",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0309",
+  "action": "ok",
+  "old_label": "BLACKMAIL",
+  "new_label": "BLACKMAIL",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0310",
+  "action": "ok",
+  "old_label": "BLACKMAIL",
+  "new_label": "BLACKMAIL",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0317",
+  "action": "ok",
+  "old_label": "BLACKMAIL",
+  "new_label": "BLACKMAIL",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0322",
+  "action": "ok",
+  "old_label": "BLACKMAIL",
+  "new_label": "BLACKMAIL",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0326",
+  "action": "ok",
+  "old_label": "BLACKMAIL",
+  "new_label": "BLACKMAIL",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0328",
+  "action": "ok",
+  "old_label": "BLACKMAIL",
+  "new_label": "BLACKMAIL",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0333",
+  "action": "ok",
+  "old_label": "BLACKMAIL",
+  "new_label": "BLACKMAIL",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0339",
+  "action": "ok",
+  "old_label": "BLACKMAIL",
+  "new_label": "BLACKMAIL",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0344",
+  "action": "ok",
+  "old_label": "BLACKMAIL",
+  "new_label": "BLACKMAIL",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0347",
+  "action": "ok",
+  "old_label": "BLACKMAIL",
+  "new_label": "BLACKMAIL",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0358",
+  "action": "ok",
+  "old_label": "BLACKMAIL",
+  "new_label": "BLACKMAIL",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0361",
+  "action": "ok",
+  "old_label": "BLACKMAIL",
+  "new_label": "BLACKMAIL",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0367",
+  "action": "ok",
+  "old_label": "BLACKMAIL",
+  "new_label": "BLACKMAIL",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0378",
+  "action": "ok",
+  "old_label": "BLACKMAIL",
+  "new_label": "BLACKMAIL",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0391",
+  "action": "ok",
+  "old_label": "BLACKMAIL",
+  "new_label": "BLACKMAIL",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0471",
+  "action": "ok",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0473",
+  "action": "ok",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0474",
+  "action": "ok",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0475",
+  "action": "ok",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0476",
+  "action": "ok",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0477",
+  "action": "ok",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0480",
+  "action": "ok",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0481",
+  "action": "ok",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0483",
+  "action": "ok",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0485",
+  "action": "ok",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0486",
+  "action": "ok",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0487",
+  "action": "ok",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0488",
+  "action": "ok",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0489",
+  "action": "ok",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0490",
+  "action": "ok",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0491",
+  "action": "ok",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0492",
+  "action": "ok",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0493",
+  "action": "ok",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0494",
+  "action": "ok",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0498",
+  "action": "ok",
+  "old_label": "BLACKMAIL",
+  "new_label": "BLACKMAIL",
+  "reason": "label and content verified correct"
+ },
+ {
+  "example_id": "G10-0499",
+  "action": "ok",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "reason": "label and content verified correct"
+ }
+]

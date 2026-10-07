@@ -1,0 +1,156 @@
+[
+ {
+  "example_id": "G21-0467",
+  "action": "relabel",
+  "old_label": "HATE",
+  "new_label": "LOW_LEVEL_HARASSMENT",
+  "reason": "'no eres normal' is a personal insult, not identity-targeted; HATE requires protected-characteristic targeting"
+ },
+ {
+  "example_id": "G21-0240",
+  "action": "relabel",
+  "old_label": "SEVERE_HARASSMENT",
+  "new_label": "LOW_LEVEL_HARASSMENT",
+  "reason": "'I'll get you banned' is a single empty report-threat, not severe harassment; BLOCK/URGENT/MUTE/strike was overblown"
+ },
+ {
+  "example_id": "G21-0439",
+  "action": "relabel",
+  "old_label": "SEVERE_HARASSMENT",
+  "new_label": "LOW_LEVEL_HARASSMENT",
+  "reason": "single degrading message with no repetition/dogpile/stop-ignored; severe requires more per batch convention"
+ },
+ {
+  "example_id": "G21-0010",
+  "action": "relabel",
+  "old_label": "SEVERE_HARASSMENT",
+  "new_label": "LOW_LEVEL_HARASSMENT",
+  "reason": "single exclusionary message with no repetition/dogpile/stop-ignored; severe requires more per batch convention"
+ },
+ {
+  "example_id": "G21-0019",
+  "action": "difficulty",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "reason": "difficulty adversarial -> medium: mild teasing is not adversarial"
+ },
+ {
+  "example_id": "G21-0068",
+  "action": "difficulty",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "reason": "difficulty hard -> medium: mild teasing is not adversarial"
+ },
+ {
+  "example_id": "G21-0120",
+  "action": "difficulty",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "reason": "difficulty hard -> medium: mild teasing is not adversarial"
+ },
+ {
+  "example_id": "G21-0161",
+  "action": "difficulty",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "reason": "difficulty adversarial -> medium: mild teasing is not adversarial"
+ },
+ {
+  "example_id": "G21-0179",
+  "action": "difficulty",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "reason": "difficulty adversarial -> medium: mild teasing is not adversarial"
+ },
+ {
+  "example_id": "G21-0310",
+  "action": "difficulty",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "reason": "difficulty hard -> medium: mild teasing is not adversarial"
+ },
+ {
+  "example_id": "G21-0344",
+  "action": "difficulty",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "reason": "difficulty hard -> medium: mild teasing is not adversarial"
+ },
+ {
+  "example_id": "G21-0393",
+  "action": "difficulty",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "reason": "difficulty hard -> medium: mild teasing is not adversarial"
+ },
+ {
+  "example_id": "G21-0409",
+  "action": "difficulty",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "reason": "difficulty hard -> medium: mild teasing is not adversarial"
+ },
+ {
+  "example_id": "G21-0431",
+  "action": "difficulty",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "reason": "difficulty adversarial -> medium: mild teasing is not adversarial"
+ },
+ {
+  "example_id": "G21-0494",
+  "action": "difficulty",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "reason": "difficulty adversarial -> medium: mild teasing is not adversarial"
+ },
+ {
+  "example_id": "G21-0496",
+  "action": "difficulty",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "reason": "difficulty adversarial -> medium: mild teasing is not adversarial"
+ },
+ {
+  "example_id": "G21-0497",
+  "action": "difficulty",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "reason": "difficulty adversarial -> medium: mild teasing is not adversarial"
+ },
+ {
+  "example_id": "G21-0090",
+  "action": "difficulty",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "reason": "difficulty adversarial -> hard: mild teasing is not adversarial"
+ },
+ {
+  "example_id": "G21-0205",
+  "action": "difficulty",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "reason": "difficulty adversarial -> hard: mild teasing is not adversarial"
+ },
+ {
+  "example_id": "G21-0206",
+  "action": "difficulty",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "reason": "difficulty adversarial -> hard: mild teasing is not adversarial"
+ },
+ {
+  "example_id": "G21-0359",
+  "action": "difficulty",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "reason": "difficulty adversarial -> hard: mild teasing is not adversarial"
+ },
+ {
+  "example_id": "G21-0471",
+  "action": "difficulty",
+  "old_label": "AMBIGUOUS_REVIEW",
+  "new_label": "AMBIGUOUS_REVIEW",
+  "reason": "difficulty adversarial -> hard: mild teasing is not adversarial"
+ }
+]
