@@ -386,6 +386,26 @@ def test_ranking_performance_fields_match_benchmark_dimensions(tmp_path) -> None
     assert flat["startup_p95_ms"] == startup["startup_p95_ms"]  # nosec B101
     assert flat["artifact_size_bytes"] == 4  # nosec B101
 
+
+def test_ranking_performance_fields_rejects_non_numeric_metric(tmp_path) -> None:
+    artifact = tmp_path / "model.bin"
+    artifact.write_bytes(b"1234")
+    report = benchmark_candidate(
+        lambda: sum(range(10)),
+        lambda: object(),
+        [artifact],
+        iterations=1,
+        concurrency=1,
+        queue_requests=1,
+        timeout_ms=1000.0,
+    )
+    single = report["concurrency_1"]
+    assert isinstance(single, dict)  # nosec B101
+    single["p95_ms"] = "invalid"
+    with pytest.raises(ValueError, match="numeric p95_ms"):
+        ranking_performance_fields(report)
+
+
 def test_export_artifact_metadata_hashes_exact_bytes(tmp_path) -> None:
     artifact = tmp_path / "model.onnx"
     artifact.write_bytes(b"abc")
