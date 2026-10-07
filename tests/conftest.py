@@ -21,6 +21,11 @@ def settings(tmp_path: Path) -> Settings:
                 "admin-secret",
                 frozenset({"review:read", "review:write", "review:admin"}),
             ),
+            ClientCredential(
+                "support",
+                "support-secret",
+                frozenset({"support:context"}),
+            ),
         ),
         request_queue_size=4,
         request_workers=2,
@@ -44,3 +49,8 @@ def staff_headers() -> dict[str, str]:
 @pytest.fixture
 def admin_headers() -> dict[str, str]:
     return {"X-Client-Id": "admin", "Authorization": "Bearer admin-secret"}
+
+
+@pytest.fixture
+def support_headers() -> dict[str, str]:
+    return {"X-Client-Id": "support", "Authorization": "Bearer support-secret"}
