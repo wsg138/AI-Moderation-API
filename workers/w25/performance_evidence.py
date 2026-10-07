@@ -65,7 +65,7 @@ def ranking_performance_fields(report: dict[str, object]) -> dict[str, float | i
             int(single["peak_rss_bytes"]),
             int(realistic["peak_rss_bytes"]),
         ),
-        "artifact_size_bytes": int(report["artifact_size_bytes"]),
+        "artifact_size_bytes": int(artifact_size),
     }
 
 
