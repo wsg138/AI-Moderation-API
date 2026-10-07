@@ -44,6 +44,8 @@ from .models import (
     SafetyMemoryFact,
     SafetyMemoryKind,
     StrikeRecommendation,
+    SupportContextDecision,
+    SupportDecisionSource,
     SupportFlow,
 )
 
@@ -136,6 +138,18 @@ class ModerationStore:
 
     async def list_review_items(self, limit: int) -> list[ReviewItem]:
         return await asyncio.to_thread(_list_review_items, self._path, limit)
+
+    async def list_support_context(
+        self,
+        subject_id: str,
+        limit: int,
+    ) -> list[SupportContextDecision]:
+        return await asyncio.to_thread(
+            _list_support_context,
+            self._path,
+            subject_id,
+            limit,
+        )
 
     async def create_correction(
         self,
@@ -826,6 +840,96 @@ def _list_review_items(path: Path, limit: int) -> list[ReviewItem]:
             (limit,),
         ).fetchall()
     return [_review_item(row) for row in rows]
+
+
+def _list_support_context(
+    path: Path,
+    subject_id: str,
+    limit: int,
+) -> list[SupportContextDecision]:
+    candidate_limit = min(250, max(limit, limit * 5))
+    with _connect(path) as connection:
+        rows = connection.execute(
+            """SELECT e.event_id,e.occurred_at,e.platform,e.channel_profile,
+                      d.semantic_label,d.message_action,d.review_priority,
+                      d.strike_recommendation,d.containment,d.support_flow,
+                      d.reason_codes_json
+               FROM moderation_events e
+               JOIN decision_evidence d ON d.event_id=e.event_id
+               WHERE e.status='FINAL'
+                 AND e.sender_identity_id=?
+                 AND d.ingestion_status='INGESTED'
+                 AND (
+                   e.channel_profile IS NULL OR
+                   e.channel_profile NOT IN (
+                     'discord_staff_exempt',
+                     'discord_ticket_exempt',
+                     'discord_configured_exempt'
+                   )
+                 )
+               ORDER BY e.occurred_at DESC
+               LIMIT ?""",
+            (subject_id, candidate_limit),
+        ).fetchall()
+
+        decisions: list[SupportContextDecision] = []
+        for row in rows:
+            accepted = _accepted_correction(connection, str(row["event_id"]))
+            decision = _support_context_decision(row, accepted)
+            if not _meaningful_support_decision(decision):
+                continue
+            decisions.append(decision)
+            if len(decisions) >= limit:
+                break
+        return decisions
+
+
+def _support_context_decision(
+    row: sqlite3.Row,
+    accepted: CorrectionResponse | None,
+) -> SupportContextDecision:
+    if accepted is not None:
+        corrected = accepted.corrected
+        return SupportContextDecision(
+            event_id=str(row["event_id"]),
+            occurred_at=datetime.fromisoformat(row["occurred_at"]),
+            platform=Platform(row["platform"]),
+            semantic_label=corrected.semantic_label,
+            message_action=corrected.message_action,
+            review_priority=corrected.review_priority,
+            strike_recommendation=corrected.strike_recommendation,
+            containment=corrected.containment,
+            support_flow=corrected.support_flow,
+            reason_codes=list(corrected.reason_codes),
+            decision_source=SupportDecisionSource.ACCEPTED_CORRECTION,
+        )
+
+    return SupportContextDecision(
+        event_id=str(row["event_id"]),
+        occurred_at=datetime.fromisoformat(row["occurred_at"]),
+        platform=Platform(row["platform"]),
+        semantic_label=Label(row["semantic_label"]),
+        message_action=MessageAction(row["message_action"]),
+        review_priority=ReviewPriority(row["review_priority"]),
+        strike_recommendation=StrikeRecommendation(row["strike_recommendation"]),
+        containment=Containment(row["containment"]),
+        support_flow=SupportFlow(row["support_flow"]),
+        reason_codes=json.loads(row["reason_codes_json"] or "[]"),
+        decision_source=SupportDecisionSource.AI,
+    )
+
+
+def _meaningful_support_decision(decision: SupportContextDecision) -> bool:
+    return any(
+        (
+            decision.semantic_label is not Label.SAFE,
+            decision.message_action is not MessageAction.ALLOW,
+            decision.review_priority is not ReviewPriority.NONE,
+            decision.strike_recommendation is not StrikeRecommendation.NONE,
+            decision.containment is not Containment.NONE,
+            decision.support_flow is not SupportFlow.NONE,
+        )
+    )
 
 
 def _create_correction(
