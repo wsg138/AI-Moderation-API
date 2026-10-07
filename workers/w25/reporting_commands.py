@@ -11,7 +11,10 @@ from workers.w25.attacks import ATTACK_FAMILIES, mutate_examples
 from workers.w25.comparison import rank_candidates
 from workers.w25.config import MODEL_SPECS
 from workers.w25.evidence import aggregate_evidence_manifest
-from workers.w25.performance_evidence import benchmark_candidate
+from workers.w25.performance_evidence import (
+    benchmark_candidate,
+    ranking_performance_fields,
+)
 from workers.w25.selection import (
     DevelopmentScore,
     select_deberta_seed_aggregate,
@@ -145,7 +148,7 @@ def _onnx_benchmark(args) -> None:
 
 
 def _benchmark_payload(operation, startup, artifacts: list[Path], args) -> dict[str, object]:
-    return benchmark_candidate(
+    report = benchmark_candidate(
         operation,
         startup,
         artifacts,
@@ -154,6 +157,8 @@ def _benchmark_payload(operation, startup, artifacts: list[Path], args) -> dict[
         queue_requests=args.queue_requests,
         timeout_ms=args.timeout_ms,
     )
+    report.update(ranking_performance_fields(report))
+    return report
 
 
 def _benchmark_artifacts(args, primary: Path) -> list[Path]:

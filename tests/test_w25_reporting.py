@@ -25,7 +25,10 @@ from workers.w25.evidence import aggregate_evidence_manifest
 from workers.w25.export_onnx import artifact_metadata, parity_report
 from workers.w25.failures import grouped_visibility_failures
 from workers.w25.lexical_artifact import export_lexical_artifact
-from workers.w25.performance_evidence import benchmark_candidate
+from workers.w25.performance_evidence import (
+    benchmark_candidate,
+    ranking_performance_fields,
+)
 from workers.w25.stability import stability_report
 
 
@@ -357,6 +360,31 @@ def test_composed_performance_report_includes_all_runtime_dimensions(tmp_path) -
     }
     assert report["artifact_size_bytes"] == 4  # nosec B101
 
+
+
+def test_ranking_performance_fields_match_benchmark_dimensions(tmp_path) -> None:
+    artifact = tmp_path / "model.bin"
+    artifact.write_bytes(b"1234")
+    report = benchmark_candidate(
+        lambda: sum(range(10)),
+        lambda: object(),
+        [artifact],
+        iterations=3,
+        concurrency=2,
+        queue_requests=4,
+        timeout_ms=1000.0,
+    )
+    flat = ranking_performance_fields(report)
+    single = report["concurrency_1"]
+    realistic = report["concurrency_realistic"]
+    startup = report["startup"]
+    assert isinstance(single, dict)  # nosec B101
+    assert isinstance(realistic, dict)  # nosec B101
+    assert isinstance(startup, dict)  # nosec B101
+    assert flat["p95_ms"] == single["p95_ms"]  # nosec B101
+    assert flat["throughput_per_second"] == realistic["throughput_per_second"]  # nosec B101
+    assert flat["startup_p95_ms"] == startup["startup_p95_ms"]  # nosec B101
+    assert flat["artifact_size_bytes"] == 4  # nosec B101
 
 def test_export_artifact_metadata_hashes_exact_bytes(tmp_path) -> None:
     artifact = tmp_path / "model.onnx"

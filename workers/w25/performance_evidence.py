@@ -45,3 +45,32 @@ def benchmark_candidate(
         ),
         "artifact_size_bytes": artifact_size_bytes(artifact_paths),
     }
+
+
+def ranking_performance_fields(report: dict[str, object]) -> dict[str, float | int]:
+    """Flatten the benchmark dimensions consumed by evidence ranking."""
+    single = _metric_group(report, "concurrency_1")
+    realistic = _metric_group(report, "concurrency_realistic")
+    startup = _metric_group(report, "startup")
+    return {
+        "p50_ms": float(single["p50_ms"]),
+        "p95_ms": float(single["p95_ms"]),
+        "p99_ms": float(single["p99_ms"]),
+        "throughput_per_second": float(realistic["throughput_per_second"]),
+        "startup_p50_ms": float(startup["startup_p50_ms"]),
+        "startup_p95_ms": float(startup["startup_p95_ms"]),
+        "cpu_percent_equivalent": float(realistic["cpu_percent_equivalent"]),
+        "steady_rss_bytes": int(realistic["steady_rss_bytes"]),
+        "peak_rss_bytes": max(
+            int(single["peak_rss_bytes"]),
+            int(realistic["peak_rss_bytes"]),
+        ),
+        "artifact_size_bytes": int(report["artifact_size_bytes"]),
+    }
+
+
+def _metric_group(report: dict[str, object], key: str) -> dict[str, object]:
+    value = report.get(key)
+    if not isinstance(value, dict):
+        raise ValueError(f"benchmark report requires {key} object")
+    return value
