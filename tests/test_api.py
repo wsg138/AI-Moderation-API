@@ -247,15 +247,15 @@ def _seed_support_context(client: TestClient, rose_headers: dict[str, str]):
 
 
 def _assert_support_context_minimized(response, meaningful) -> None:
-    assert response.status_code == 200
+    assert response.status_code == 200  # nosec B101  # nosemgrep
     body = response.json()
-    assert body["subject_id"] == "identity-player-a"
-    assert len(body["decisions"]) == 1
+    assert body["subject_id"] == "identity-player-a"  # nosec B101  # nosemgrep
+    assert len(body["decisions"]) == 1  # nosec B101  # nosemgrep
     decision = body["decisions"][0]
-    assert decision["event_id"] == meaningful.json()["event_id"]
-    assert decision["semantic_label"] == "SEVERE_HARASSMENT"
-    assert decision["message_action"] == "BLOCK"
-    assert decision["decision_source"] == "AI"
+    assert decision["event_id"] == meaningful.json()["event_id"]  # nosec B101  # nosemgrep
+    assert decision["semantic_label"] == "SEVERE_HARASSMENT"  # nosec B101  # nosemgrep
+    assert decision["message_action"] == "BLOCK"  # nosec B101  # nosemgrep
+    assert decision["decision_source"] == "AI"  # nosec B101  # nosemgrep
     for forbidden in (
         "bad-context raw private phrase",
         "platform-player-a",
@@ -263,7 +263,7 @@ def _assert_support_context_minimized(response, meaningful) -> None:
         "scope_id",
         "sender_id",
     ):
-        assert forbidden not in response.text
+        assert forbidden not in response.text  # nosec B101  # nosemgrep
 
 
 def test_support_context_requires_dedicated_permission_and_minimizes_data(
@@ -285,9 +285,9 @@ def test_support_context_requires_dedicated_permission_and_minimizes_data(
             headers=support_headers,
         )
 
-    assert meaningful.status_code == 200
-    assert missing_auth.status_code == 401
-    assert wrong_permission.status_code == 403
+    assert meaningful.status_code == 200  # nosec B101  # nosemgrep
+    assert missing_auth.status_code == 401  # nosec B101  # nosemgrep
+    assert wrong_permission.status_code == 403  # nosec B101  # nosemgrep
     _assert_support_context_minimized(response, meaningful)
 
 
@@ -337,13 +337,13 @@ def test_support_context_uses_accepted_staff_correction(
             headers=support_headers,
         )
 
-    assert moderated.status_code == 200
-    assert correction.status_code == 201
-    assert correction.json()["status"] == "ACCEPTED"
+    assert moderated.status_code == 200  # nosec B101  # nosemgrep
+    assert correction.status_code == 201  # nosec B101  # nosemgrep
+    assert correction.json()["status"] == "ACCEPTED"  # nosec B101  # nosemgrep
     decision = response.json()["decisions"][0]
-    assert decision["semantic_label"] == "LOW_LEVEL_HARASSMENT"
-    assert decision["message_action"] == "ALLOW"
-    assert decision["strike_recommendation"] == "EVIDENCE"
-    assert decision["reason_codes"] == ["staff_corrected"]
-    assert decision["decision_source"] == "ACCEPTED_CORRECTION"
+    assert decision["semantic_label"] == "LOW_LEVEL_HARASSMENT"  # nosec B101  # nosemgrep
+    assert decision["message_action"] == "ALLOW"  # nosec B101  # nosemgrep
+    assert decision["strike_recommendation"] == "EVIDENCE"  # nosec B101  # nosemgrep
+    assert decision["reason_codes"] == ["staff_corrected"]  # nosec B101  # nosemgrep
+    assert decision["decision_source"] == "ACCEPTED_CORRECTION"  # nosec B101  # nosemgrep
 
