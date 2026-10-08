@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Any
 
 from .blind_review import _outside_checkout, _write_jsonl
-from .review_assignments import packet_digest, _check_packet
+from .review_assignments import _check_packet, packet_digest
 from .review_decisions import review_summary, validate_decision
 
 
