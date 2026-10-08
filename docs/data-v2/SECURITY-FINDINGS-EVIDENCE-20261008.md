@@ -33,4 +33,8 @@ These are source-based findings with reproducible negative tests on the W2 branc
 
 ## Validation
 
-W2 implementation parent: `6ed2bea688bf25584262fca3f285a0c9091e347f`. Seven focused negative test cases were added in `tests/test_review_security_boundaries.py` (parameterized cases expand the tests), to be executed with the required GitHub Actions CI on the draft stacked PR. **No passing local build/test claim:** the isolated execution container has no GitHub network access for repository cloning. Reconcile the final PR exact-head `verify`, Ruff, mypy, complexity, wheel build and Codacy checks after opening the PR before calling this complete.
+W2 source changes: `6ed2bea688bf25584262fca3f285a0c9091e347f`, with a follow-up complexity refactor at `a525cb7407019ad7b3a6e5e1f7458e272c3fff89`. Six new regression test functions cover eight parameterized negative cases in `tests/test_review_security_boundaries.py`.
+
+- **Initial CI failed** at `028a9ddef2cf33055d4bfcf3b37fa360428e4545` ([run 37800388912](https://github.com/wsg138/AI-Moderation-API/actions/runs/37800388912)) on `_check_messages` **CCN 10 > 8**, after Ruff/mypy success. Refactored chronology validation into a separate helper, without weakening rejection.
+- **Corrected code head passed** GitHub-hosted `service-ci` at `a525cb7407019ad7b3a6e5e1f7458e272c3fff89` ([run 37800592856](https://github.com/wsg138/AI-Moderation-API/actions/runs/37800592856)): Ruff, mypy, CCN, candidate dataset QA, 18 report freshness checks, W11 integration reproducibility, **258 tests passed**, and wheel build.
+- No passing local build claim: the isolated tool container cannot clone GitHub due to network/DNS restrictions. These are GitHub-hosted results. Recheck the final documentation-only PR head and Codacy independently; a successful required workflow does **not** establish security scanner clearance.
