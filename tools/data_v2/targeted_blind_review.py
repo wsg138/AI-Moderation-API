@@ -25,6 +25,7 @@ from tools.dataset_qa.freshness import ROOT, batch_files
 from tools.dataset_qa.review_assignments import _check_packet
 
 from .private_owner_actions import (
+    _require,
     _source_index,
     read_private_ledger,
     validate_ledger,
@@ -68,33 +69,48 @@ def _diverse_selection(
     return chosen
 
 
+def _validate_frame(
+    queue: list[dict[str, object]], by_id: dict[str, dict[str, Any]],
+) -> None:
+    _require(len(queue) == len(by_id), "triage queue incomplete")
+    _require(
+        len({row["example_id"] for row in queue}) == len(queue),
+        "triage queue duplicate",
+    )
+    for row in queue:
+        _require(str(row["example_id"]) in by_id, "unknown candidate ID")
+        _require(str(row["triage_priority"]) in QUOTAS, "unknown candidate triage tier")
+
+
+def _candidate_buckets(
+    queue: list[dict[str, object]], reviewed: set[str],
+) -> dict[tuple[str, str], list[str]]:
+    buckets: dict[tuple[str, str], list[str]] = defaultdict(list)
+    for row in queue:
+        identifier = str(row["example_id"])
+        if identifier not in reviewed:
+            buckets[(identifier[:3], str(row["triage_priority"]))].append(identifier)
+    return buckets
+
+
 def select_review_ids(
     queue: list[dict[str, object]], by_id: dict[str, dict[str, Any]],
     reviewed: set[str], secret: bytes,
 ) -> tuple[list[str], dict[str, object]]:
     """Keyed sample across source batches and priority tiers; no label reuse."""
-    if len(secret) < 16 or not set(by_id).issuperset(reviewed):
-        raise ValueError("invalid review secret or owner reviewed source IDs")
-    if len(queue) != len(by_id) or len({row["example_id"] for row in queue}) != len(queue):
-        raise ValueError("triage queue incomplete or duplicate")
-    buckets: dict[tuple[str, str], list[str]] = defaultdict(list)
-    for row in queue:
-        identifier = str(row["example_id"])
-        tier = str(row["triage_priority"])
-        if identifier not in by_id or tier not in QUOTAS:
-            raise ValueError("unknown candidate ID or triage tier")
-        if identifier not in reviewed:
-            buckets[(identifier[:3], tier)].append(identifier)
+    _require(len(secret) >= 16, "invalid review secret")
+    _require(set(by_id).issuperset(reviewed), "invalid review secret or owner reviewed IDs")
+    _validate_frame(queue, by_id)
     selected: list[str] = []
     tiers: Counter[str] = Counter()
-    for (batch, tier), identifiers in sorted(buckets.items()):
+    for (batch, tier), identifiers in sorted(_candidate_buckets(queue, reviewed).items()):
         chosen = _diverse_selection(
             identifiers, by_id, secret, f"{batch}:{tier}", QUOTAS[tier]
         )
         selected.extend(chosen)
         tiers[tier] += len(chosen)
-    if len(selected) != len(set(selected)) or not selected:
-        raise ValueError("invalid or empty selected cohort")
+    _require(len(selected) == len(set(selected)), "duplicate selected cohort")
+    _require(bool(selected), "invalid or empty selected cohort")
     ordered = sorted(selected, key=lambda ident: _rank(secret, ident, "review-order"))
     summary: dict[str, object] = {
         "source_scope": "pinned_public_synthetic_G10_G27",
