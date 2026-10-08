@@ -74,3 +74,17 @@ def test_no_proposal_is_marked_approved_by_a_gold_label() -> None:
     assert all(row["review_origin"] == "coordinator_provisional_screen_only"
                for row in proposals)
     assert all(json.dumps(row).count("admitted") == 0 for row in proposals)
+
+
+def test_explicit_irl_exposure_source_rows_cannot_get_gameplay_proposal() -> None:
+    source_rows = [
+        json.loads(line) for line in _source().decode("utf-8").splitlines()
+    ]
+    known_irl = {"G10-0107", "G10-0108", "G10-0110", "G10-0124"}
+    assert known_irl <= {row["example_id"] for row in source_rows}
+    assert all(
+        "explicit_real_world_cue" in row["reason_codes"]
+        for row in source_rows if row["example_id"] in known_irl
+    )
+    proposals, _ = build_proposals(_source())
+    assert not ({row["example_id"] for row in proposals} & known_irl)
