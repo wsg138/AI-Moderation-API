@@ -99,7 +99,8 @@
       "status": "sealed_evaluation_only",
       "policy_version": "v1_pending_adjudication",
       "use": [
-        "independent_acceptance_after_freeze_only"
+        "quarantined_holdout_candidate_only",
+        "future_independent_acceptance_if_protocol_accounts_for_pre_split_selection_bias"
       ],
       "exclusions": [
         "training",
@@ -109,8 +110,9 @@
         "prompt_design",
         "synthetic_targeting"
       ],
-      "primary_blocker": "independent frozen evaluation process; no development inspection",
-      "reference": "private heldout partition manifest"
+      "primary_blocker": "Prospectively frozen never-mined benchmark needed for strong independent generalization claims; no routine iteration or labeling on this cohort",
+      "reference": "private heldout partition manifest",
+      "known_exposure": "These candidates were mined/scored before the date-based split was assigned; their labels are not known, but they are NOT pristine never-inspected acceptance data."
     },
     {
       "id": "w25-dev-scores",
@@ -192,5 +194,6 @@
     "approved_uses"
   ],
   "promotion_rule": "A source is not supervised-training-eligible until permissions, privacy review, final-byte structure QA, policy-label adjudication, deduplication/family split, and explicit dataset acceptance all pass.",
-  "compute_rule": "Explicit owner notice and approval before expensive/heavy local or paid workloads."
+  "compute_rule": "Explicit owner notice and approval before expensive/heavy local or paid workloads.",
+  "evaluation_caveat": "A prospective, independently labeled and never-mined real-world evaluation cohort is still needed; pre-split mined real-review-heldout-v1 is not sufficient for 99% validation. W20 and W27 remain protected."
 }
