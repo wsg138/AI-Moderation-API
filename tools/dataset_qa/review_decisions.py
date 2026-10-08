@@ -71,7 +71,7 @@ def _validate_evidence(indices: object, messages: object) -> None:
     if not isinstance(messages, list) or not isinstance(indices, list):
         raise ValueError("invalid packet context or evidence indices")
     if not indices:
-        raise ValueError("review decision must cite at least one visible message")
+        raise ValueError("review evidence must cite at least one visible message")
     if not all(type(i) is int and 0 <= i < len(messages) for i in indices):
         raise ValueError("evidence index outside as-of-target context")
     if len(indices) != len(set(indices)):
