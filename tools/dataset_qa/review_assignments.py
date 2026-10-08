@@ -28,20 +28,23 @@ def packet_digest(packet: dict[str, object]) -> str:
     return hashlib.sha256(encoded.encode()).hexdigest()
 
 
-def _check_packet(packet: dict[str, object]) -> str:
-    if set(packet) != PACKET_FIELDS:
-        raise ValueError("invalid blind packet fields")
-    identifier = packet["packet_id"]
-    messages = packet["messages"]
-    if not isinstance(identifier, str) or not re.fullmatch(r"R-[a-f0-9]{24}", identifier):
-        raise ValueError("invalid opaque packet ID")
+def _check_messages(messages: object, target_index: object) -> None:
     if not isinstance(messages, list) or not messages:
         raise ValueError("review packet has no messages")
-    if packet["target_index"] != len(messages) - 1:
+    if target_index != len(messages) - 1:
         raise ValueError("review packet contains post-target messages")
     if any(not isinstance(m, dict) or set(m) != {"speaker", "offset_ms", "text"}
            for m in messages):
         raise ValueError("review packet contains extra message metadata")
+
+
+def _check_packet(packet: dict[str, object]) -> str:
+    if set(packet) != PACKET_FIELDS:
+        raise ValueError("invalid blind packet fields")
+    identifier = packet["packet_id"]
+    if not isinstance(identifier, str) or not re.fullmatch(r"R-[a-f0-9]{24}", identifier):
+        raise ValueError("invalid opaque packet ID")
+    _check_messages(packet["messages"], packet["target_index"])
     return identifier
 
 
