@@ -1,0 +1,43 @@
+name: DATA-V2-01 candidate-only checks
+
+on:
+  push:
+    branches:
+      - workers/data-v2-pr52-qa-repair
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  candidate-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install dependencies
+        run: |
+          python -m pip install --disable-pip-version-check -r deployment/requirements-runtime.lock
+          python -m pip install --disable-pip-version-check -e '.[dev]'
+      - name: Ruff on DATA-V2-01 code
+        run: |
+          ruff check tools/dataset_qa/freshness.py tools/dataset_qa/candidate_audit.py \
+            tests/test_dataset_freshness.py tests/test_candidate_audit.py
+      - name: Mypy
+        run: mypy
+      - name: Enforce complexity limits
+        run: python tools/check_complexity.py
+      - name: Final-byte report freshness
+        run: python -m tools.dataset_qa.freshness
+      - name: Regression and service tests
+        run: pytest
+      - name: Build wheel
+        run: python -m pip wheel . --no-deps --wheel-dir dist
+
+# Existing service-ci continues to run for the stacked PR. It is already red
+# on 162 generator Ruff findings at the PR #52 source head; this isolated
+# job tests new QA code without masking the existing required CI check.

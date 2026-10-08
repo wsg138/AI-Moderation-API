@@ -31,30 +31,41 @@ def _context(record: dict[str, Any]) -> tuple[str, str, list[dict[str, Any]]]:
     return target, " ".join(m.get("text", "") for m in messages), messages
 
 
-def _policy_flags(item: dict[str, Any], label: str, action: str) -> set[str]:
-    reasons = set(item.get("reason_codes", []))
+def _safe_flags(item: dict[str, Any], label: str, action: str) -> set[str]:
+    if label != "SAFE":
+        return set()
     flags: set[str] = set()
-    if label == "SAFE" and action != "ALLOW":
+    if action != "ALLOW":
         flags.add("safe_action_disagreement")
+    if item.get("strike") or item.get("containment") != "NONE":
+        flags.add("safe_with_punishment")
+    if set(item.get("reason_codes", [])) & SENSITIVE:
+        flags.add("safe_with_severe_reason_code")
+    return flags
+
+
+def _policy_flags(item: dict[str, Any], label: str, action: str) -> set[str]:
+    flags = _safe_flags(item, label, action)
     if label == "AMBIGUOUS_REVIEW" and action != "REVIEW":
         flags.add("ambiguous_action_disagreement")
-    if label == "SAFE" and (item.get("strike") or item.get("containment") != "NONE"):
-        flags.add("safe_with_punishment")
-    if label == "SAFE" and reasons & SENSITIVE:
-        flags.add("safe_with_severe_reason_code")
     if label == "SELF_HARM_INTENT" and (action == "BLOCK" or item.get("strike")):
         flags.add("self_harm_disclosure_punished")
     return flags
 
 
-def _text_flags(label: str, target: str, context: str) -> set[str]:
+def _violence_flags(label: str, target: str, context: str) -> set[str]:
     flags: set[str] = set()
-    if label == "SAFE" and DIRECTIVE.search(target):
-        flags.add("safe_with_self_harm_directive")
     if label == "REAL_WORLD_THREAT" and GAME.search(target) and not REAL.search(context):
         flags.add("real_world_label_with_game_cue")
     if label == "GAMEPLAY_VIOLENCE" and REAL.search(context):
         flags.add("gameplay_label_with_real_cue")
+    return flags
+
+
+def _text_flags(label: str, target: str, context: str) -> set[str]:
+    flags = _violence_flags(label, target, context)
+    if label == "SAFE" and DIRECTIVE.search(target):
+        flags.add("safe_with_self_harm_directive")
     if label == "GROOMING" and not MINOR.search(context):
         flags.add("grooming_without_explicit_minor_cue")
     if DM_PIVOT.fullmatch(target.strip()) and label != "SAFE":
