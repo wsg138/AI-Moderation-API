@@ -15,7 +15,7 @@ This program is the follow-up to W25 Phase-A screening; do not replace the pinne
 - A local Qwen3 8B fact annotator was unreliable on owner-policy examples (10/21 semantic-label matches in a *prompt-contaminated consistency check*). Its hypotheses were **not admitted as training truth**.
 - PR #52 contributes **9,000 additional synthetic candidate records** (G10–G27). Its independent semantic review is missing; stale per-batch QA reports and Codacy findings require resolution first. **PR #52 is not training-eligible yet.**
 
-See [source registry](source-registry.json) and [training order / gates](TRAINING-ORDER.md). For outside dataset-review input, see [collaboration questions](COLLABORATOR-REVIEW.md).
+See [source registry](source-registry.json), [training order / gates](TRAINING-ORDER.md), [provisional independent-labeling rubric](ANNOTATION-RUBRIC.md), and [PR #52 full 18-batch audit](PR52-LABEL-COUNT-AUDIT.md). For outside dataset-review input, see [collaboration questions](COLLABORATOR-REVIEW.md).
 
 ## Nonnegotiable principles
 
