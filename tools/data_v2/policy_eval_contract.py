@@ -72,9 +72,7 @@ def _threat(facts: SemanticFacts) -> PolicyDecision:
 
 
 def _blackmail(facts: SemanticFacts) -> PolicyDecision:
-    if facts.scope == "game_only" and facts.channel in {
-        "minecraft_public", "minecraft_private", "discord_gaming",
-    }:
+    if facts.scope == "game_only":
         return _allow("SAFE", "§12 + owner 2026-10-08 ruling")
     if facts.scope == "irl":
         return _decision("BLACKMAIL", "BLOCK", "§12", review="URGENT",
