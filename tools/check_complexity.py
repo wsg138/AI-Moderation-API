@@ -5,7 +5,12 @@ from pathlib import Path
 
 MAX_CCN = 8
 MAX_LINES = 50
-ROOTS = (Path("service"), Path("tests"), Path("tools/dataset_qa"))
+ROOTS = (
+    Path("service"),
+    Path("tests"),
+    Path("tools/dataset_qa"),
+    Path("tools/chat_mining"),
+)
 
 
 class ComplexityVisitor(ast.NodeVisitor):
