@@ -8,6 +8,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 import sys
 from collections import Counter, defaultdict
 from pathlib import Path
@@ -29,6 +30,8 @@ from .synthetic_family_audit import (
 
 POLICY_RISK = frozenset({
     "gameplay_blackmail_scope_review",
+    "multilingual_policy_boundary",
+    "self_disclosed_contact_policy_boundary",
     "asof_exact_candidate_action_conflict",
     "safe_action_disagreement",
     "safe_with_punishment",
@@ -48,6 +51,7 @@ SAFETY_LABELS = frozenset({
     "BLACKMAIL", "GROOMING", "DANGEROUS_REAL_WORLD_INSTRUCTIONS",
     "HATE", "SLUR_USE", "SEVERE_HARASSMENT", "STAFF_TARGETED_ABUSE",
 })
+SELF_CONTACT = re.compile(r"\b(?:my (?:phone|address|email)|call me at|my number is)\b", re.I)
 GROUP_KINDS = frozenset({
     "asof_exact", "target_exact", "family_id",
     "family_stem_candidate", "near_target_candidate",
@@ -66,6 +70,18 @@ def _source_ref(identifier: str, source_files: dict[str, str]) -> dict[str, obje
     }
 
 
+def _conflicting_actions(group: Group, by_id: dict[str, dict[str, Any]]) -> bool:
+    return len({by_id[identifier].get("action") for identifier in group.example_ids}) > 1
+
+
+def validate_source_order(rows: list[dict[str, Any]]) -> None:
+    """Record suffix must equal its actual JSONL line before citing provenance."""
+    for index, row in enumerate(rows):
+        expected = f"G{10 + index // 500:02d}-{index % 500 + 1:04d}"
+        if row.get("example_id") != expected:
+            raise ValueError("source record order differs from example-ID line mapping")
+
+
 def _group_index(
     groups: list[Group], by_id: dict[str, dict[str, Any]],
 ) -> tuple[dict[str, list[dict[str, object]]], set[str]]:
@@ -81,9 +97,7 @@ def _group_index(
                   "size": len(group.example_ids)}
         for identifier in group.example_ids:
             links[identifier].append(signal)
-        if group.kind == "asof_exact" and len({
-            by_id[i].get("action") for i in group.example_ids
-        }) > 1:
+        if group.kind == "asof_exact" and _conflicting_actions(group, by_id):
             conflicts.update(group.example_ids)
     return links, conflicts
 
@@ -103,6 +117,10 @@ def _source_flags(
     )
     if game_only_candidate(record):
         flags.add("gameplay_blackmail_scope_review")
+    if str(record["example_id"]).startswith("G21-"):
+        flags.add("multilingual_policy_boundary")
+    if label == "SAFE" and SELF_CONTACT.search(target):
+        flags.add("self_disclosed_contact_policy_boundary")
     if conflicting:
         flags.add("asof_exact_candidate_action_conflict")
     if record["target_index"] < len(record["messages"]) - 1:
@@ -190,6 +208,7 @@ def main(argv: list[str] | None = None) -> int:
             path.name[:3]: str(path) for path in batch_files(ROOT, require_complete=True)
         }
         rows = load_candidates()
+        validate_source_order(rows)
         queue, summary = build_queue(rows, find_groups(rows), files)
         if args.coordinator_queue_out is not None:
             _write_jsonl(_outside_checkout(args.coordinator_queue_out), queue)
