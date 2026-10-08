@@ -171,3 +171,63 @@ reviewer's answer before both independent decisions have been irreversibly
 recorded. Reviewers should not share accounts or use the coordinator's
 private crosswalk. Any later promotion requires a *separate* gated
 adjudication/admission implementation and explicit source/split authorization.
+
+## Operational two-reviewer assignment and intake
+
+After the synthetic-only `review_sampling` command has prepared a
+candidate subset, run the offline assignment tool with **two or more
+genuinely independent reviewers**. These IDs should be pseudonymous aliases
+with identity, role, and conflict-of-interest checks kept securely by the
+coordinator, not posted to GitHub. Example (illustrative files, **no commands
+have been executed on owner hardware**):
+
+```bash
+python -m tools.dataset_qa.review_assignments \
+  --packet-input /tmp/enthusia-reviewer/sample-packets.jsonl \
+  --reviewers reviewer01,reviewer02,reviewer03 \
+  --reviewer-out-dir /tmp/enthusia-reviewer-assigned \
+  --coordinator-manifest-out /tmp/enthusia-coordinator/assignment-manifest.jsonl
+```
+
+Use the **same coordinator-only HMAC key** for sample creation and
+assignment. Each packet goes to two distinct aliases, balanced across the
+roster. Every reviewer gets a separate file containing only their blinded
+packets; the coordinator manifest (never distributed) records packet ID,
+SHA-256 of the canonical packet, and two assigned reviewer aliases. The
+assignment manifest is not the source-ID crosswalk; keep both separated
+from reviewers and gold/source labels.
+
+Each reviewer independently completes records with the exact
+`review_decisions.py` schema described above. Collect those files only
+after decisions are complete; do not give reviewers access to another
+reviewer's submissions. On the coordinator side, run:
+
+```bash
+python -m tools.dataset_qa.review_intake \
+  --packet-input /tmp/enthusia-reviewer/sample-packets.jsonl \
+  --manifest-input /tmp/enthusia-coordinator/assignment-manifest.jsonl \
+  --decision-input /tmp/reviews/reviewer01-decisions.jsonl \
+  --decision-input /tmp/reviews/reviewer02-decisions.jsonl \
+  --status-out /tmp/enthusia-coordinator/intake-status.jsonl
+```
+
+`review_intake` verifies that the packet bytes match their original
+assignment digest, that submissions come from the assigned reviewer aliases,
+and that there are no duplicates or out-of-range evidence indices. It
+provides a status report of pending, agreement, disagreement or unresolved
+policy questions. The status output **does not include source gold labels**
+and every row remains `training_eligible: false`. Do not hand source/gold
+labels to reviewers before their independent decisions have been locked.
+
+**Security limitation:** the CLI does not authenticate a remote human.
+Someone in possession of both reviewer files can impersonate both aliases.
+The coordinator must confirm real, distinct reviewers and control storage,
+permissions, and submission provenance outside this code. No live review
+service or identity provider is implemented; do not claim an automated
+two-human consensus from two aliases alone.
+
+**Further acceptance blockers:** even two matching independent decisions do
+not satisfy owner Policy-v1 adjudication for every safety/critical case,
+Codacy issue-level triage, permission/source gates, cross-source duplicate
+and family split isolation, or heldout evaluation independence. None of
+these commands trigger training, merge, staff punishments or deployment.
