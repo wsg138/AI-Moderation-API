@@ -27,7 +27,7 @@ def test_100_curated_cases_have_independent_review_gate() -> None:
     proposals, summary = build_proposals(raw)
     assert summary["provisional_game_only_proposals"] == 100
     assert len(proposals) == len(_curated_ids()) == 100
-    assert len({r["example_id"] for r in proposals}) == 86
+    assert len({r["example_id"] for r in proposals}) == 100
     assert all(r["status"] == "requires_independent_policy_adjudication"
                for r in proposals)
     assert all(r["training_eligible"] is False for r in proposals)
