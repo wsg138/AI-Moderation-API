@@ -25,11 +25,9 @@ def serialize_as_of_target(record: Mapping[str, object]) -> dict[str, object]:
 
 def _target_details(record: Mapping[str, object]) -> tuple[list[object], int, int]:
     raw = record.get("messages")
-    index = record.get("target_index")
-    if not isinstance(raw, list) or not isinstance(index, int) or isinstance(index, bool):
-        raise ValueError("messages must be a list and target_index an integer")
-    if index < 0 or index >= len(raw):
-        raise ValueError("target_index outside message sequence")
+    if not isinstance(raw, list):
+        raise ValueError("messages must be a list")
+    index = _target_index(record.get("target_index"), len(raw))
     target = raw[index]
     if not isinstance(target, dict):
         raise ValueError("target must be a message")
@@ -37,6 +35,14 @@ def _target_details(record: Mapping[str, object]) -> tuple[list[object], int, in
     if not isinstance(cutoff, int) or isinstance(cutoff, bool):
         raise ValueError("target message must have integer offset_ms")
     return raw, index, cutoff
+
+
+def _target_index(value: object, count: int) -> int:
+    if not isinstance(value, int) or isinstance(value, bool):
+        raise ValueError("target_index must be an integer")
+    if value < 0 or value >= count:
+        raise ValueError("target_index outside message sequence")
+    return value
 
 
 def _static_scope(record: Mapping[str, object], name: str) -> str:
