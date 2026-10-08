@@ -109,3 +109,33 @@ def test_invalid_policy_and_non_boolean_strike_are_rejected() -> None:
     row["policy_version"] = "v2"
     with pytest.raises(ValueError, match="policy version"):
         validate_decision(row, packet)
+
+
+@pytest.mark.parametrize("facts", [[], [" "], ["x"] * 33, ["x" * 201]])
+def test_empty_or_unbounded_semantic_facts_fail_closed(facts: list[str]) -> None:
+    packet = _packet()
+    row = _decision(packet, "r1")
+    row["semantic_facts"] = facts
+    with pytest.raises(ValueError, match="semantic facts"):
+        validate_decision(row, packet)
+
+
+@pytest.mark.parametrize("evidence", [[], [1, 1]])
+def test_missing_or_duplicated_visible_evidence_fails_closed(
+    evidence: list[int],
+) -> None:
+    packet = _packet()
+    row = _decision(packet, "r1")
+    row["evidence_message_indices"] = evidence
+    with pytest.raises(ValueError, match="evidence"):
+        validate_decision(row, packet)
+
+
+def test_zero_evidence_can_never_create_a_false_independent_agreement() -> None:
+    packet = _packet()
+    first = _decision(packet, "r1")
+    second = _decision(packet, "r2")
+    first["evidence_message_indices"] = []
+    second["evidence_message_indices"] = []
+    with pytest.raises(ValueError, match="at least one"):
+        review_summary([packet], [first, second])
