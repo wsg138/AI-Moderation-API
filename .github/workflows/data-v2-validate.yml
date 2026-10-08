@@ -33,12 +33,11 @@ jobs:
       - name: Enforce complexity limits
         run: python tools/check_complexity.py
       - name: Final-byte report freshness
-        run: python -m tools.dataset_qa.freshness
+        run: python -m tools.dataset_qa.freshness --require-complete
       - name: Regression and service tests
         run: pytest
       - name: Build wheel
         run: python -m pip wheel . --no-deps --wheel-dir dist
 
-# Existing service-ci continues to run for the stacked PR. It is already red
-# on 162 generator Ruff findings at the PR #52 source head; this isolated
-# job tests new QA code without masking the existing required CI check.
+# The candidate branch requires all 18 batches; main retains an empty-corpus no-op.
+# The normal required service-ci independently runs full repo-wide checks.

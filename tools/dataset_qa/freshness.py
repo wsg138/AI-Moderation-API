@@ -26,11 +26,11 @@ def report_for(path: Path) -> str:
     return render_markdown_report(build_report(result))
 
 
-def batch_files(directory: Path) -> list[Path]:
+def batch_files(directory: Path, require_complete: bool = False) -> list[Path]:
     files = sorted(directory.glob("G??-*.jsonl"))
     selected = [path for path in files if path.name[:3] in EXPECTED]
     found = {path.name[:3] for path in selected}
-    if found and found != EXPECTED:
+    if (found or require_complete) and found != EXPECTED:
         raise ValueError(f"incomplete G10-G27 batches: missing {sorted(EXPECTED - found)}")
     return selected
 
@@ -39,10 +39,12 @@ def report_path(path: Path) -> Path:
     return path.with_name(f"{path.name[:3]}-report.md")
 
 
-def process(directory: Path, write: bool = False) -> tuple[int, int]:
+def process(
+    directory: Path, write: bool = False, require_complete: bool = False
+) -> tuple[int, int]:
     """Compute every report before mutating anything, and fail on stale output."""
     updates: list[tuple[Path, str]] = []
-    for dataset in batch_files(directory):
+    for dataset in batch_files(directory, require_complete):
         rendered = report_for(dataset)
         destination = report_path(dataset)
         current = destination.read_text(encoding="utf-8") if destination.exists() else None
@@ -51,16 +53,17 @@ def process(directory: Path, write: bool = False) -> tuple[int, int]:
     if write:
         for path, content in updates:
             path.write_text(content, encoding="utf-8")
-    return len(updates), len(batch_files(directory))
+    return len(updates), len(batch_files(directory, require_complete))
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--directory", type=Path, default=ROOT)
     parser.add_argument("--write", action="store_true")
+    parser.add_argument("--require-complete", action="store_true")
     args = parser.parse_args(argv)
     try:
-        changed, checked = process(args.directory, args.write)
+        changed, checked = process(args.directory, args.write, args.require_complete)
     except (OSError, ValueError) as exc:
         print(f"Report freshness error: {exc}", file=sys.stderr)
         return 2

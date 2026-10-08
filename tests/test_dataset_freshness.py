@@ -97,3 +97,17 @@ def test_stale_report_is_rewritten_idempotently(
     assert report.read_text(encoding="utf-8") == "old\n"
     assert process(tmp_path, write=True) == (1, 1)
     assert process(tmp_path) == (0, 1)
+
+def test_required_empty_batch_set_fails_closed(tmp_path: Path) -> None:
+    with pytest.raises(ValueError, match="incomplete"):
+        process(tmp_path, require_complete=True)
+
+
+def test_optional_empty_batch_set_remains_main_compatible(tmp_path: Path) -> None:
+    assert batch_files(tmp_path) == []
+
+
+def test_required_one_batch_set_fails_closed(tmp_path: Path) -> None:
+    (tmp_path / "G10-fixture.jsonl").touch()
+    with pytest.raises(ValueError, match="incomplete"):
+        process(tmp_path, require_complete=True)
