@@ -1,1 +1,1 @@
-"""Offline-only data/model evaluation preparation tools."""
+"""Offline DATA-V2 audit, policy-evaluation, and training-readiness utilities."""
