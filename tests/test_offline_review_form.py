@@ -35,7 +35,7 @@ class FormTags(HTMLParser):
 def test_offline_form_has_all_review_decision_fields() -> None:
     parser = FormTags()
     parser.feed(FORM.read_text(encoding="utf-8"))
-    assert FIELDS <= parser.ids
+    assert parser.ids >= FIELDS
     assert not parser.externals
 
 
