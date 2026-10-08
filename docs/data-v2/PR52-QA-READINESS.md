@@ -78,3 +78,17 @@ flagged IDs using owner Policy v1, including quoted slurs under §10.
 
 W11/W25 overlap requires approved development-only manifests, not W20/W27,
 private logs, or previously model-mined heldout material.
+
+## Target-as-of-time safeguard (follow-up)
+
+The 1,584 nonterminal-target cases are retrospective candidate fixtures;
+later messages, even if chronologically corrected, must NEVER enter the
+model's real-time features for their earlier target. The worker branch adds
+`tools/dataset_qa/asof_input.py` with an explicit scope/message allowlist,
+cutoff enforcement and future-only-answer regressions, plus a live rolling
+context regression. The classifier currently remains a stub; training
+integration and independent semantic adjudication are still required.
+
+The candidate-only freshness check is strict about all 18 batches being
+present (and unique). The compatibility mode for `main` remains an empty
+candidate no-op. None of this changes labels or establishes training readiness.
