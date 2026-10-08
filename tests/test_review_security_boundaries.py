@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 from tools.dataset_qa.blind_review import _write_jsonl, _write_review_outputs
-from tools.dataset_qa.review_assignments import _check_packet
+from tools.dataset_qa.review_assignments import _check_packet, _write_assignment_outputs
 from tools.dataset_qa.review_intake import _read_jsonl
 
 
@@ -81,3 +81,21 @@ def test_assignment_rejects_out_of_order_pretarget_offsets() -> None:
     }
     with pytest.raises(ValueError, match="chronological"):
         _check_packet(packet)
+
+
+def test_failed_assignment_manifest_does_not_leave_reviewers_exposed(
+    tmp_path: Path,
+) -> None:
+    reviewer_dir = tmp_path / "new-reviewer-files"
+    manifest = tmp_path / "private" / "manifest.jsonl"
+    manifest.parent.mkdir()
+    manifest.write_text("do not overwrite", encoding="utf-8")
+    with pytest.raises(FileExistsError):
+        _write_assignment_outputs(
+            reviewer_dir, manifest,
+            {"reviewer01": [{"packet_id": "R-" + "a" * 24}],
+             "reviewer02": [{"packet_id": "R-" + "b" * 24}]},
+            [{"packet_id": "R-" + "a" * 24}],
+        )
+    assert not reviewer_dir.exists()
+    assert manifest.read_text(encoding="utf-8") == "do not overwrite"
