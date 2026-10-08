@@ -50,3 +50,52 @@ The default prints only source SHA-256, counts and flags. The optional JSONL man
 5. The 9,000 synthetic records remain **candidate-only**. No model training, deployment, private player-data access, W20/W27 use, or automatic punishments are authorized.
 
 Related: [owner rule](./GAMEPLAY-BLACKMAIL-OWNER-RULING.md); [DATA-V2-02 review protocol](./BLIND-REVIEW-PACKET-PROTOCOL.md); GitHub issue #59.
+
+## Coordinator preliminary scope screen (86 proposals; not yet independently adjudicated)
+
+A narrower manual/semantic **coordinator preliminary screen** of as-of-target
+synthetic text selected **86 of the 107** stronger-gameplay-cue cases as
+provisional correction requests. These cases depict explicit game-item payment
+for leverage over Minecraft bases, guild vaults/coordinates, in-game griefing,
+or in-game records. The selection excludes underspecified threats, cheating
+report leverage, a personal voice-chat disclosure, real-money purchases of
+server ranks and all cases containing identified real-world cues. Even though
+these 86 were provisionally read in their context, this does **not** constitute
+a second independent human review or certify their final labels.
+
+The 341 flagged records are now tracked as:
+
+| State | Count | Admission |
+|---|---:|---|
+| Provisional game-only corrections prepared | **86** | Zero approved; independent/adjudication gate remains |
+| Other stronger-gameplay-cue cases, not yet provisionally proposed | **21** | Pending |
+| Mixed/real-world-risk scope | **35** | Pending; no game-only allowance assumed |
+| Insufficient game-only scope evidence | **199** | Pending |
+| **Total originally flagged** | **341** | **0 admitted** |
+
+Reproduce the proposal set, pinned to the exact original Git blob and target-time
+context:
+
+```bash
+python -m tools.dataset_qa.gameplay_blackmail_proposals
+
+# Optional coordinator-only output (not inside Git checkout):
+python -m tools.dataset_qa.gameplay_blackmail_proposals \
+  --coordinator-proposals-out /tmp/enthusia-g10-provisional-corrections.jsonl
+```
+
+Each optional proposal JSONL row has the original synthetic ID, precise source
+line and source SHA-256, an as-of-target visible-context SHA-256, a short
+gameplay scope basis, and a proposed new `SAFE / ALLOW / NONE / no strike / no
+mute / support NONE` tuple. Crucially, it always has
+`status=requires_independent_policy_adjudication`,
+`review_origin=coordinator_provisional_screen_only`, and
+`training_eligible=false`. Neither command rewrites the G10 dataset, creates
+official review decisions, changes production, or removes the existing
+source/split and security blockers.
+
+Remaining per-record verification should inspect the **21** unproposed
+strong-cue examples first and explicitly identify any overlooked mixed or
+real-world stakes before extending the proposal set; also validate the current
+86 proposed cases independently and resolve contradictions. Grouped phrases
+or source-provided tags are not enough to certify semantic outcomes.
