@@ -13,6 +13,7 @@ import os
 import re
 import sys
 from collections import defaultdict
+from contextlib import suppress
 from pathlib import Path
 
 from .blind_review import KEY_ENV, _outside_checkout, _write_jsonl
@@ -131,10 +132,8 @@ def _write_assignment_outputs(
     except BaseException:
         for destination in created:
             destination.unlink(missing_ok=True)
-        try:
+        with suppress(OSError):
             directory.rmdir()
-        except OSError:
-            pass
         raise
 
 
