@@ -58,7 +58,10 @@ function render() {
   document.getElementById('previous').disabled = current === 0;
   document.getElementById('next').disabled = current + 1 === cards.length;
 }
-function move(delta) { current = Math.max(0, Math.min(cards.length - 1, current + delta)); render(); }
+function move(delta) {
+  current = Math.max(0, Math.min(cards.length - 1, current + delta));
+  render();
+}
 function choose(value) {
   cards[current].querySelector('input[value="' + value + '"]').checked = true;
   render();
