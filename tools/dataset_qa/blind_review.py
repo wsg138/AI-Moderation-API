@@ -94,9 +94,29 @@ def _outside_checkout(path: Path) -> Path:
 def _write_jsonl(path: Path, records: list[dict[str, object]]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
-    with os.fdopen(fd, "w", encoding="utf-8") as target:
-        for row in records:
-            target.write(json.dumps(row, ensure_ascii=False) + "\n")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as target:
+            for row in records:
+                target.write(json.dumps(row, ensure_ascii=False) + "\n")
+    except BaseException:
+        path.unlink(missing_ok=True)
+        raise
+
+
+def _write_review_outputs(
+    reviewer_path: Path, reviewer_rows: list[dict[str, object]],
+    coordinator_path: Path, coordinator_rows: list[dict[str, object]],
+) -> None:
+    """Keep coordinator answers outside the entire reviewer output directory."""
+    if (coordinator_path.is_relative_to(reviewer_path.parent)
+            or reviewer_path.is_relative_to(coordinator_path.parent)):
+        raise ValueError("coordinator output must be outside reviewer packet directory")
+    _write_jsonl(reviewer_path, reviewer_rows)
+    try:
+        _write_jsonl(coordinator_path, coordinator_rows)
+    except BaseException:
+        reviewer_path.unlink(missing_ok=True)
+        raise
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -107,12 +127,9 @@ def main(argv: list[str] | None = None) -> int:
     try:
         packet_out = _outside_checkout(args.packet_out)
         map_out = _outside_checkout(args.crosswalk_out)
-        if packet_out == map_out:
-            raise ValueError("packet and crosswalk outputs must be separate")
         secret = os.environ.get(KEY_ENV, "").encode("utf-8")
         packets, crosswalk = build_packets(ROOT, secret)
-        _write_jsonl(packet_out, packets)
-        _write_jsonl(map_out, crosswalk)
+        _write_review_outputs(packet_out, packets, map_out, crosswalk)
     except (OSError, ValueError) as exc:
         print(f"Blind packet preparation failed: {exc}", file=sys.stderr)
         return 2

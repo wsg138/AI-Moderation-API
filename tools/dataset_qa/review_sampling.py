@@ -18,7 +18,7 @@ from typing import Any
 from .blind_review import (
     KEY_ENV,
     _outside_checkout,
-    _write_jsonl,
+    _write_review_outputs,
     build_packets,
 )
 from .candidate_audit import _add_overlap, _cross_batch, _flags
@@ -133,8 +133,7 @@ def main(argv: list[str] | None = None) -> int:
             raise ValueError("output paths must be distinct and not already exist")
         secret = os.environ.get(KEY_ENV, "").encode("utf-8")
         packets, selection_map = build_sample(ROOT, secret)
-        _write_jsonl(packet_out, packets)
-        _write_jsonl(map_out, selection_map)
+        _write_review_outputs(packet_out, packets, map_out, selection_map)
     except (OSError, ValueError, TypeError, KeyError) as exc:
         print(f"Review sample preparation failed: {exc}", file=sys.stderr)
         return 2

@@ -37,8 +37,13 @@ def _check_messages(messages: object, target_index: object) -> None:
     if not isinstance(target, dict) or type(target.get("offset_ms")) is not int:
         raise ValueError("review packet target timestamp must be an integer")
     cutoff = target["offset_ms"]
+    previous: int | None = None
     for message in messages:
         _check_message(message, cutoff)
+        offset = message["offset_ms"]
+        if previous is not None and offset < previous:
+            raise ValueError("review packet timestamps must be chronological")
+        previous = offset
 
 
 def _check_message(message: object, cutoff: int) -> None:

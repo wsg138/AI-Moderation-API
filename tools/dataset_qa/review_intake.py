@@ -17,8 +17,20 @@ from .review_assignments import _check_packet, packet_digest
 from .review_decisions import review_summary, validate_decision
 
 
+def _unique_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    result: dict[str, Any] = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError(f"duplicate JSON object key: {key}")
+        result[key] = value
+    return result
+
+
 def _read_jsonl(path: Path) -> list[dict[str, Any]]:
-    rows = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()]
+    rows = [
+        json.loads(line, object_pairs_hook=_unique_object)
+        for line in path.read_text(encoding="utf-8").splitlines()
+    ]
     if any(not isinstance(row, dict) for row in rows):
         raise ValueError("JSONL input must contain objects only")
     return rows
