@@ -117,3 +117,8 @@ def test_future_dated_earlier_message_is_rejected_even_if_target_is_last() -> No
     packet["target_index"] = 1
     with pytest.raises(ValueError, match="future"):
         assign_reviewers([packet], ["r1", "r2"], KEY)
+
+
+def test_empty_assignment_is_not_a_completed_reviewer_batch() -> None:
+    with pytest.raises(ValueError, match="at least one packet"):
+        assign_reviewers([], ["reviewerA", "reviewerB"], KEY)
