@@ -3,8 +3,11 @@
 No private logs are read. Run:
     python tools/data_v2/test_method_invariants.py
 
-This is a small safety fixture, NOT the production session linker,
-near-duplicate audit, privacy scanner, or Policy-v1 resolver.
+This is a small synthetic-only design fixture, NOT the production session linker,
+near-duplicate audit, privacy scanner, or Policy-v1 resolver. The per-message
+scope_id and manifest group fields used here are a proposed v2 extension: legacy
+Policy-v1 JSONL contains record-level channel_profile and family_id, not scope_id.
+Do not run validate_window unchanged as a gate over legacy G01-G27 datasets.
 """
 
 from __future__ import annotations
@@ -48,7 +51,7 @@ def validate_window(record: dict) -> list[str]:
         if not isinstance(message.get("text"), str):
             errors.append("missing_text")
 
-    if len(scopes) > 1 and not record.get("verified_cross_scope_link"):
+    if len(scopes) > 1 and record.get("verified_cross_scope_link") is not True:
         errors.append("unverified_cross_scope")
     if offsets:
         if offsets[-1] != 0:
@@ -57,7 +60,11 @@ def validate_window(record: dict) -> list[str]:
             errors.append("future_message")
         if offsets != sorted(offsets):
             errors.append("nonchronological")
-        if not record.get("verified_long_gap_link"):
+        if record.get("verified_long_gap_link") is not True:
+            # A continuous stream can stay active while the oldest message
+            # falls beyond the target-centered 120s context horizon.
+            if offsets[0] < -120000:
+                errors.append("context_outside_120s")
             if any((right - left) > 120000 for left, right in zip(offsets, offsets[1:])):
                 errors.append("unlinked_afk_gap")
     return sorted(set(errors))
@@ -73,10 +80,13 @@ def find_split_leaks(records: list[dict]) -> list[str]:
         if split not in {"train", "dev", "holdout"}:
             raise ValueError("Unrecognized split")
         groups: list[tuple[str, str]] = [("example", record_id)]
-        for field in ("session_group", "family_group", "canonical_event_id"):
+        for field in ("session_group", "family_group", "family_id", "canonical_event_id"):
             value = record.get(field)
             if value:
-                groups.append((field, str(value)))
+                # family_id is the existing Policy-v1 generator key;
+                # family_group is the proposed private v2 manifest key.
+                kind = "family_group" if field == "family_id" else field
+                groups.append((kind, str(value)))
         for message_id in record.get("source_message_ids", []):
             groups.append(("source_message", str(message_id)))
         for parent_id in record.get("parent_ids", []):
@@ -156,6 +166,51 @@ class DataV2FixtureTests(unittest.TestCase):
                              ("msg-3", "msg-4"))
         b["parent_ids"] = ["FX-001"]
         self.assertIn("example:FX-001", find_split_leaks([a, b]))
+
+
+    def test_continuous_stream_still_excludes_old_context(self) -> None:
+        r = synthetic_record()
+        r["messages"] = [
+            {"speaker": "P1", "scope_id": "mc-global", "offset_ms": -150000,
+             "text": "an old message"},
+            {"speaker": "P2", "scope_id": "mc-global", "offset_ms": -75000,
+             "text": "another message"},
+            {"speaker": "P1", "scope_id": "mc-global", "offset_ms": 0,
+             "text": "current target"},
+        ]
+        r["target_index"] = 2
+        errors = validate_window(r)
+        self.assertIn("context_outside_120s", errors)
+        self.assertNotIn("unlinked_afk_gap", errors)
+
+    def test_string_cross_scope_verification_does_not_bypass(self) -> None:
+        r = synthetic_record()
+        r["messages"][0]["scope_id"] = "discord-general"
+        r["verified_cross_scope_link"] = "yes"
+        self.assertIn("unverified_cross_scope", validate_window(r))
+
+    def test_string_long_gap_verification_does_not_bypass(self) -> None:
+        r = synthetic_record()
+        r["messages"][0]["offset_ms"] = -300000
+        r["verified_long_gap_link"] = "yes"
+        self.assertIn("unlinked_afk_gap", validate_window(r))
+        self.assertIn("context_outside_120s", validate_window(r))
+
+    def test_existing_family_id_is_respected(self) -> None:
+        a = synthetic_record()
+        b = synthetic_record("FX-002", "holdout", "SESSION-B", "FAMILY-B",
+                             ("msg-3", "msg-4"))
+        b.pop("family_group")
+        b["family_id"] = "FAMILY-A"
+        self.assertIn("family_group:FAMILY-A", find_split_leaks([a, b]))
+
+    def test_normalized_family_and_v2_family_group_are_equivalent(self) -> None:
+        a = synthetic_record()
+        a.pop("family_group")
+        a["family_id"] = "FAMILY-A"
+        b = synthetic_record("FX-002", "holdout", "SESSION-B", "FAMILY-A",
+                             ("msg-3", "msg-4"))
+        self.assertIn("family_group:FAMILY-A", find_split_leaks([a, b]))
 
     def test_generic_phrase_is_not_alone_leakage(self) -> None:
         a = synthetic_record()
