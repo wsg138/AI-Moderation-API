@@ -37,6 +37,14 @@ def _validate_text(value: object, field: str) -> str:
     return value
 
 
+def _validate_duration(row: dict[str, Any]) -> None:
+    duration = row["containment_duration_seconds"]
+    if row["containment"] == "NONE" and duration is not None:
+        raise ValueError("NONE containment requires null duration")
+    if duration is not None and (type(duration) is not int or duration <= 0):
+        raise ValueError("mute duration must be a positive integer or null")
+
+
 def _validate_outcomes(row: dict[str, Any]) -> None:
     if row["semantic_label"] not in LABELS:
         raise ValueError("unknown semantic label")
@@ -45,13 +53,23 @@ def _validate_outcomes(row: dict[str, Any]) -> None:
             raise ValueError(f"invalid {field}")
     if type(row["strike"]) is not bool:
         raise ValueError("strike must be a boolean")
-    duration = row["containment_duration_seconds"]
-    if row["containment"] == "NONE" and duration is not None:
-        raise ValueError("NONE containment requires null duration")
-    if duration is not None and (type(duration) is not int or duration <= 0):
-        raise ValueError("mute duration must be a positive integer or null")
     if row["uncertainty"] not in UNCERTAINTY:
         raise ValueError("unknown uncertainty value")
+    _validate_duration(row)
+
+
+def _validate_facts(facts: object) -> None:
+    if not isinstance(facts, list):
+        raise ValueError("semantic facts must be bounded text entries")
+    if not all(isinstance(f, str) and 0 < len(f) <= 200 for f in facts):
+        raise ValueError("semantic facts must be bounded text entries")
+
+
+def _validate_evidence(indices: object, messages: object) -> None:
+    if not isinstance(messages, list) or not isinstance(indices, list):
+        raise ValueError("invalid packet context or evidence indices")
+    if not all(type(i) is int and 0 <= i < len(messages) for i in indices):
+        raise ValueError("evidence index outside as-of-target context")
 
 
 def validate_decision(
@@ -66,17 +84,8 @@ def validate_decision(
     if row["policy_version"] != "v1":
         raise ValueError("unsupported policy version")
     _validate_outcomes(row)
-    facts = row["semantic_facts"]
-    if not isinstance(facts, list) or not all(
-        isinstance(f, str) and 0 < len(f) <= 200 for f in facts
-    ):
-        raise ValueError("semantic facts must be bounded text entries")
-    indices = row["evidence_message_indices"]
-    messages = packet.get("messages")
-    if not isinstance(messages, list) or not isinstance(indices, list):
-        raise ValueError("invalid packet context or evidence indices")
-    if not all(type(i) is int and 0 <= i < len(messages) for i in indices):
-        raise ValueError("evidence index outside as-of-target context")
+    _validate_facts(row["semantic_facts"])
+    _validate_evidence(row["evidence_message_indices"], packet.get("messages"))
 
 
 def _decision_fingerprint(row: dict[str, Any]) -> tuple[object, ...]:
