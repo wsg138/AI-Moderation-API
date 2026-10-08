@@ -98,14 +98,20 @@ def test_requires_an_unpredictable_secret() -> None:
         build_packets(ROOT, b"short")
 
 
+def _assert_hidden_fields(
+    packets: list[dict[str, object]], crosswalk: list[dict[str, object]]
+) -> None:
+    assert all("label" not in p and "example_id" not in p for p in packets)
+    assert all("label" not in row and "action" not in row for row in crosswalk)
+    assert {row["example_id"][:3] for row in crosswalk} == {
+        f"G{n:02d}" for n in range(10, 28)
+    }
+
+
 def test_all_available_candidate_records_have_blind_packets() -> None:
     if not batch_files(ROOT):
         pytest.skip("main branch has no G10-G27 candidates")
     packets, crosswalk = build_packets(ROOT, KEY)
     assert len(packets) == len(crosswalk) == 9000
     assert len({p["packet_id"] for p in packets}) == 9000
-    assert {row["example_id"][:3] for row in crosswalk} == {
-        f"G{n:02d}" for n in range(10, 28)
-    }
-    assert all("label" not in p and "example_id" not in p for p in packets)
-    assert all("label" not in row and "action" not in row for row in crosswalk)
+    _assert_hidden_fields(packets, crosswalk)
