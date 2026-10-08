@@ -1,0 +1,176 @@
+{
+  "source": {
+    "workflow_run_id": 37225843627,
+    "head_sha": "3aac90ca8d0d57ca2174a852f961c6b753e7205d",
+    "partition": "W11 validation",
+    "n": 385,
+    "selection_data_only": true
+  },
+  "baseline_tfidf": {
+    "semantic_label": {
+      "accuracy": 0.9142857142857143,
+      "macro_f1": 0.8281258599860339,
+      "weighted_f1": 0.9162238690688963
+    },
+    "runtime_visibility": {
+      "accuracy": 0.935064935064935,
+      "block_precision": 0.9375,
+      "block_recall": 0.9217877094972067,
+      "block_f1": 0.9295774647887324
+    },
+    "dataset_action_3way": {
+      "accuracy": 0.9298701298701298,
+      "macro_f1": 0.9171372246589101
+    },
+    "review_priority": {
+      "accuracy": 0.9558441558441558,
+      "macro_f1": 0.9234199634001712
+    },
+    "strike": {
+      "accuracy": 0.974025974025974,
+      "macro_f1": 0.9581776310072131
+    },
+    "containment": {
+      "accuracy": 0.9948051948051948,
+      "macro_f1": 0.9653153153153153
+    },
+    "support_flow": {
+      "accuracy": 1,
+      "macro_f1": 0.6666666666666666
+    },
+    "calibration": {
+      "ece": 0.16288780821650672,
+      "brier_score": 0.07907764342004127
+    },
+    "critical_slices": {
+      "minecraft_gameplay": {
+        "n": 87,
+        "block_false_positive_rate": 0.03571428571428571
+      },
+      "benign_hard_negatives": {
+        "n": 55,
+        "block_false_positive_rate": 0.03636363636363636
+      },
+      "generic_minecraft_violence": {
+        "n": 48,
+        "block_false_positive_rate": 0
+      },
+      "explicit_real_world_cues": {
+        "n": 97,
+        "allowed_block_false_positive_rate": 0,
+        "blocked_block_recall": 0.9375
+      },
+      "real_world_threat": {
+        "n": 55,
+        "block_recall": 0.9090909090909091
+      },
+      "split_message_threat": {
+        "n": 7,
+        "block_recall": 1
+      },
+      "long_gap_non_linkage": {
+        "n": 2,
+        "block_false_positive_rate": 0
+      },
+      "self_harm_instruction": {
+        "n": 20,
+        "block_recall": 0.95
+      },
+      "first_person_self_harm_disclosure": {
+        "n": 5,
+        "block_false_positive_rate": 0
+      },
+      "slur_actual_use": {
+        "n": 21,
+        "block_recall": 0.9047619047619048
+      },
+      "slur_reference_only": {
+        "n": 8,
+        "block_false_positive_rate": 0
+      },
+      "public_flirting_or_sexual": {
+        "n": 29,
+        "block_recall": 0.8620689655172413
+      },
+      "private_flirting": {
+        "n": 11,
+        "block_false_positive_rate": 0.18181818181818182
+      },
+      "sexual_minor": {
+        "n": 7,
+        "block_recall": 1
+      },
+      "age_reliable_minor": {
+        "n": 7,
+        "block_recall": 1
+      },
+      "age_self_report_only": {
+        "n": 4,
+        "block_false_positive_rate": 0.25
+      },
+      "minecraft_tnt": {
+        "n": 11,
+        "block_false_positive_rate": 0
+      },
+      "real_world_explosive_request": {
+        "n": 22,
+        "block_recall": 1
+      },
+      "obfuscation_evasion": {
+        "n": 7,
+        "block_recall": 0.8571428571428571
+      },
+      "discord_general": {
+        "n": 81,
+        "allowed_block_false_positive_rate": 0.09523809523809523,
+        "blocked_block_recall": 0.95
+      },
+      "minecraft_public": {
+        "n": 176,
+        "allowed_block_false_positive_rate": 0.03389830508474576,
+        "blocked_block_recall": 0.9137931034482759
+      }
+    }
+  },
+  "bert_mini": {
+    "semantic_label": {
+      "accuracy": 0.8831168831168831,
+      "macro_f1": 0.776358371388446
+    },
+    "runtime_visibility": {
+      "accuracy": 0.9402597402597402,
+      "block_precision": 0.9193548387096774,
+      "block_recall": 0.9553072625698324
+    },
+    "calibration": {
+      "ece": 0.04237224331137713,
+      "brier_score": 0.04573141801541434
+    },
+    "minecraft_gameplay_block_false_positive_rate": 0.05952380952380952,
+    "real_world_threat_block_recall": 0.9636363636363636,
+    "split_message_threat_block_recall": 0.8571428571428571
+  },
+  "bert_tiny": {
+    "semantic_label": {
+      "accuracy": 0.6831168831168831,
+      "macro_f1": 0.462404313491213
+    },
+    "runtime_visibility": {
+      "accuracy": 0.8467532467532467,
+      "block_precision": 0.8092783505154639,
+      "block_recall": 0.8770949720670391
+    },
+    "calibration": {
+      "ece": 0.0777600551846546,
+      "brier_score": 0.0946692524799915
+    },
+    "minecraft_gameplay_block_false_positive_rate": 0.08333333333333333,
+    "real_world_threat_block_recall": 0.9636363636363636,
+    "split_message_threat_block_recall": 1
+  },
+  "selection": {
+    "candidate": "baseline-tfidf",
+    "basis": "pre-recorded safety/false-positive criteria using validation only",
+    "old_heldout_used": false
+  }
+}

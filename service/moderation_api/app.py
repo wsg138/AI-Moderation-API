@@ -28,6 +28,7 @@ from .models import (
     ReviewQueueResponse,
     SupportContextResponse,
 )
+from .onnx_classifier import OnnxClassifier, OnnxClassifierConfig
 from .runtime import ModerationRuntime, ProcessingTimeout, RequestQueueFull
 from .storage import (
     DecisionConflict,
@@ -49,7 +50,7 @@ def create_app(
     config = settings or Settings.from_env()
     store = ModerationStore(config.database_path)
     context = _build_context(config)
-    local_classifier = classifier or StubClassifier()
+    local_classifier = classifier or _build_local_classifier()
     advisory, advisory_enabled = _build_advisory(config, store, advisory_client)
     runtime = ModerationRuntime(config, store, context, local_classifier, advisory)
     authenticator = Authenticator(config.clients)
@@ -74,6 +75,15 @@ def create_app(
     _register_support_context(app, store, support_context_auth)
     return app
 
+
+
+def _build_local_classifier() -> LocalClassifier:
+    """Load the configured W12 ONNX bundle, otherwise preserve fail-open stub mode."""
+    try:
+        config = OnnxClassifierConfig.from_env()
+    except (RuntimeError, ValueError):
+        return StubClassifier()
+    return OnnxClassifier(config)
 
 def _build_context(settings: Settings) -> RollingContextStore:
     return RollingContextStore(

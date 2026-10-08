@@ -1,0 +1,75 @@
+{
+  "candidate": "baseline-tfidf",
+  "model_version": "w12-baseline-tfidf-v2",
+  "serialization_version": "w12-v2",
+  "seed": 42,
+  "original_v1_history": {
+    "initial_model_freeze_sha": "49930627d3fad9505f9ef4db7c2708030f9b6723",
+    "old_heldout_evidence_observed": true,
+    "status": "superseded_development_evidence",
+    "reason": "material preprocessing correction after observation: train/runtime timing/speaker parity plus removal of post-target future messages"
+  },
+  "v2_preprocessing": {
+    "introduced_at_sha": "8604f292efc37469f06b419e82570dc31c9ead55",
+    "current_model_code_head": "2abf7bebff42de41063428ac647cfee80cbe1739",
+    "canonical_speakers": "first appearance",
+    "target_offset_ms": 0,
+    "prior_offsets": "target-relative negative/zero",
+    "post_target_messages_excluded": true,
+    "editorial_metadata_excluded_from_model_input": true
+  },
+  "final_selection": {
+    "basis": "W11 train + validation only",
+    "evidence_workflow_run_id": 37320175852,
+    "evidence_head_sha": "2abf7bebff42de41063428ac647cfee80cbe1739",
+    "selected_candidate": "baseline-tfidf",
+    "thresholds_retuned_after_old_heldout_observation": false,
+    "old_heldout_used_for_v2_selection": false,
+    "metrics": {
+      "label_accuracy": 0.9142857142857143,
+      "label_macro_f1": 0.8281258599860339,
+      "block_precision": 0.9375,
+      "block_recall": 0.9217877094972067,
+      "minecraft_gameplay_block_false_positive_rate": 0.03571428571428571,
+      "real_world_threat_block_recall": 0.9090909090909091,
+      "calibration_ece": 0.16288780821650672,
+      "calibration_brier": 0.07907764342004127
+    },
+    "rationale": "baseline retained for stronger semantic quality and lower normal-user false positives; BERT Mini has higher BLOCK/threat recall and better calibration but worse gameplay/Discord/explicit-cue false positives and misses one split-message threat validation case"
+  },
+  "w11_split": {
+    "algorithm": "w11-v2",
+    "train": 3269,
+    "validation": 385,
+    "test": 410,
+    "frozen_adversarial": 436,
+    "reshuffled": false
+  },
+  "selected_onnx_evidence": {
+    "model_version": "w12-baseline-tfidf-v2",
+    "metadata_sha256": "529880d0c97bb4ee50050b22cf8a61f88fa05bbb153e2f97f76d81e0e2a4f126",
+    "feature_count": 7073,
+    "runtime_artifact_bytes": 1010811,
+    "validation_examples": 385,
+    "prediction_mismatches": 0,
+    "max_abs_probability_delta": 1.8235273024913567e-7,
+    "artifact_id": 11349359710,
+    "artifact_zip_sha256": "d3a7312c7b6360e65e944efe20b1f7754635476e94c640d90f22c6032114477d",
+    "artifact_expires_at": "2026-11-04T13:55:20Z",
+    "quantization": {
+      "attempted": true,
+      "selected": false,
+      "runtime_artifact_bytes": 420811,
+      "metadata_sha256": "d4fb525be175a0bb3592a65349fdf010378c7498d1f72f8763e6b79ea6e08997",
+      "validation_prediction_mismatches": 3,
+      "max_abs_probability_delta": 0.02604693601774083,
+      "decision": "retain FP32 because int8 changes validation predictions"
+    }
+  },
+  "final_acceptance": {
+    "status": "AWAITING_FRESH_UNSEEN_W20_ACCEPTANCE",
+    "issue": 43,
+    "pr": 44,
+    "rule": "one-shot evaluation after independent W20 review/freeze; any subsequent semantic model/preprocessing/threshold change burns W20 and requires a new unseen set"
+  }
+}
