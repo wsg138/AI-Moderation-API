@@ -117,6 +117,15 @@ def review_summary(
     return [_status(packet["packet_id"], grouped[packet["packet_id"]]) for packet in packets]
 
 
+def _uncertainty_status(decisions: list[dict[str, Any]]) -> str | None:
+    uncertainty = {row["uncertainty"] for row in decisions}
+    if "POLICY_UNRESOLVED" in uncertainty:
+        return "owner_policy_question"
+    if len(decisions) >= 2 and "EVIDENCE_INSUFFICIENT" in uncertainty:
+        return "evidence_insufficient"
+    return None
+
+
 def _status(identifier: str, decisions: list[dict[str, Any]]) -> dict[str, object]:
     status = "awaiting_first_review"
     if len(decisions) == 1:
@@ -124,12 +133,7 @@ def _status(identifier: str, decisions: list[dict[str, Any]]) -> dict[str, objec
     if len(decisions) >= 2:
         fingerprints = {_decision_fingerprint(row) for row in decisions}
         status = "independent_agreement" if len(fingerprints) == 1 else "adjudication"
-    if len(decisions) >= 2 and any(
-        d["uncertainty"] == "EVIDENCE_INSUFFICIENT" for d in decisions
-    ):
-        status = "evidence_insufficient"
-    if any(d["uncertainty"] == "POLICY_UNRESOLVED" for d in decisions):
-        status = "owner_policy_question"
+    status = _uncertainty_status(decisions) or status
     return {
         "packet_id": identifier, "status": status,
         "reviewer_count": len(decisions),
