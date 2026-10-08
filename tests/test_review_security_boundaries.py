@@ -6,7 +6,8 @@ from pathlib import Path
 import pytest
 
 from tools.dataset_qa.blind_review import _write_jsonl, _write_review_outputs
-from tools.dataset_qa.review_assignments import _check_packet, _write_assignment_outputs, main as assignment_main
+from tools.dataset_qa.review_assignments import _check_packet, _write_assignment_outputs
+from tools.dataset_qa.review_assignments import main as assignment_main
 from tools.dataset_qa.review_intake import _read_jsonl
 
 
