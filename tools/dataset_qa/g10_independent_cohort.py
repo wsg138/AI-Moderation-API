@@ -15,7 +15,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from .blind_review import KEY_ENV, _outside_checkout, _write_jsonl, make_packet
+from .blind_review import KEY_ENV, _outside_checkout, _write_review_outputs, make_packet
 from .freshness import ROOT
 from .gameplay_blackmail_proposals import PINNED_SOURCE_BLOB_SHA1, _blob_sha1
 from .owner_blackmail_audit import G10, _load_synthetic_g10
@@ -80,8 +80,7 @@ def main(argv: list[str] | None = None) -> int:
             raise ValueError("keep crosswalk outside reviewer packet directory")
         secret = os.environ.get(KEY_ENV, "").encode("utf-8")
         packets, mapping = build_cohort((ROOT / G10).read_bytes(), secret)
-        _write_jsonl(packet_out, packets)
-        _write_jsonl(map_out, mapping)
+        _write_review_outputs(packet_out, packets, map_out, mapping)
     except (OSError, ValueError, KeyError, TypeError, json.JSONDecodeError) as exc:
         print(f"G10 blind cohort preparation blocked: {exc}", file=sys.stderr)
         return 2
