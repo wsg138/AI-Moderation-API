@@ -65,7 +65,7 @@ def validate_window(record: dict) -> list[str]:
             # falls beyond the target-centered 120s context horizon.
             if offsets[0] < -120000:
                 errors.append("context_outside_120s")
-            if any((right - left) > 120000 for left, right in zip(offsets, offsets[1:])):
+            if any((right - left) > 120000 for left, right in zip(offsets, offsets[1:], strict=False)):
                 errors.append("unlinked_afk_gap")
     return sorted(set(errors))
 
