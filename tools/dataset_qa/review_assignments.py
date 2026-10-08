@@ -36,17 +36,19 @@ def _check_messages(messages: object, target_index: object) -> None:
     target = messages[-1]
     if not isinstance(target, dict) or type(target.get("offset_ms")) is not int:
         raise ValueError("review packet target timestamp must be an integer")
-    cutoff = target["offset_ms"]
+    _check_ordered_messages(messages, target["offset_ms"])
+
+
+def _check_ordered_messages(messages: list[object], cutoff: int) -> None:
     previous: int | None = None
     for message in messages:
-        _check_message(message, cutoff)
-        offset = message["offset_ms"]
+        offset = _check_message(message, cutoff)
         if previous is not None and offset < previous:
             raise ValueError("review packet timestamps must be chronological")
         previous = offset
 
 
-def _check_message(message: object, cutoff: int) -> None:
+def _check_message(message: object, cutoff: int) -> int:
     if not isinstance(message, dict) or set(message) != {
         "speaker", "offset_ms", "text"
     }:
@@ -55,6 +57,7 @@ def _check_message(message: object, cutoff: int) -> None:
         raise ValueError("review packet contains future or invalid timestamp")
     if not isinstance(message["speaker"], str) or not isinstance(message["text"], str):
         raise ValueError("review packet message speaker/text must be strings")
+    return message["offset_ms"]
 
 
 def _check_packet(packet: dict[str, object]) -> str:
