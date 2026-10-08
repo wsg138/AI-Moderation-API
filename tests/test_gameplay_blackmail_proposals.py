@@ -22,11 +22,11 @@ def _source() -> bytes:
     return path.read_bytes()
 
 
-def test_86_curated_cases_have_independent_review_gate() -> None:
+def test_100_curated_cases_have_independent_review_gate() -> None:
     raw = _source()
     proposals, summary = build_proposals(raw)
-    assert summary["provisional_game_only_proposals"] == 86
-    assert len(proposals) == len(_curated_ids()) == 86
+    assert summary["provisional_game_only_proposals"] == 100
+    assert len(proposals) == len(_curated_ids()) == 100
     assert len({r["example_id"] for r in proposals}) == 86
     assert all(r["status"] == "requires_independent_policy_adjudication"
                for r in proposals)
@@ -66,6 +66,10 @@ def test_distinct_game_only_proposals_keep_gameplay_and_irl_risks_separate() -> 
     proposed, _ = build_proposals(_source())
     ids = {str(row["example_id"]) for row in proposed}
     assert {"G10-0008", "G10-0031", "G10-0219", "G10-0245"} <= ids
+    assert {"G10-0043", "G10-0050", "G10-0079", "G10-0104",
+            "G10-0138", "G10-0163", "G10-0281", "G10-0381"} <= ids
+    assert {"G10-0047", "G10-0144", "G10-0161", "G10-0279",
+            "G10-0311", "G10-0324", "G10-0380"} & ids == set()
     assert {"G10-0148", "G10-0195", "G10-0207", "G10-0321"} & ids == set()
 
 
@@ -88,3 +92,15 @@ def test_explicit_irl_exposure_source_rows_cannot_get_gameplay_proposal() -> Non
     )
     proposals, _ = build_proposals(_source())
     assert not ({row["example_id"] for row in proposals} & known_irl)
+
+
+def test_14_new_game_only_leverage_cases_remain_provisional() -> None:
+    proposals, summary = build_proposals(_source())
+    assert summary["provisional_game_only_proposals"] == 100
+    groups = summary["groups"]
+    assert groups["minecraft_cheating_report_leverage"] == 9
+    assert groups["minecraft_account_rule_leverage"] == 3
+    assert groups["minecraft_griefing_or_base_location_leverage"] == 2
+    assert all(item["status"] == "requires_independent_policy_adjudication"
+               for item in proposals)
+    assert summary["training_admitted"] == 0
