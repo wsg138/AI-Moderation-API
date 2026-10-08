@@ -15,13 +15,13 @@ from typing import Any
 
 from .asof_input import serialize_as_of_target
 from .blind_review import _outside_checkout, _write_jsonl
+from .freshness import ROOT
 from .gameplay_blackmail_proposals import (
     GROUPS,
     PINNED_SOURCE_BLOB_SHA1,
     _blob_sha1,
 )
 from .gameplay_blackmail_triage import scope_bucket
-from .freshness import ROOT
 from .owner_blackmail_audit import G10, _load_synthetic_g10, game_only_candidate
 
 # Exactly seven of the original 21 need more context. No ALLOW suggestion.
