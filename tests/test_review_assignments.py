@@ -78,3 +78,42 @@ def test_duplicate_packet_and_short_key_fail_closed() -> None:
         assign_reviewers([packet, packet], ["r1", "r2"], KEY)
     with pytest.raises(ValueError, match="too short"):
         assign_reviewers([packet], ["r1", "r2"], b"x")
+
+
+@pytest.mark.parametrize("field,value", [
+    ("platform_hint", {"source_label": "BLACKMAIL"}),
+    ("channel_profile", ""),
+    ("target_index", True),
+])
+def test_packet_invalid_scope_or_boolean_target_is_rejected(
+    field: str, value: object,
+) -> None:
+    packet = _packet(1)
+    packet[field] = value
+    with pytest.raises(ValueError, match="scope|target"):
+        assign_reviewers([packet], ["r1", "r2"], KEY)
+
+
+@pytest.mark.parametrize("field,value", [
+    ("speaker", {"gold": "BLACKMAIL"}),
+    ("text", {"source_label": "BLOCK"}),
+    ("offset_ms", True),
+    ("offset_ms", 0.1),
+])
+def test_message_nested_metadata_or_invalid_timestamp_is_rejected(
+    field: str, value: object,
+) -> None:
+    packet = _packet(1)
+    packet["messages"][0][field] = value
+    with pytest.raises(ValueError, match="timestamp|speaker/text"):
+        assign_reviewers([packet], ["r1", "r2"], KEY)
+
+
+def test_future_dated_earlier_message_is_rejected_even_if_target_is_last() -> None:
+    packet = _packet(1)
+    packet["messages"].insert(
+        0, {"speaker": "B", "offset_ms": 10, "text": "future information"}
+    )
+    packet["target_index"] = 1
+    with pytest.raises(ValueError, match="future"):
+        assign_reviewers([packet], ["r1", "r2"], KEY)
