@@ -41,7 +41,7 @@ QUOTAS = {
 
 def _rank(secret: bytes, identifier: str, purpose: str) -> str:
     return hmac.new(
-        secret, f"{purpose}\0{identifier}".encode("utf-8"), hashlib.sha256
+        secret, f"{purpose}\0{identifier}".encode(), hashlib.sha256
     ).hexdigest()
 
 
