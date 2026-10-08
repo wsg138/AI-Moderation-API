@@ -95,6 +95,18 @@ def _third_pass_record(
     return result
 
 
+def _collect_weak_scope_cases(
+    rows: list[dict[str, Any]], digest: str, proposed: dict[str, str],
+) -> list[dict[str, object]]:
+    output: list[dict[str, object]] = []
+    for line, row in enumerate(rows, 1):
+        if not game_only_candidate(row):
+            continue
+        if scope_bucket(row) == "insufficient_scope_evidence":
+            output.append(_third_pass_record(row, line, digest, proposed))
+    return output
+
+
 def build_third_pass(raw: bytes) -> tuple[list[dict[str, object]], dict[str, object]]:
     """Require source bytes and exact original 199-case coverage."""
     if _blob_sha1(raw) != PINNED_SOURCE_BLOB_SHA1:
@@ -105,12 +117,7 @@ def build_third_pass(raw: bytes) -> tuple[list[dict[str, object]], dict[str, obj
     if old.intersection(proposed):
         raise ValueError("third pass overlaps earlier adjudication queues")
     digest = hashlib.sha256(raw).hexdigest()
-    output = []
-    for line, row in enumerate(rows, 1):
-        if not game_only_candidate(row):
-            continue
-        if scope_bucket(row) == "insufficient_scope_evidence":
-            output.append(_third_pass_record(row, line, digest, proposed))
+    output = _collect_weak_scope_cases(rows, digest, proposed)
     if len(output) != 199:
         raise ValueError("third-pass count changed from 199")
     counts = Counter(str(row["preliminary_disposition"]) for row in output)
