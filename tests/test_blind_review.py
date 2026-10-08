@@ -89,7 +89,7 @@ def test_post_target_text_cannot_hide_a_pre_target_future_offset() -> None:
 
 
 def test_output_in_checkout_is_rejected() -> None:
-    with pytest.raises(ValueError, match="outside Git checkout"):
+    with pytest.raises(ValueError, match="inside Git checkout"):
         _outside_checkout(Path("tests/private-crosswalk.jsonl"))
 
 
