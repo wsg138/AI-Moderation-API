@@ -25,10 +25,10 @@
 
 | Value | Count |
 |---|---:|
-| `adversarial` | 75 |
-| `easy` | 75 |
-| `hard` | 225 |
-| `medium` | 125 |
+| `adversarial` | 56 |
+| `easy` | 106 |
+| `hard` | 212 |
+| `medium` | 126 |
 
 ### platform_hint
 
@@ -50,24 +50,24 @@
 
 | Value | Count |
 |---|---:|
-| `AMBIGUOUS_REVIEW` | 25 |
-| `SAFE` | 75 |
-| `SEXUAL_CONTENT` | 400 |
+| `AMBIGUOUS_REVIEW` | 4 |
+| `SAFE` | 107 |
+| `SEXUAL_CONTENT` | 389 |
 
 ### action
 
 | Value | Count |
 |---|---:|
-| `ALLOW` | 75 |
-| `BLOCK` | 400 |
-| `REVIEW` | 25 |
+| `ALLOW` | 107 |
+| `BLOCK` | 389 |
+| `REVIEW` | 4 |
 
 ### review_priority
 
 | Value | Count |
 |---|---:|
-| `NONE` | 475 |
-| `NORMAL` | 25 |
+| `NONE` | 496 |
+| `NORMAL` | 4 |
 
 ### containment
 
@@ -85,8 +85,8 @@
 
 | Value | Count |
 |---|---:|
-| `false` | 244 |
-| `true` | 256 |
+| `false` | 246 |
+| `true` | 254 |
 
 ### Containment duration coverage
 
@@ -100,16 +100,19 @@
 |---|---:|
 | `discord_general_no_game_context` | 14 |
 | `historical_or_high_level_context` | 18 |
-| `insufficient_context` | 25 |
+| `insufficient_context` | 2 |
 | `minecraft_gameplay_explicit` | 19 |
 | `mutual_banter_evidence` | 22 |
 | `obfuscated_evasion` | 56 |
-| `private_context_relevant` | 78 |
-| `public_flirting` | 84 |
-| `public_sexual_content` | 324 |
+| `private_context_relevant` | 69 |
+| `private_flirting` | 9 |
+| `public_flirting` | 100 |
+| `public_sexual_content` | 315 |
 | `quoted_or_condemned` | 2 |
-| `sexual_solicitation` | 256 |
+| `reply_context` | 21 |
+| `sexual_solicitation` | 254 |
 | `split_message_context` | 18 |
+| `target_requested_stop` | 2 |
 
 ### Message count
 

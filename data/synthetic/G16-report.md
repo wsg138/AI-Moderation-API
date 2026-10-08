@@ -25,10 +25,10 @@
 
 | Value | Count |
 |---|---:|
-| `adversarial` | 75 |
-| `easy` | 75 |
-| `hard` | 225 |
-| `medium` | 125 |
+| `adversarial` | 60 |
+| `easy` | 103 |
+| `hard` | 213 |
+| `medium` | 124 |
 
 ### platform_hint
 
@@ -48,25 +48,25 @@
 
 | Value | Count |
 |---|---:|
-| `AMBIGUOUS_REVIEW` | 25 |
-| `LOW_LEVEL_HARASSMENT` | 40 |
-| `SAFE` | 75 |
+| `AMBIGUOUS_REVIEW` | 3 |
+| `LOW_LEVEL_HARASSMENT` | 49 |
+| `SAFE` | 88 |
 | `SEVERE_HARASSMENT` | 360 |
 
 ### action
 
 | Value | Count |
 |---|---:|
-| `ALLOW` | 115 |
+| `ALLOW` | 137 |
 | `BLOCK` | 316 |
-| `REVIEW` | 69 |
+| `REVIEW` | 47 |
 
 ### review_priority
 
 | Value | Count |
 |---|---:|
-| `NONE` | 115 |
-| `NORMAL` | 287 |
+| `NONE` | 137 |
+| `NORMAL` | 265 |
 | `URGENT` | 98 |
 
 ### containment
@@ -104,8 +104,8 @@
 |---|---:|
 | `coordinated_dogpile` | 86 |
 | `discord_gameplay_explicit` | 115 |
-| `insufficient_context` | 25 |
-| `low_severity_insult` | 40 |
+| `insufficient_context` | 3 |
+| `low_severity_insult` | 49 |
 | `minecraft_gameplay_explicit` | 385 |
 | `multi_sender_dogpile` | 104 |
 | `mutual_banter_evidence` | 75 |

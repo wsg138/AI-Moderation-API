@@ -25,10 +25,10 @@
 
 | Value | Count |
 |---|---:|
-| `adversarial` | 54 |
+| `adversarial` | 40 |
 | `easy` | 80 |
-| `hard` | 220 |
-| `medium` | 146 |
+| `hard` | 217 |
+| `medium` | 163 |
 
 ### platform_hint
 
@@ -51,27 +51,27 @@
 | Value | Count |
 |---|---:|
 | `AMBIGUOUS_REVIEW` | 25 |
-| `HATE` | 50 |
-| `LOW_LEVEL_HARASSMENT` | 220 |
+| `HATE` | 49 |
+| `LOW_LEVEL_HARASSMENT` | 224 |
 | `REAL_WORLD_THREAT` | 30 |
 | `SAFE` | 75 |
-| `SEVERE_HARASSMENT` | 100 |
+| `SEVERE_HARASSMENT` | 97 |
 
 ### action
 
 | Value | Count |
 |---|---:|
-| `ALLOW` | 295 |
-| `BLOCK` | 180 |
+| `ALLOW` | 299 |
+| `BLOCK` | 176 |
 | `REVIEW` | 25 |
 
 ### review_priority
 
 | Value | Count |
 |---|---:|
-| `NONE` | 295 |
+| `NONE` | 299 |
 | `NORMAL` | 25 |
-| `URGENT` | 180 |
+| `URGENT` | 176 |
 
 ### containment
 
@@ -91,8 +91,8 @@
 
 | Value | Count |
 |---|---:|
-| `false` | 320 |
-| `true` | 180 |
+| `false` | 324 |
+| `true` | 176 |
 
 ### Containment duration coverage
 
@@ -109,13 +109,13 @@
 | `discord_gameplay_explicit` | 95 |
 | `discord_general_no_game_context` | 103 |
 | `explicit_real_world_cue` | 30 |
-| `identity_target` | 50 |
+| `identity_target` | 49 |
 | `insufficient_context` | 25 |
-| `low_severity_insult` | 220 |
+| `low_severity_insult` | 224 |
 | `minecraft_gameplay_explicit` | 97 |
 | `multi_sender_dogpile` | 50 |
 | `real_world_location` | 12 |
-| `repeated_targeting` | 100 |
+| `repeated_targeting` | 97 |
 | `target_requested_stop` | 25 |
 | `targeted_violence` | 30 |
 

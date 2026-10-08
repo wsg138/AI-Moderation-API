@@ -4,7 +4,6 @@ Seeded for reproducibility. Writes data/synthetic/G14-self-harm-third-party.json
 """
 import json
 import random
-import sys
 
 rng = random.Random(14072026)
 
@@ -143,7 +142,8 @@ def fam_friend_direct(n):
     ]
     for _ in range(n):
         add(fam, CONCERN, "easy", chan(), [M("A", _uc(cores))], 0,
-            [TPC], "third_party_concern: Direct report of a friend expressing suicidal intent; urgent staff alert, support resources, no punishment.", )
+            [TPC], ("third_party_concern: Direct report of a friend expressing "
+                "suicidal intent; urgent staff alert, support resources, no punishment."), )
 
 def fam_friend_cutting(n):
     fam = "g14.friend-cutting.002"
@@ -163,7 +163,8 @@ def fam_friend_cutting(n):
     ]
     for _ in range(n):
         add(fam, CONCERN, "easy", chan(), [M("A", _uc(cores))], 0,
-            [TPC], "third_party_concern: Report of a friend self-injuring; urgent staff alert, support resources, no punishment.")
+            [TPC], ("third_party_concern: Report of a friend self-injuring; urgent "
+                "staff alert, support resources, no punishment."))
 
 def fam_sibling(n):
     fam = "g14.sibling.003"
@@ -181,7 +182,8 @@ def fam_sibling(n):
     ]
     for _ in range(n):
         add(fam, CONCERN, "easy", chan(), [M("A", _uc(cores))], 0,
-            [TPC], "third_party_concern: Sibling expressing suicidal intent; urgent staff alert, support resources, no punishment.")
+            [TPC], ("third_party_concern: Sibling expressing suicidal intent; urgent "
+                "staff alert, support resources, no punishment."))
 
 def fam_schoolmate(n):
     fam = "g14.schoolmate.004"
@@ -199,7 +201,9 @@ def fam_schoolmate(n):
     ]
     for _ in range(n):
         add(fam, CONCERN, "easy", chan(), [M("A", _uc(cores))], 0,
-            [TPC, "explicit_real_world_cue"], "third_party_concern: Schoolmate with stated plan/timeframe; urgent staff alert, support resources, no punishment.")
+            [TPC, "explicit_real_world_cue"],
+                ("third_party_concern: Schoolmate with stated plan/timeframe; "
+                    "urgent staff alert, support resources, no punishment."))
 
 def fam_partner(n):
     fam = "g14.partner.005"
@@ -217,7 +221,8 @@ def fam_partner(n):
     ]
     for _ in range(n):
         add(fam, CONCERN, "easy", chan(), [M("A", _uc(cores))], 0,
-            [TPC], "third_party_concern: Partner expressing suicidal intent; urgent staff alert, support resources, no punishment.")
+            [TPC], ("third_party_concern: Partner expressing suicidal intent; urgent "
+                "staff alert, support resources, no punishment."))
 
 def fam_guildmate(n):
     fam = "g14.guildmate.006"
@@ -232,7 +237,8 @@ def fam_guildmate(n):
     for _ in range(n):
         t = _uc(cores, nm_mc)
         add(fam, CONCERN, "easy", chan(), [M("A", t)], 0,
-            [TPC], "third_party_concern: Online community member expressing suicidal intent; urgent staff alert, support resources, no punishment.")
+            [TPC], ("third_party_concern: Online community member expressing suicidal "
+                "intent; urgent staff alert, support resources, no punishment."))
 
 def fam_cousin_family(n):
     fam = "g14.cousin-family.007"
@@ -248,21 +254,12 @@ def fam_cousin_family(n):
     ]
     for _ in range(n):
         add(fam, CONCERN, "easy", chan(), [M("A", _uc(cores))], 0,
-            [TPC], "third_party_concern: Family member expressing self-harm intent; urgent staff alert, support resources, no punishment.")
+            [TPC], ("third_party_concern: Family member expressing self-harm intent; "
+                "urgent staff alert, support resources, no punishment."))
 
 # ---------------------------------------------------------------- medium: quoting
 def fam_quote_chat(n):
     fam = "g14.quote-chat.008"
-    quotes = [
-        "i can't do this anymore",
-        "everyone would be better off without me",
-        "i'm done trying",
-        "what's the point of any of this",
-        "i just want it all to stop",
-        "nobody would even care if i was gone",
-        "i'm tired of being alive",
-        "goodbye everyone, it was fun",
-    ]
     frames = [
         "did anyone else see what {name} just said? \"{q}\"",
         "{name} just typed \"{q}\" in chat, that's worrying",
@@ -274,7 +271,10 @@ def fam_quote_chat(n):
     for _ in range(n):
         t = _uc2(frames)
         add(fam, CONCERN, "medium", chan(), [M("A", t)], 0,
-            [TPC, "quoted_or_condemned"], "third_party_concern: Reporter quoting another player's concerning message verbatim; quoted content is evidence, not endorsement; urgent staff alert.")
+            [TPC, "quoted_or_condemned"],
+                ("third_party_concern: Reporter quoting another player's concerning "
+                    ("message verbatim; quoted content is evidence, not endorsement; "
+                        "urgent staff alert.")))
 
 def fam_quote_goodbye(n):
     fam = "g14.quote-goodbye.009"
@@ -289,7 +289,9 @@ def fam_quote_goodbye(n):
     for _ in range(n):
         t = _uc(cores, nm_mc)
         add(fam, CONCERN, "medium", chan(), [M("A", t)], 0,
-            [TPC, "quoted_or_condemned"], "third_party_concern: Goodbye-style message from another player reported as concerning; urgent staff alert, support resources.")
+            [TPC, "quoted_or_condemned"],
+                ("third_party_concern: Goodbye-style message from another player "
+                    "reported as concerning; urgent staff alert, support resources."))
 
 def fam_quote_dm(n):
     fam = "g14.quote-dm.010"
@@ -304,7 +306,9 @@ def fam_quote_dm(n):
     for _ in range(n):
         t = _uc(cores, nm_mc)
         add(fam, CONCERN, "medium", chan(), [M("A", t)], 0,
-            [TPC, "private_context_relevant"], "third_party_concern: Concerning DM from another player shared by recipient; urgent staff alert, support resources.")
+            [TPC, "private_context_relevant"],
+                ("third_party_concern: Concerning DM from another player shared by "
+                    "recipient; urgent staff alert, support resources."))
 
 def fam_voice_chat(n):
     fam = "g14.voice-chat.015"
@@ -318,7 +322,8 @@ def fam_voice_chat(n):
     for _ in range(n):
         t = _uc(cores, nm_any)
         add(fam, CONCERN, "medium", chan(), [M("A", t)], 0,
-            [TPC], "third_party_concern: Report of concerning statements made on voice chat; urgent staff alert, support resources.")
+            [TPC], ("third_party_concern: Report of concerning statements made on "
+                "voice chat; urgent staff alert, support resources."))
 
 def fam_stream_chat(n):
     fam = "g14.stream-chat.016"
@@ -332,7 +337,8 @@ def fam_stream_chat(n):
     for _ in range(n):
         t = _uc(cores, nm_mc)
         add(fam, CONCERN, "medium", chan(), [M("A", t)], 0,
-            [TPC], "third_party_concern: Concerning message from a stream viewer reported; urgent staff alert, support resources.")
+            [TPC], ("third_party_concern: Concerning message from a stream viewer "
+                "reported; urgent staff alert, support resources."))
 
 # ---------------------------------------------------------------- medium: help-seeking
 def fam_how_to_help(n):
@@ -359,7 +365,8 @@ def fam_how_to_help(n):
     ]
     for _ in range(n):
         add(fam, CONCERN, "medium", chan(), [M("A", _uc(cores))], 0,
-            [TPC], "third_party_concern: Reporter seeking guidance on helping an at-risk person; provide support resources, urgent staff awareness.")
+            [TPC], ("third_party_concern: Reporter seeking guidance on helping an "
+                "at-risk person; provide support resources, urgent staff awareness."))
 
 def fam_resources(n):
     fam = "g14.resources.012"
@@ -379,7 +386,8 @@ def fam_resources(n):
     ]
     for _ in range(n):
         add(fam, CONCERN, "medium", chan(), [M("A", _uc(cores))], 0,
-            [TPC], "third_party_concern: Request for crisis resources on behalf of another person; provide support resources, staff awareness.")
+            [TPC], ("third_party_concern: Request for crisis resources on behalf of "
+                "another person; provide support resources, staff awareness."))
 
 def fam_what_to_say(n):
     fam = "g14.what-to-say.013"
@@ -401,7 +409,8 @@ def fam_what_to_say(n):
     ]
     for _ in range(n):
         add(fam, CONCERN, "medium", chan(), [M("A", _uc(cores))], 0,
-            [TPC], "third_party_concern: Reporter asking how to respond to an at-risk person; provide supportive guidance and resources.")
+            [TPC], ("third_party_concern: Reporter asking how to respond to an at-risk "
+                "person; provide supportive guidance and resources."))
 
 def fam_should_i_tell(n):
     fam = "g14.should-i-tell.014"
@@ -421,7 +430,8 @@ def fam_should_i_tell(n):
     ]
     for _ in range(n):
         add(fam, CONCERN, "medium", chan(), [M("A", _uc(cores))], 0,
-            [TPC], "third_party_concern: Reporter conflicted about breaking confidence; encourage telling a trusted adult/staff, provide resources.")
+            [TPC], ("third_party_concern: Reporter conflicted about breaking "
+                "confidence; encourage telling a trusted adult/staff, provide resources."))
 
 # ---------------------------------------------------------------- hard: escalation / triggers
 def fam_witness_live(n):
@@ -442,7 +452,7 @@ def fam_witness_live(n):
                     M("A", "he just said nobody would miss him if he was gone", 0)]
         elif variant == 2:
             msgs = [M("B", f"has anyone talked to {name} today", -5200),
-                    M("A", f"yeah he's in vc right now saying he can't do this anymore", -2100),
+                    M("A", "yeah he's in vc right now saying he can't do this anymore", -2100),
                     M("A", "i think someone should check on him seriously", 0)]
         else:
             msgs = [M("A", f"uhh {name} just said 'i give up on everything' in chat", -1800),
@@ -454,7 +464,8 @@ def fam_witness_live(n):
         seen_local.add(sig)
         add(fam, CONCERN, "hard", chan(), msgs, len(msgs) - 1,
             [TPC, "reply_context"] if len(msgs) > 2 else [TPC],
-            "third_party_concern: Live witnessing of concerning statements; urgent staff alert, support resources.")
+            ("third_party_concern: Live witnessing of concerning statements; "
+                "urgent staff alert, support resources."))
         made += 1
     assert made == n, f"witness_live made {made}/{n}"
 
@@ -471,7 +482,8 @@ def fam_staff_ping(n):
     for _ in range(n):
         t = _uc(cores, nm_mc)
         add(fam, CONCERN, "hard", chan(), [M("A", t)], 0,
-            [TPC], "third_party_concern: Direct request for staff to check on an at-risk player; urgent staff alert, support resources.")
+            [TPC], ("third_party_concern: Direct request for staff to check on an "
+                "at-risk player; urgent staff alert, support resources."))
 
 def fam_aftermath(n):
     fam = "g14.aftermath.019"
@@ -491,7 +503,8 @@ def fam_aftermath(n):
     ]
     for _ in range(n):
         add(fam, CONCERN, "hard", chan(), [M("A", _uc(cores))], 0,
-            [TPC], "third_party_concern: Report of a recent attempt; the person needs support, reporter needs support resources; urgent staff awareness.")
+            [TPC], ("third_party_concern: Report of a recent attempt; the person needs "
+                "support, reporter needs support resources; urgent staff awareness."))
 
 def fam_relapse(n):
     fam = "g14.relapse.020"
@@ -513,7 +526,8 @@ def fam_relapse(n):
     ]
     for _ in range(n):
         add(fam, CONCERN, "hard", chan(), [M("A", _uc(cores))], 0,
-            [TPC], "third_party_concern: Report of relapse after improvement; urgent staff alert, support resources.")
+            [TPC], ("third_party_concern: Report of relapse after improvement; urgent "
+                "staff alert, support resources."))
 
 def fam_trigger_breakup(n):
     fam = "g14.trigger-breakup.021"
@@ -533,7 +547,8 @@ def fam_trigger_breakup(n):
     ]
     for _ in range(n):
         add(fam, CONCERN, "hard", chan(), [M("A", _uc(cores))], 0,
-            [TPC], "third_party_concern: Breakup-triggered suicidal statements about a friend; urgent staff alert, support resources.")
+            [TPC], ("third_party_concern: Breakup-triggered suicidal statements about "
+                "a friend; urgent staff alert, support resources."))
 
 def fam_trigger_bullying(n):
     fam = "g14.trigger-bullying.022"
@@ -555,7 +570,8 @@ def fam_trigger_bullying(n):
     ]
     for _ in range(n):
         add(fam, CONCERN, "hard", chan(), [M("A", _uc(cores))], 0,
-            [TPC], "third_party_concern: Bullying-triggered suicidal statements; urgent staff alert for both the bullying and the safety concern.")
+            [TPC], ("third_party_concern: Bullying-triggered suicidal statements; "
+                "urgent staff alert for both the bullying and the safety concern."))
 
 def fam_trigger_grades(n):
     fam = "g14.trigger-grades.023"
@@ -573,7 +589,8 @@ def fam_trigger_grades(n):
     ]
     for _ in range(n):
         add(fam, CONCERN, "hard", chan(), [M("A", _uc(cores))], 0,
-            [TPC], "third_party_concern: Academic-failure-triggered suicidal statements; urgent staff alert, support resources.")
+            [TPC], ("third_party_concern: Academic-failure-triggered suicidal "
+                "statements; urgent staff alert, support resources."))
 
 def fam_night_message(n):
     fam = "g14.night-message.024"
@@ -595,7 +612,9 @@ def fam_night_message(n):
     ]
     for _ in range(n):
         add(fam, CONCERN, "hard", chan(), [M("A", _uc(cores))], 0,
-            [TPC, "explicit_real_world_cue"], "third_party_concern: Late-night concerning messages; time context raises urgency; urgent staff alert, support resources.")
+            [TPC, "explicit_real_world_cue"],
+                ("third_party_concern: Late-night concerning messages; time context "
+                    "raises urgency; urgent staff alert, support resources."))
 
 def fam_secondhand(n):
     fam = "g14.secondhand.025"
@@ -608,7 +627,8 @@ def fam_secondhand(n):
     for _ in range(n):
         t = _uc(cores, nm_any)
         add(fam, CONCERN, "hard", chan(), [M("A", t)], 0,
-            [TPC], "third_party_concern: Secondhand report; lower certainty but still a safety signal; staff check warranted, no punishment.")
+            [TPC], ("third_party_concern: Secondhand report; lower certainty but still "
+                "a safety signal; staff check warranted, no punishment."))
 
 def fam_anonymous_tip(n):
     fam = "g14.anonymous-tip.026"
@@ -626,7 +646,9 @@ def fam_anonymous_tip(n):
     ]
     for _ in range(n):
         add(fam, CONCERN, "hard", chan(), [M("A", _uc(cores))], 0,
-            [TPC, "insufficient_context"], "third_party_concern: Anonymous tip with limited detail; still a safety signal; staff awareness, gentle follow-up, no punishment.")
+            [TPC, "insufficient_context"],
+                ("third_party_concern: Anonymous tip with limited detail; still a "
+                    "safety signal; staff awareness, gentle follow-up, no punishment."))
 
 def fam_joking_unsure(n):
     fam = "g14.joking-unsure.027"
@@ -640,7 +662,8 @@ def fam_joking_unsure(n):
     for _ in range(n):
         t = _uc(cores, nm_any)
         add(fam, CONCERN, "hard", chan(), [M("A", t)], 0,
-            [TPC], "third_party_concern: Uncertainty about joking vs serious does not negate the safety signal; treat as concern, staff check, no punishment.")
+            [TPC], ("third_party_concern: Uncertainty about joking vs serious does not "
+                "negate the safety signal; treat as concern, staff check, no punishment."))
 
 def fam_check_in_ask(n):
     fam = "g14.check-in-ask.028"
@@ -653,7 +676,8 @@ def fam_check_in_ask(n):
     for _ in range(n):
         t = _uc(cores, nm_mc)
         add(fam, CONCERN, "hard", chan(), [M("A", t)], 0,
-            [TPC], "third_party_concern: Request for welfare check after concerning message and silence; urgent staff alert.")
+            [TPC], ("third_party_concern: Request for welfare check after concerning "
+                "message and silence; urgent staff alert."))
 
 # ---------------------------------------------------------------- adversarial: concern edge cases
 def fam_concern_vs_banter(n):
@@ -670,11 +694,13 @@ def fam_concern_vs_banter(n):
                     M("B", f"bro {name} just said in vc he's actually not doing good", -1500),
                     M("A", "wait really? he sounded like he was joking but now i'm worried", 0)]
         elif variant == 1:
-            msgs = [M("A", f"we were all roasting each other and then {name} said 'maybe i should just die fr'", -2600),
+            msgs = [M("A", (f"we were all roasting each other and then {name} said 'maybe i "
+                f"should just die fr'"), -2600),
                     M("A", "everyone laughed but he went quiet after, i think he meant it", 0)]
         else:
             msgs = [M("B", f"{name} stop being dramatic lol", -2000),
-                    M("A", f"it's not dramatic, he told me yesterday he's been thinking about it for real", 0)]
+                    M("A", ("it's not dramatic, he told me yesterday he's been thinking about "
+                        "it for real"), 0)]
         sig = _uniq_msg_texts(msgs)
         if sig in _used_texts or sig in seen_local:
             continue
@@ -682,7 +708,8 @@ def fam_concern_vs_banter(n):
         seen_local.add(sig)
         add(fam, CONCERN, "adversarial", chan(), msgs, len(msgs) - 1,
             [TPC, "reply_context", "mutual_banter_evidence"],
-            "third_party_concern: Concern embedded in banter context; the banter does not cancel the safety signal; urgent staff alert.")
+            ("third_party_concern: Concern embedded in banter context; the "
+                "banter does not cancel the safety signal; urgent staff alert."))
         made += 1
     assert made == n, f"concern_vs_banter made {made}/{n}"
 
@@ -697,7 +724,8 @@ def fam_delayed_report(n):
     for _ in range(n):
         t = _uc(cores, nm_any)
         add(fam, CONCERN, "adversarial", chan(), [M("A", t)], 0,
-            [TPC], "third_party_concern: Delayed report; passage of time does not remove the safety signal; staff check still warranted.")
+            [TPC], ("third_party_concern: Delayed report; passage of time does not "
+                "remove the safety signal; staff check still warranted."))
 
 def fam_minimizing_reporter(n):
     fam = "g14.minimizing-reporter.031"
@@ -711,7 +739,8 @@ def fam_minimizing_reporter(n):
     for _ in range(n):
         t = _uc(cores, nm_any)
         add(fam, CONCERN, "adversarial", chan(), [M("A", t)], 0,
-            [TPC], "third_party_concern: Reporter minimizing does not negate the reported statements; treat as concern; urgent staff alert.")
+            [TPC], ("third_party_concern: Reporter minimizing does not negate the "
+                "reported statements; treat as concern; urgent staff alert."))
 
 def fam_evasion_adjacent(n):
     fam = "g14.evasion-adjacent.032"
@@ -731,7 +760,10 @@ def fam_evasion_adjacent(n):
     ]
     for _ in range(n):
         add(fam, CONCERN, "adversarial", chan(), [M("A", _uc(cores))], 0,
-            [TPC, "obfuscated_evasion"], "third_party_concern: Euphemistic/algospeak phrasing of third-party suicidal statements; the concern signal survives the euphemism; urgent staff alert.")
+            [TPC, "obfuscated_evasion"],
+                ("third_party_concern: Euphemistic/algospeak phrasing of "
+                    ("third-party suicidal statements; the concern signal survives the "
+                        "euphemism; urgent staff alert.")))
 
 # ---------------------------------------------------------------- SAFE hard negatives
 def fam_hyperbole_boss(n):
@@ -749,7 +781,8 @@ def fam_hyperbole_boss(n):
     for _ in range(n):
         add(fam, "SAFE", "hard", "minecraft_public", [M("A", _uc(cores))], 0,
             ["gameplay_death_context", "minecraft_gameplay_explicit"],
-            "safe: 'killing me' is gameplay hyperbole about boss difficulty; no person at risk.", domain="self_harm")
+            ("safe: 'killing me' is gameplay hyperbole about boss difficulty; "
+                "no person at risk."), domain="self_harm")
 
 def fam_hyperbole_grind(n):
     fam = "g14.hyperbole-grind.034"
@@ -765,7 +798,8 @@ def fam_hyperbole_grind(n):
     for _ in range(n):
         add(fam, "SAFE", "hard", "minecraft_public", [M("A", _uc(cores))], 0,
             ["gameplay_death_context", "minecraft_gameplay_explicit"],
-            "safe: Grind hyperbole; 'death' refers to tedious gameplay, no person at risk.", domain="self_harm")
+            ("safe: Grind hyperbole; 'death' refers to tedious gameplay, no "
+                "person at risk."), domain="self_harm")
 
 def fam_gameplay_death(n):
     fam = "g14.gameplay-death.035"
@@ -782,7 +816,8 @@ def fam_gameplay_death(n):
     for _ in range(n):
         add(fam, "SAFE", "hard", "minecraft_public", [M("A", _uc(cores))], 0,
             ["gameplay_death_context", "minecraft_gameplay_explicit"],
-            "safe: 'kill me' is in-game death frustration; explicit gameplay context, no person at risk.", domain="self_harm")
+            ("safe: 'kill me' is in-game death frustration; explicit gameplay "
+                "context, no person at risk."), domain="self_harm")
 
 def fam_slang_dead(n):
     fam = "g14.slang-dead.036"
@@ -796,9 +831,11 @@ def fam_slang_dead(n):
         "that actually killed me, so funny",
     ]
     for _ in range(n):
-        add(fam, "SAFE", "hard", rng.choice(["minecraft_public", "discord_gaming"]), [M("A", _uc(cores))], 0,
+        add(fam, "SAFE", "hard", rng.choice(["minecraft_public", "discord_gaming"]),
+            [M("A", _uc(cores))], 0,
             ["mutual_banter_evidence"],
-            "safe: 'dead' is laughter slang; positive/banter context, no person at risk.", domain="self_harm")
+            ("safe: 'dead' is laughter slang; positive/banter context, no "
+                "person at risk."), domain="self_harm")
 
 def fam_item_death(n):
     fam = "g14.item-death.037"
@@ -848,9 +885,11 @@ def fam_lyrics_sad(n):
         "'i'll be a ghost in your playlist' - stuck in my head",
     ]
     for _ in range(n):
-        add(fam, "SAFE", "adversarial", rng.choice(["discord_gaming", "discord_general"]), [M("A", _uc(cores))], 0,
+        add(fam, "SAFE", "adversarial", rng.choice(["discord_gaming",
+            "discord_general"]), [M("A", _uc(cores))], 0,
             ["quoted_or_condemned", "discord_general_no_game_context"],
-            "safe: Clearly framed as song lyrics being discussed/appreciated; metalinguistic framing, no person at risk.", domain="self_harm")
+            ("safe: Clearly framed as song lyrics being discussed/appreciated; "
+                "metalinguistic framing, no person at risk."), domain="self_harm")
 
 def fam_lyrics_mimic(n):
     fam = "g14.lyrics-mimic.040"
@@ -891,7 +930,7 @@ def fam_lyrics_mimic(n):
             msgs = [M("A", rng.choice(openers), -2400),
                     M("A", f"{line} - {rng.choice(reactions)}", 0)]
         elif variant == 1:
-            msgs = [M("A", f"new album just dropped and the lyrics are so dark lol", -1800),
+            msgs = [M("A", "new album just dropped and the lyrics are so dark lol", -1800),
                     M("A", f"{line} {rng.choice(reactions)}", 0)]
         else:
             msgs = [M("A", f"this artist really gets it: {line}", -2100),
@@ -902,9 +941,11 @@ def fam_lyrics_mimic(n):
             continue
         _used_texts.add(sig)
         seen_local.add(sig)
-        add(fam, "SAFE", "adversarial", rng.choice(["discord_gaming", "discord_general"]), msgs, len(msgs) - 1,
+        add(fam, "SAFE", "adversarial", rng.choice(["discord_gaming",
+            "discord_general"]), msgs, len(msgs) - 1,
             ["quoted_or_condemned", "reply_context"],
-            "safe: Dark lyrics discussed as music; conversational framing confirms artistic context, no person at risk.", domain="self_harm")
+            ("safe: Dark lyrics discussed as music; conversational framing "
+                "confirms artistic context, no person at risk."), domain="self_harm")
         made += 1
     assert made == n, f"lyrics_mimic made {made}/{n}"
 
@@ -925,7 +966,8 @@ def fam_metaphor_dark(n):
     for _ in range(n):
         add(fam, "SAFE", "adversarial", chan(), [M("A", _uc(cores))], 0,
             ["mutual_banter_evidence"],
-            "safe: 'kill/die' as everyday hyperbole about non-lethal frustrations; no person at risk.", domain="self_harm")
+            ("safe: 'kill/die' as everyday hyperbole about non-lethal "
+                "frustrations; no person at risk."), domain="self_harm")
 
 # ---------------------------------------------------------------- AMBIGUOUS_REVIEW
 def fam_vague_worry(n):
@@ -943,7 +985,8 @@ def fam_vague_worry(n):
     for _ in range(n):
         add(fam, "AMBIGUOUS_REVIEW", "hard", chan(), [M("A", _uc(cores, nm_any))], 0,
             ["insufficient_context"],
-            "ambiguous: Worry expressed with no specifics about self-harm; review to determine if follow-up is warranted.", domain="self_harm")
+            ("ambiguous: Worry expressed with no specifics about self-harm; "
+                "review to determine if follow-up is warranted."), domain="self_harm")
 
 def fam_vague_absence(n):
     fam = "g14.vague-absence.043"
@@ -959,7 +1002,8 @@ def fam_vague_absence(n):
     for _ in range(n):
         add(fam, "AMBIGUOUS_REVIEW", "hard", chan(), [M("A", _uc(cores, nm_any))], 0,
             ["insufficient_context"],
-            "ambiguous: Absence noted with mild concern but no self-harm signal; review, no urgent action.", domain="self_harm")
+            ("ambiguous: Absence noted with mild concern but no self-harm "
+                "signal; review, no urgent action."), domain="self_harm")
 
 def fam_vague_mood(n):
     fam = "g14.vague-mood.044"
@@ -974,7 +1018,8 @@ def fam_vague_mood(n):
     for _ in range(n):
         add(fam, "AMBIGUOUS_REVIEW", "hard", chan(), [M("A", _uc(cores, nm_any))], 0,
             ["insufficient_context"],
-            "ambiguous: Vague mood observation with no self-harm content; review to assess.", domain="self_harm")
+            ("ambiguous: Vague mood observation with no self-harm content; "
+                "review to assess."), domain="self_harm")
 
 def fam_vague_post(n):
     fam = "g14.vague-post.045"
@@ -987,7 +1032,8 @@ def fam_vague_post(n):
     for _ in range(n):
         add(fam, "AMBIGUOUS_REVIEW", "hard", chan(), [M("A", _uc(cores, nm_any))], 0,
             ["insufficient_context"],
-            "ambiguous: References unseen content with no description; cannot assess risk; review.", domain="self_harm")
+            ("ambiguous: References unseen content with no description; cannot "
+                "assess risk; review."), domain="self_harm")
 
 # Multi-message conversational context injection (target >=55% multi-message).
 # Prepends/appends label-neutral context; shifts target_index accordingly.
@@ -1050,10 +1096,13 @@ def _inject_context():
             msgs = msgs + [M("A", rng.choice(post), 1900)]
         r["messages"] = msgs
         # fix reason codes for added context
-        if len(msgs) > 1 and "reply_context" not in r["reason_codes"]:
-            # only add reply_context when a real reply relationship exists (prepended)
-            if r["target_index"] > 0:
-                r["reason_codes"] = r["reason_codes"] + ["reply_context"]
+        if (
+            len(msgs) > 1
+            and "reply_context" not in r["reason_codes"]
+            and r["target_index"] > 0
+        ):
+            # Add only when a real reply relationship exists (prepended).
+            r["reason_codes"] = r["reason_codes"] + ["reply_context"]
 
 # ---------------------------------------------------------------- driver
 PLAN = [

@@ -25,10 +25,10 @@
 
 | Value | Count |
 |---|---:|
-| `adversarial` | 103 |
-| `easy` | 54 |
-| `hard` | 220 |
-| `medium` | 123 |
+| `adversarial` | 92 |
+| `easy` | 63 |
+| `hard` | 224 |
+| `medium` | 121 |
 
 ### platform_hint
 
@@ -50,25 +50,25 @@
 
 | Value | Count |
 |---|---:|
-| `AMBIGUOUS_REVIEW` | 26 |
-| `HATE` | 354 |
-| `LOW_LEVEL_HARASSMENT` | 25 |
-| `SAFE` | 95 |
+| `AMBIGUOUS_REVIEW` | 20 |
+| `HATE` | 347 |
+| `LOW_LEVEL_HARASSMENT` | 29 |
+| `SAFE` | 104 |
 
 ### action
 
 | Value | Count |
 |---|---:|
-| `ALLOW` | 120 |
-| `BLOCK` | 354 |
-| `REVIEW` | 26 |
+| `ALLOW` | 133 |
+| `BLOCK` | 347 |
+| `REVIEW` | 20 |
 
 ### review_priority
 
 | Value | Count |
 |---|---:|
-| `NONE` | 471 |
-| `NORMAL` | 29 |
+| `NONE` | 477 |
+| `NORMAL` | 23 |
 
 ### containment
 
@@ -102,14 +102,15 @@
 
 | Value | Count |
 |---|---:|
-| `identity_target` | 455 |
-| `insufficient_context` | 22 |
-| `low_severity_insult` | 25 |
-| `minecraft_gameplay_explicit` | 8 |
+| `discord_gameplay_explicit` | 5 |
+| `identity_target` | 446 |
+| `insufficient_context` | 18 |
+| `low_severity_insult` | 29 |
+| `minecraft_gameplay_explicit` | 18 |
 | `mutual_banter_evidence` | 15 |
 | `obfuscated_evasion` | 1 |
-| `quoted_or_condemned` | 37 |
-| `reply_context` | 261 |
+| `quoted_or_condemned` | 35 |
+| `reply_context` | 256 |
 
 ### Message count
 

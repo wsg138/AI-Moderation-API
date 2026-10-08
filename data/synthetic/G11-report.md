@@ -25,10 +25,10 @@
 
 | Value | Count |
 |---|---:|
-| `adversarial` | 75 |
-| `easy` | 75 |
-| `hard` | 225 |
-| `medium` | 125 |
+| `adversarial` | 73 |
+| `easy` | 96 |
+| `hard` | 211 |
+| `medium` | 120 |
 
 ### platform_hint
 
@@ -48,24 +48,24 @@
 
 | Value | Count |
 |---|---:|
-| `AMBIGUOUS_REVIEW` | 25 |
+| `AMBIGUOUS_REVIEW` | 4 |
 | `DOXXING` | 400 |
-| `SAFE` | 75 |
+| `SAFE` | 96 |
 
 ### action
 
 | Value | Count |
 |---|---:|
-| `ALLOW` | 75 |
+| `ALLOW` | 96 |
 | `BLOCK` | 400 |
-| `REVIEW` | 25 |
+| `REVIEW` | 4 |
 
 ### review_priority
 
 | Value | Count |
 |---|---:|
-| `NONE` | 75 |
-| `NORMAL` | 25 |
+| `NONE` | 96 |
+| `NORMAL` | 4 |
 | `URGENT` | 400 |
 
 ### containment
@@ -99,12 +99,13 @@
 |---|---:|
 | `apparent_doxxing` | 129 |
 | `confirmed_doxxing` | 275 |
-| `discord_gameplay_explicit` | 9 |
+| `discord_gameplay_explicit` | 16 |
 | `explicit_real_world_cue` | 215 |
-| `insufficient_context` | 73 |
-| `minecraft_gameplay_explicit` | 18 |
+| `insufficient_context` | 52 |
+| `minecraft_gameplay_explicit` | 32 |
 | `real_world_address_cue` | 20 |
 | `real_world_location` | 165 |
+| `reply_context` | 13 |
 
 ### Message count
 

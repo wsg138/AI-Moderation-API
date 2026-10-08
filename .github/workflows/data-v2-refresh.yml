@@ -1,0 +1,43 @@
+name: DATA-V2-01 one-time report refresh
+
+# Isolated worker branch only. The GitHub Actions token's own push does not
+# recursively trigger another run; PR checks are handled by service-ci.
+on:
+  push:
+    branches:
+      - workers/data-v2-pr52-qa-repair
+    paths:
+      - "tools/dataset_qa/freshness.py"
+      - "tools/dataset_qa/candidate_audit.py"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    if: github.repository == 'wsg138/AI-Moderation-API' && github.ref == 'refs/heads/workers/data-v2-pr52-qa-repair'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Regenerate exactly 18 final-byte reports
+        run: python -m tools.dataset_qa.freshness --write
+      - name: Generate sanitized candidate review summary
+        run: python -m tools.dataset_qa.candidate_audit
+      - name: Verify report determinism
+        run: python -m tools.dataset_qa.freshness
+      - name: Commit only reports and aggregate audit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add data/synthetic/G{10..27}-report.md docs/data-v2/PR52-QA-READINESS.md
+          if ! git diff --cached --quiet; then
+            git commit -m "Regenerate final-byte G10-G27 QA reports and sanitized audit"
+            git push origin HEAD:workers/data-v2-pr52-qa-repair
+          fi

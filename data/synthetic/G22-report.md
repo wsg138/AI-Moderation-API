@@ -25,10 +25,10 @@
 
 | Value | Count |
 |---|---:|
-| `adversarial` | 75 |
-| `easy` | 75 |
-| `hard` | 225 |
-| `medium` | 125 |
+| `adversarial` | 73 |
+| `easy` | 87 |
+| `hard` | 217 |
+| `medium` | 123 |
 
 ### platform_hint
 
@@ -50,24 +50,24 @@
 
 | Value | Count |
 |---|---:|
-| `AMBIGUOUS_REVIEW` | 25 |
-| `DANGEROUS_REAL_WORLD_INSTRUCTIONS` | 400 |
-| `SAFE` | 75 |
+| `AMBIGUOUS_REVIEW` | 8 |
+| `DANGEROUS_REAL_WORLD_INSTRUCTIONS` | 403 |
+| `SAFE` | 89 |
 
 ### action
 
 | Value | Count |
 |---|---:|
-| `ALLOW` | 75 |
-| `BLOCK` | 400 |
-| `REVIEW` | 25 |
+| `ALLOW` | 89 |
+| `BLOCK` | 403 |
+| `REVIEW` | 8 |
 
 ### review_priority
 
 | Value | Count |
 |---|---:|
-| `NONE` | 475 |
-| `NORMAL` | 25 |
+| `NONE` | 492 |
+| `NORMAL` | 8 |
 
 ### containment
 
@@ -97,10 +97,10 @@
 
 | Value | Count |
 |---|---:|
-| `dangerous_instruction_request` | 400 |
+| `dangerous_instruction_request` | 403 |
 | `explicit_real_world_cue` | 400 |
-| `historical_or_high_level_context` | 64 |
-| `insufficient_context` | 25 |
+| `historical_or_high_level_context` | 78 |
+| `insufficient_context` | 8 |
 | `minecraft_gameplay_explicit` | 11 |
 
 ### Message count

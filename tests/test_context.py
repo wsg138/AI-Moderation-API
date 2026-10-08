@@ -90,3 +90,16 @@ async def test_remove_prevents_failed_event_from_becoming_context() -> None:
     await store.remove(failed.event_id)
     context = await store.snapshot_for(message("next", seconds=1))
     assert context == ()
+
+@pytest.mark.asyncio
+async def test_future_answer_and_identity_metadata_do_not_leak_into_past_snapshot() -> None:
+    store = RollingContextStore(45, 20, 20, 5, 8)
+    await store.record(message(
+        "FUTURE_ONLY_ANSWER", seconds=15, sender="a",
+        sender_identity="later-known-identity", targets=("b",),
+    ))
+    await store.record(message("earlier", seconds=-4, sender="a"))
+    snapshot = await store.snapshot_for(message("target", seconds=0, sender="a"))
+    assert [item.external_message_id for item in snapshot] == ["earlier"]
+    assert all(item.occurred_at <= BASE for item in snapshot)
+    assert all(item.sender_identity_id != "later-known-identity" for item in snapshot)
