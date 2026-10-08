@@ -19,6 +19,17 @@ See [source registry](source-registry.json), [training order / gates](TRAINING-O
 
 The completed policy-aware methodological response is in [TECHNICAL-METHODS-REVIEW.md](TECHNICAL-METHODS-REVIEW.md). Its bounded, **synthetic-only** split/chronology fixture checks are in [tools/data_v2/test_method_invariants.py](../../tools/data_v2/test_method_invariants.py). These are design and invariant-test artifacts, not independent human adjudication or training approval.
 
+## Metadata admission preflight
+
+The repository includes a **read-only, low-cost metadata check**:
+
+```shell
+python -m tools.data_v2.source_admission_gate
+python -m tools.data_v2.source_admission_gate --source-id pr52-g10-g27
+```
+
+This only inspects the **public source registry** and lists blockers (candidate, missing rights/privacy/label approval references, forbidden training use, protected evaluation status). As initially registered, **0 of 8 sources pass** its provisional metadata preflight; this is intentional until dataset QA, rights/privacy review and independent labels are completed. The script does **not** read source JSONL/chat, materialize or approve training, verify the references cryptographically, authorize GPU operations, or grant consent. Future training must additionally verify exact source revisions, private evidence/permissions, per-example adjudication and split/leakage controls, plus explicit owner approval. Never use this check alone as a training-authorization gate.
+
 ## Nonnegotiable principles
 
 1. **Real chronology instead of toxicity stacks.** Keep everyday SAFE chat, PvP, advertisements, ordinary conversations, and occasional harmful-looking lines in their actual observed order. Do not assemble sequences of unrelated slurs/threats back-to-back. Every supervised example has a single marked target; context consists of earlier available messages and relevant metadata, *never future chat*. Use meaningful inactivity/session boundaries rather than connecting unrelated periods. Record the extraction parameters and version.
