@@ -27,14 +27,19 @@ def game_only_candidate(row: dict[str, Any]) -> bool:
     )
 
 
-def audit_file(path: Path) -> dict[str, object]:
-    """Return aggregate candidate counts, never rewrite source or emit raw chat."""
-    source = path.read_bytes()
+def _load_synthetic_g10(source: bytes) -> list[dict[str, Any]]:
     rows = [json.loads(line) for line in source.decode("utf-8").splitlines()]
     if len(rows) != 500 or any(not isinstance(row, dict) for row in rows):
         raise ValueError("expected complete 500-record G10 synthetic batch")
     if any(row.get("source") != "synthetic" for row in rows):
         raise ValueError("audit scope is public synthetic G10 only")
+    return rows
+
+
+def audit_file(path: Path) -> dict[str, object]:
+    """Return aggregate candidate counts, never rewrite source or emit raw chat."""
+    source = path.read_bytes()
+    rows = _load_synthetic_g10(source)
     blocked = [row for row in rows if row.get("label") == "BLACKMAIL"
                and row.get("action") == "BLOCK"]
     return {
