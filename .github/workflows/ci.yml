@@ -66,6 +66,8 @@ jobs:
           for file in "${files[@]}"; do
             python -m tools.dataset_qa validate "$file"
           done
+      - name: G10-G27 final-byte report freshness
+        run: python -m tools.dataset_qa.freshness
       - name: W11 integration reproducibility
         run: python -m tools.dataset_integration --check
       - name: Tests
