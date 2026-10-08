@@ -17,6 +17,8 @@ This file is an **execution plan**, not approval to run jobs. A gate is complete
 | **I. Multi-seed + evaluation freeze** | Repeat promising candidates across seeds; calibrate on dev; lock architecture/policy/thresholds | Multi-seed table, exact-decision errors, critical-class confusion, false alarms / 1k SAFE, abstention/latency | Pass predefined floors across seeds with acceptable variance |
 | **J. Independent acceptance, then shadow** | Use heldout/W27 per their own authorization and preserve W20 for final independent acceptance; shadow-only runtime review first | Versioned acceptance report and separate owner production decision | No merge/deployment/automatic punishments until explicit approval |
 
+**Important real-heldout caveat:** the 552 real-review holdout candidates were assigned to their split *after* the 33,714-example model-based mining/scoring pass. They are excluded from further development, but are not pristine never-mined external acceptance examples. A **new prospective never-scored cohort** is needed before claiming 99% real-world accuracy. W20 and W27 remain reserved as specified by their own frozen protocols.
+
 ### What to train, and in what order
 
 1. **No new GPU job yet.** First fix bad or missing labels; 9,000 questionable labels can be worse than 1,000 reliable ones.
