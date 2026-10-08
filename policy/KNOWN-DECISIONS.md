@@ -4,6 +4,9 @@ These are policy anchors already established before the formal interview. They a
 
 ## Allow / generally allow
 
+- **Owner decision (2026-10-08):** Blackmail/extortion involving **only Minecraft gameplay stakes** (e.g. threatening to reveal another player's Minecraft base coordinates unless paid diamonds or ancient debris) is fully allowed: ALLOW with no blackmail-related strike, staff ping, or mute. This applies in Minecraft and gaming Discord when the case is clearly only in-game. The same words involving real money, personal information, real-world harm or exposure remain prohibited real-world blackmail regardless of channel. Ambiguous mixed/unknown stakes require additional context or staff review. Does not override separately prohibited conduct.
+
+
 - Ordinary Minecraft combat language should not be blocked merely because it sounds violent in isolation.
 - Examples such as `im gonna kill you`, `im gonna stab you`, or `im gonna shoot you` are generally acceptable when they are plausibly gameplay.
 - Explicit game context such as swords, bows, TNT, rounds, bases, respawning, or Minecraft builds should strongly favor gameplay interpretation.
