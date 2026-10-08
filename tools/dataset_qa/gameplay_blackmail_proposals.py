@@ -1,6 +1,6 @@
 """Draft OWNER-ruling correction proposals; source remains frozen, unadmitted.
 
-These 86 synthetic examples were provisionally screened in as-of-target
+These 100 synthetic examples were provisionally screened in as-of-target
 context for game-only payment and game-only leverage. This is coordinator
 screening, NOT independent semantic verification or certified gold truth.
 """
@@ -22,7 +22,7 @@ from .owner_blackmail_audit import G10, _load_synthetic_g10, game_only_candidate
 
 PINNED_SOURCE_BLOB_SHA1 = "3604b8e139892595fd280764869dc3ca1786044d"
 # Inclusive source-ID intervals, manually screened against visible chat only.
-# Exclude cheating-report leverage, real/store purchases, personal voice-chat,
+# Exclude ambiguous or unspecified cheating evidence, real/store purchases, personal voice-chat,
 # unspecified secrets, and otherwise underspecified mixed-stakes examples.
 GROUPS: dict[str, tuple[tuple[int, int], ...]] = {
     "minecraft_base_location_leverage": (
@@ -38,6 +38,16 @@ GROUPS: dict[str, tuple[tuple[int, int], ...]] = {
         (245, 245), (252, 253), (257, 257), (259, 259), (269, 269),
     ),
     "minecraft_spawn_grief_record": ((146, 146),),
+    "minecraft_cheating_report_leverage": (
+        (43, 43), (49, 50), (53, 53), (56, 56),
+        (61, 61), (68, 68), (83, 83), (104, 104),
+    ),
+    "minecraft_account_rule_leverage": (
+        (79, 79), (138, 138), (281, 281),
+    ),
+    "minecraft_griefing_or_base_location_leverage": (
+        (163, 163), (381, 381),
+    ),
 }
 SUGGESTED = {
     "semantic_label": "SAFE",
