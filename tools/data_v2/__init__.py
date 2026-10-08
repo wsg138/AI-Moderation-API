@@ -1,1 +1,1 @@
-"""Read-only DATA-V2 public synthetic audit utilities."""
+"""Offline DATA-V2 audit, policy-evaluation, and training-readiness utilities."""
