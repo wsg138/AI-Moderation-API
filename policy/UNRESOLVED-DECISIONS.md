@@ -27,8 +27,8 @@ These items do not invalidate the settled policy above. They are either genuinel
 7. **Threat containment matrix**
    - Several anchors exist (including ~7-day clear real-world threat examples and urgent handling for severe threats), but there is no complete severity-to-duration table.
 
-8. **Blackmail containment duration**
-   - Clear blackmail is muted pending staff review; exact maximum/default duration is not frozen.
+8. **Real-world blackmail containment duration**
+   - Only real-world blackmail is muted pending staff review; exact maximum/default duration is not frozen. Gameplay-only blackmail is allowed under owner decision 2026-10-08.
 
 9. **Accidental slur lexical matches**
    - Actual/obfuscated slurs are blocked and struck. Naive substring false positives must be avoided, but exact lexical disambiguation examples still belong in dataset calibration.
