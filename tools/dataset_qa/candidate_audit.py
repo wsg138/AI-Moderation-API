@@ -31,43 +31,67 @@ def _context(record: dict[str, Any]) -> tuple[str, str, list[dict[str, Any]]]:
     return target, " ".join(m.get("text", "") for m in messages), messages
 
 
-def _flags(record: dict[str, Any]) -> set[str]:
-    label, action = record.get("label"), record.get("action")
-    reasons = set(record.get("reason_codes", []))
-    target, context, messages = _context(record)
+def _policy_flags(item: dict[str, Any], label: str, action: str) -> set[str]:
+    reasons = set(item.get("reason_codes", []))
     flags: set[str] = set()
     if label == "SAFE" and action != "ALLOW":
         flags.add("safe_action_disagreement")
     if label == "AMBIGUOUS_REVIEW" and action != "REVIEW":
         flags.add("ambiguous_action_disagreement")
-    if label == "SAFE" and (record.get("strike") or record.get("containment") != "NONE"):
+    if label == "SAFE" and (item.get("strike") or item.get("containment") != "NONE"):
         flags.add("safe_with_punishment")
     if label == "SAFE" and reasons & SENSITIVE:
         flags.add("safe_with_severe_reason_code")
+    if label == "SELF_HARM_INTENT" and (action == "BLOCK" or item.get("strike")):
+        flags.add("self_harm_disclosure_punished")
+    return flags
+
+
+def _text_flags(label: str, target: str, context: str) -> set[str]:
+    flags: set[str] = set()
     if label == "SAFE" and DIRECTIVE.search(target):
         flags.add("safe_with_self_harm_directive")
-    if label == "SELF_HARM_INTENT" and (action == "BLOCK" or record.get("strike")):
-        flags.add("self_harm_disclosure_punished")
     if label == "REAL_WORLD_THREAT" and GAME.search(target) and not REAL.search(context):
         flags.add("real_world_label_with_game_cue")
     if label == "GAMEPLAY_VIOLENCE" and REAL.search(context):
         flags.add("gameplay_label_with_real_cue")
     if label == "GROOMING" and not MINOR.search(context):
         flags.add("grooming_without_explicit_minor_cue")
+    if DM_PIVOT.fullmatch(target.strip()) and label != "SAFE":
+        flags.add("dm_pivot_is_target")
+    return flags
+
+
+def _reason_flags(label: str, reasons: set[str]) -> set[str]:
+    flags: set[str] = set()
     if "actual_slur" in reasons and label not in {"HATE", "SLUR_USE"}:
         flags.add("actual_slur_reason_label_disagreement")
     if "staff_targeted_abuse" in reasons and label != "STAFF_TARGETED_ABUSE":
         flags.add("staff_targeted_reason_label_disagreement")
-    if DM_PIVOT.fullmatch(target.strip()) and label != "SAFE":
-        flags.add("dm_pivot_is_target")
-    if record.get("target_index") != len(messages) - 1:
+    return flags
+
+
+def _chronology_flags(item: dict[str, Any], messages: list[dict[str, Any]]) -> set[str]:
+    flags: set[str] = set()
+    if item.get("target_index") != len(messages) - 1:
         flags.add("nonterminal_target_index_review")
-    offsets = [m.get("offset_ms") for m in messages]
+    offsets = [message.get("offset_ms") for message in messages]
     if any(a > b for a, b in zip(offsets, offsets[1:])):
         flags.add("nonchronological_message_offsets")
     if len(messages) >= 3 and len({m.get("speaker") for m in messages}) == 1:
         flags.add("single_speaker_multimessage_realism_review")
     return flags
+
+
+def _flags(item: dict[str, Any]) -> set[str]:
+    label, action = item.get("label"), item.get("action")
+    target, context, messages = _context(item)
+    return (
+        _policy_flags(item, label, action)
+        | _text_flags(label, target, context)
+        | _reason_flags(label, set(item.get("reason_codes", [])))
+        | _chronology_flags(item, messages)
+    )
 
 
 def _add_overlap(
@@ -103,10 +127,9 @@ def _batch_digest_table(files: list[Path]) -> list[str]:
     return lines
 
 
-def build_summary(directory: Path = ROOT) -> str:
-    files = batch_files(directory)
-    if len(files) != 18:
-        raise ValueError("expected all 18 synthetic candidate batches")
+def _scan_files(
+    files: list[Path],
+) -> tuple[Counter[str], dict[str, list[str]], list[dict[str, list[str]]]]:
     labels: Counter[str] = Counter()
     flags: dict[str, list[str]] = defaultdict(list)
     duplicates: dict[str, list[str]] = defaultdict(list)
@@ -119,9 +142,40 @@ def build_summary(directory: Path = ROOT) -> str:
             for rule in _flags(item):
                 flags[rule].append(item["example_id"])
             _add_overlap(item, duplicates, targets, families)
+    return labels, flags, [duplicates, targets, families]
+
+
+def _flag_table(flags: dict[str, list[str]]) -> list[str]:
+    lines = ["", "## Sanitized review queue", "",
+             "| Rule | Count | First 12 synthetic example IDs |",
+             "|---|---:|---|"]
+    for rule, ids in sorted(flags.items()):
+        lines.append(f"| {rule} | {len(ids)} | {', '.join(sorted(ids)[:12])} |")
+    return lines
+
+
+def _overlap_lines(groups: list[dict[str, list[str]]]) -> list[str]:
+    lines = ["", "## Cross-batch structural family overlap", ""]
+    for name, values in zip((
+        "Exact normalized full contexts",
+        "Identical target message (18+ chars)",
+        "Shared explicit family ID",
+    ), groups):
+        matches = _cross_batch(values)
+        sample = "; ".join(", ".join(ids[:4]) for ids in matches[:12])
+        lines.append(f"- {name}: **{len(matches)} groups**; sample: {sample or '(none)'}")
+    return lines
+
+
+def build_summary(directory: Path = ROOT) -> str:
+    files = batch_files(directory)
+    if len(files) != 18:
+        raise ValueError("expected all 18 synthetic candidate batches")
+    labels, flags, groups = _scan_files(files)
     lines = [
         "# DATA-V2-01 — final-byte QA and independent-review queue", "",
         "Source PR #52 / JSONL commit 53e34e52c6c9a42a8be2ab8f772156e89d31b7e9.",
+        "G24 chronology offsets subsequently corrected without changing text or labels.",
         "Generated by python -m tools.dataset_qa.candidate_audit.",
         "Only public synthetic records; excludes W20, W27 and all real-chat logs.", "",
         f"Records: **{sum(labels.values())}** from **{len(files)}** batches.",
@@ -129,30 +183,16 @@ def build_summary(directory: Path = ROOT) -> str:
     ] + _batch_digest_table(files)
     lines += ["", "## Final label distribution", "", "| Label | Count |", "|---|---:|"]
     lines += [f"| {label} | {count} |" for label, count in sorted(labels.items())]
-    lines += ["", "## Sanitized review queue", "",
-              "| Rule | Count | First 12 synthetic example IDs |",
-              "|---|---:|---|"]
-    for rule, ids in sorted(flags.items()):
-        lines.append(f"| {rule} | {len(ids)} | {', '.join(sorted(ids)[:12])} |")
-    lines += ["", "## Cross-batch structural family overlap", ""]
-    groups = [
-        ("Exact normalized full contexts", _cross_batch(duplicates)),
-        ("Identical target message (18+ chars)", _cross_batch(targets)),
-        ("Shared explicit family ID", _cross_batch(families)),
-    ]
-    for name, matches in groups:
-        sample = "; ".join(", ".join(ids[:4]) for ids in matches[:12])
-        lines.append(f"- {name}: **{len(matches)} groups**; sample: {sample or '(none)'}")
+    lines += _flag_table(flags)
+    lines += _overlap_lines(groups)
     lines += [
-        "", "Target-message equality is a cheap candidate filter, not a fuzzy-neighbor",
-        "exhaustive scan. Review cross-batch families prior to partitioning.", "",
+        "", "Identical target messages are cheap candidate filters, not fuzzy scans.",
+        "Review all cross-batch families before partitioning.", "",
         "## Admission decision: NOT TRAINING-READY", "",
-        "Existing QA validates structure, not semantic truth. An independent reviewer",
-        "must adjudicate flagged IDs against owner Policy v1, including actual",
-        "quoted slurs under §10, before admitting examples.", "",
-        "For W11/W25 overlap, obtain an approved development-only manifest",
-        "and compare family/normalized context without accessing W20, W27,",
-        "private logs, or previously model-mined heldout evidence.", "",
+        "Structural QA does not establish semantic truth. Independently review",
+        "flagged IDs using owner Policy v1, including quoted slurs under §10.", "",
+        "W11/W25 overlap requires approved development-only manifests, not W20/W27,",
+        "private logs, or previously model-mined heldout material.", "",
     ]
     return "\n".join(lines)
 

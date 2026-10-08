@@ -4,7 +4,6 @@ Seeded for reproducibility. Writes data/synthetic/G14-self-harm-third-party.json
 """
 import json
 import random
-import sys
 
 rng = random.Random(14072026)
 

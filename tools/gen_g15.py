@@ -11,7 +11,7 @@ import random
 
 random.seed(1507)
 
-OUT = '/home/hatch/workspace/ai-moderation/data/synthetic/G15-evasion-advanced.jsonl'
+OUT = 'data/synthetic/G15-evasion-advanced.jsonl'
 records = []
 counter = [0]
 
@@ -1671,4 +1671,5 @@ def main():
             f.write(json.dumps(r, ensure_ascii=False) + '\n')
     print(f"wrote {len(records)} records to {OUT}")
 
-main()
+if __name__ == '__main__':
+    main()
