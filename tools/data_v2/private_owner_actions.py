@@ -42,6 +42,11 @@ COMPARISON_FIELDS = {
 }
 
 
+def _require(condition: bool, message: str) -> None:
+    if not condition:
+        raise ValueError(message)
+
+
 def _unique(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
     result: dict[str, Any] = {}
     for key, value in pairs:
@@ -82,38 +87,41 @@ def _header(ledger: dict[str, Any]) -> list[dict[str, Any]]:
         "reviewer", "round", "case_count", "source_commit", "provenance",
         "methodology", "assessment", "training_eligible_cases", "records",
     }
-    if set(ledger) != required or ledger["source_commit"] != ROUND3_COMMIT:
-        raise ValueError("unexpected private ledger schema or source commit")
+    _require(set(ledger) == required, "unexpected private ledger schema")
+    _require(ledger["source_commit"] == ROUND3_COMMIT, "unapproved source commit")
+    _require(ledger["private_coordinator_artifact"] is True, "not a private review")
+    _require(type(ledger["training_eligible_cases"]) is int, "invalid admission count")
+    _require(ledger["training_eligible_cases"] == 0, "ledger cannot admit training")
+    _require(type(ledger["round"]) is int, "invalid review round")
+    _require(ledger["round"] == 3, "unexpected review round")
     records = ledger["records"]
-    if (ledger["private_coordinator_artifact"] is not True
-            or ledger["training_eligible_cases"] != 0
-            or type(ledger["round"]) is not int or ledger["round"] != 3
-            or not isinstance(records, list) or len(records) != 50
-            or type(ledger["case_count"]) is not int or ledger["case_count"] != 50):
-        raise ValueError("invalid owner review header or count")
+    _require(isinstance(records, list), "review records must be a list")
+    _require(type(ledger["case_count"]) is int, "invalid case count")
+    _require(ledger["case_count"] == 50, "Round 3 must contain exactly 50 cases")
+    _require(len(records) == 50, "incomplete Round 3")
     return records
 
 
 def _check_structure(entry: dict[str, Any], ledger: dict[str, Any]) -> None:
-    if set(entry) != RECORD_FIELDS or set(entry["source"]) != SOURCE_FIELDS:
-        raise ValueError("missing or unexpected owner/source fields")
-    if set(entry["decision"]) != DECISION_FIELDS or set(entry["comparison"]) != COMPARISON_FIELDS:
-        raise ValueError("missing or unexpected action/comparison fields")
+    _require(set(entry) == RECORD_FIELDS, "missing or unexpected owner record fields")
+    _require(set(entry["source"]) == SOURCE_FIELDS, "invalid owner source fields")
+    _require(set(entry["decision"]) == DECISION_FIELDS, "invalid owner decision fields")
+    _require(set(entry["comparison"]) == COMPARISON_FIELDS, "invalid comparison fields")
     decision = entry["decision"]
-    if (decision["action"] not in ACTIONS or decision["authority"] !=
-            "owner_authoritative_action_only" or decision["policy_version"] != "v1"):
-        raise ValueError("invalid owner action scope")
-    if (decision["reviewer"] != ledger["reviewer"] or
-            decision["review_round"] != ledger["round"]):
-        raise ValueError("reviewer or review round mismatch")
-    if decision["explanation"] is not None and not isinstance(decision["explanation"], str):
-        raise ValueError("invalid optional explanation")
-    if (entry["training_eligible"] is not False or
-            entry["semantic_label_adjudicated"] is not False or
-            entry["other_policy_fields_adjudicated"] is not False):
-        raise ValueError("unapproved label admission or invented annotation")
-    if not isinstance(entry["opaque_id"], str) or not OPAQUE.fullmatch(entry["opaque_id"]):
-        raise ValueError("malformed opaque review ID")
+    _require(decision["action"] in ACTIONS, "invalid owner action scope")
+    _require(decision["authority"] == "owner_authoritative_action_only", "invalid authority")
+    _require(decision["policy_version"] == "v1", "invalid policy version")
+    _require(decision["reviewer"] == ledger["reviewer"], "reviewer mismatch")
+    _require(decision["review_round"] == ledger["round"], "review round mismatch")
+    _require(
+        decision["explanation"] is None or isinstance(decision["explanation"], str),
+        "invalid optional explanation",
+    )
+    _require(entry["training_eligible"] is False, "unapproved label admission")
+    _require(entry["semantic_label_adjudicated"] is False, "invented annotation")
+    _require(entry["other_policy_fields_adjudicated"] is False, "invented annotation")
+    _require(isinstance(entry["opaque_id"], str), "invalid opaque review ID")
+    _require(bool(OPAQUE.fullmatch(entry["opaque_id"])), "malformed opaque review ID")
 
 
 def _check_source(
@@ -122,23 +130,35 @@ def _check_source(
 ) -> dict[str, Any]:
     source = entry["source"]
     identifier = source["record_id"]
-    if not isinstance(identifier, str) or identifier not in rows:
-        raise ValueError("review references unknown source case")
+    _require(isinstance(identifier, str), "invalid source ID")
+    _require(identifier in rows, "review references unknown source case")
     path, blob = files[identifier[:3]]
-    if (source["repository"] != REPO or source["git_commit"] != ROUND3_COMMIT
-            or source["path"] != path or source["git_blob_sha"] != blob
-            or type(source["original_jsonl_line_number"]) is not int
-            or source["original_jsonl_line_number"] != int(identifier[4:])):
-        raise ValueError("source provenance does not match frozen bytes")
+    _require(source["repository"] == REPO, "source provenance repository mismatch")
+    _require(source["git_commit"] == ROUND3_COMMIT, "source provenance commit mismatch")
+    _require(source["path"] == path, "source provenance filename mismatch")
+    _require(source["git_blob_sha"] == blob, "source provenance blob mismatch")
+    _require(type(source["original_jsonl_line_number"]) is int, "invalid source line")
+    _require(
+        source["original_jsonl_line_number"] == int(identifier[4:]),
+        "source provenance line mismatch",
+    )
     comparison = entry["comparison"]
     candidate = rows[identifier]
-    if (comparison["candidate_action"] != candidate["action"]
-            or comparison["candidate_semantic_label_for_comparison_only"] != candidate["label"]
-            or type(comparison["action_agrees_with_candidate"]) is not bool
-            or comparison["action_agrees_with_candidate"] != (
-                entry["decision"]["action"] == candidate["action"]
-            )):
-        raise ValueError("private review candidate comparison mismatch")
+    _require(comparison["candidate_action"] == candidate["action"], "candidate comparison mismatch")
+    _require(
+        comparison["candidate_semantic_label_for_comparison_only"] == candidate["label"],
+        "candidate comparison mismatch",
+    )
+    _require(
+        type(comparison["action_agrees_with_candidate"]) is bool,
+        "invalid candidate comparison boolean",
+    )
+    _require(
+        comparison["action_agrees_with_candidate"] == (
+            entry["decision"]["action"] == candidate["action"]
+        ),
+        "candidate comparison mismatch",
+    )
     return candidate
 
 
