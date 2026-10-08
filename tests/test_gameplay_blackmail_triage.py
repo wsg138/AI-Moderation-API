@@ -7,9 +7,8 @@ from copy import deepcopy
 import pytest
 
 from tools.dataset_qa.freshness import ROOT
-from tools.dataset_qa.owner_blackmail_audit import G10
-
 from tools.dataset_qa.gameplay_blackmail_triage import build_queue, scope_bucket
+from tools.dataset_qa.owner_blackmail_audit import G10
 
 
 def _row(
