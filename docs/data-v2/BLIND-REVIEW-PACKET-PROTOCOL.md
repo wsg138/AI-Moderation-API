@@ -161,10 +161,15 @@ reviewer ID is rejected. Distinct reviewer IDs are a necessary but
 verify actual reviewer identity, isolation, and that no answer copying took
 place. The status view can distinguish `awaiting_first_review`,
 `awaiting_second_review`, `independent_agreement`,
-`adjudication`, and `owner_policy_question`. **Every status keeps
-`training_eligible: false`**. Even exact agreement never promotes
-examples to supervised training, and an unresolved Policy-v1 question needs
-the owner's ruling.
+`evidence_insufficient`, `adjudication`, and `owner_policy_question`.
+Any of two decisions marked `EVIDENCE_INSUFFICIENT` prevents
+`independent_agreement` and instead requires more evidence, even when the
+two outcome tuples are otherwise identical. `POLICY_UNRESOLVED` takes
+precedence and routes to `owner_policy_question`; before a second review,
+the item still waits for that submission unless policy is already unresolved.
+**Every status keeps `training_eligible: false`**. Even exact agreement
+never promotes examples to supervised training, and an unresolved Policy-v1
+question needs the owner's ruling.
 
 Do not reveal the source gold labels, cohort selection reasons or either
 reviewer's answer before both independent decisions have been irreversibly
