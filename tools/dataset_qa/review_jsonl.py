@@ -9,6 +9,10 @@ import json
 from pathlib import Path
 from typing import Any
 
+MAX_FILE_BYTES = 64 * 1024 * 1024
+MAX_LINE_BYTES = 64 * 1024
+MAX_ROWS = 10_000
+
 
 def _unique_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
     result: dict[str, Any] = {}
@@ -20,11 +24,17 @@ def _unique_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
 
 
 def read_jsonl(path: Path) -> list[dict[str, Any]]:
-    """Parse JSON objects; reject duplicate keys at every depth."""
-    rows = [
-        json.loads(line, object_pairs_hook=_unique_object)
-        for line in path.read_text(encoding="utf-8").splitlines()
-    ]
+    """Bound input memory; reject empty, oversized, or ambiguous JSONL."""
+    with path.open("rb") as stream:
+        raw = stream.read(MAX_FILE_BYTES + 1)
+    if len(raw) > MAX_FILE_BYTES:
+        raise ValueError("review JSONL exceeds input size limit")
+    lines = raw.decode("utf-8").splitlines()
+    if not 1 <= len(lines) <= MAX_ROWS:
+        raise ValueError("review JSONL requires 1-10,000 rows")
+    if any(len(line.encode("utf-8")) > MAX_LINE_BYTES for line in lines):
+        raise ValueError("review JSONL line exceeds size limit")
+    rows = [json.loads(line, object_pairs_hook=_unique_object) for line in lines]
     if any(not isinstance(row, dict) for row in rows):
         raise ValueError("JSONL input must contain objects only")
     return rows
