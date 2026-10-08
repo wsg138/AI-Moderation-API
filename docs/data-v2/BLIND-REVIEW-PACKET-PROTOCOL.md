@@ -147,7 +147,7 @@ not a reviewer-authentication service or an adjudicator. A valid reviewer
 record must contain exactly:
 
 - `packet_id`, `reviewer_id`, `policy_version="v1"`,
-  `semantic_facts` (a short list of observed facts),
+  `semantic_facts` (1–32 nonblank observed facts, each ≤200 characters),
   `evidence_message_indices` limited to the visible earlier/target context;
 - `semantic_label`, `action`, `review_priority`, `strike`,
   `containment`, `containment_duration_seconds`, `support_flow`;
