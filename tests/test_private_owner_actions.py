@@ -125,7 +125,7 @@ def test_duplicate_source_or_opaque_rejected() -> None:
 def test_wrong_commit_or_missing_action_rejected() -> None:
     ledger, rows, files = _fixture()
     ledger["source_commit"] = "deadbeef"
-    with pytest.raises(ValueError, match="schema or source commit"):
+    with pytest.raises(ValueError, match="source commit"):
         validate_ledger(ledger, rows, files)
     ledger, rows, files = _fixture()
     ledger["records"][2]["decision"]["action"] = "BAN"
