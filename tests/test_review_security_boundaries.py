@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 
 from tools.dataset_qa.blind_review import _write_jsonl, _write_review_outputs
+from tools.dataset_qa import review_jsonl
 from tools.dataset_qa.review_assignments import _check_packet, _write_assignment_outputs
 from tools.dataset_qa.review_assignments import main as assignment_main
 from tools.dataset_qa.review_intake import _read_jsonl
@@ -123,3 +124,29 @@ def test_assignment_cli_rejects_duplicate_json_keys_before_file_creation(
     assert result == 2
     assert not reviewers.exists()
     assert not manifest.exists()
+
+
+def test_review_reader_rejects_empty_input(tmp_path: Path) -> None:
+    path = tmp_path / "empty.jsonl"
+    path.write_bytes(b"")
+    with pytest.raises(ValueError, match="requires 1-10,000 rows"):
+        _read_jsonl(path)
+
+
+def test_review_reader_bounds_file_line_and_row_counts(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    path = tmp_path / "bounded.jsonl"
+    path.write_text('{"value":"12345"}\n', encoding="utf-8")
+    monkeypatch.setattr(review_jsonl, "MAX_FILE_BYTES", 8)
+    with pytest.raises(ValueError, match="input size limit"):
+        _read_jsonl(path)
+    monkeypatch.setattr(review_jsonl, "MAX_FILE_BYTES", 1024)
+    monkeypatch.setattr(review_jsonl, "MAX_LINE_BYTES", 8)
+    with pytest.raises(ValueError, match="line exceeds"):
+        _read_jsonl(path)
+    monkeypatch.setattr(review_jsonl, "MAX_LINE_BYTES", 1024)
+    monkeypatch.setattr(review_jsonl, "MAX_ROWS", 1)
+    path.write_text("{}\n{}\n", encoding="utf-8")
+    with pytest.raises(ValueError, match="requires 1-10,000 rows"):
+        _read_jsonl(path)
