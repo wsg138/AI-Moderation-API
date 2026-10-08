@@ -50,3 +50,10 @@ def test_form_is_restricted_to_local_file_and_no_remote_connection() -> None:
     assert "XMLHttpRequest" not in html
     assert "localStorage" not in html
     assert "training_eligible" not in html
+
+
+def test_offline_form_rejects_more_facts_than_python_intake() -> None:
+    html = FORM.read_text(encoding="utf-8")
+    assert "facts.length>32" in html
+    assert "facts.some(x=>x.length>200)" in html
+    assert "if(!indices.length)" in html
