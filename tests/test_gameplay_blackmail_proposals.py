@@ -1,0 +1,77 @@
+"""Source-locked provisional correction requests are never certified labels."""
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+import pytest
+
+from tools.dataset_qa.freshness import ROOT
+from tools.dataset_qa.gameplay_blackmail_proposals import (
+    PINNED_SOURCE_BLOB_SHA1,
+    SUGGESTED,
+    _curated_ids,
+    build_proposals,
+)
+from tools.dataset_qa.owner_blackmail_audit import G10
+
+
+def _source() -> bytes:
+    path = ROOT / G10
+    if not path.exists():
+        pytest.skip("G10 synthetic candidate batch unavailable")
+    return path.read_bytes()
+
+
+def test_86_curated_cases_have_independent_review_gate() -> None:
+    raw = _source()
+    proposals, summary = build_proposals(raw)
+    assert summary["provisional_game_only_proposals"] == 86
+    assert len(proposals) == len(_curated_ids()) == 86
+    assert len({r["example_id"] for r in proposals}) == 86
+    assert all(r["status"] == "requires_independent_policy_adjudication"
+               for r in proposals)
+    assert all(r["training_eligible"] is False for r in proposals)
+    assert summary["finalized"] == summary["training_admitted"] == 0
+
+
+def test_proposals_anchor_every_case_to_same_source_and_visible_context() -> None:
+    proposals, summary = build_proposals(_source())
+    assert all(row["source_sha256"] == summary["source_sha256"]
+               for row in proposals)
+    assert all(len(str(row["visible_context_sha256"])) == 64
+               for row in proposals)
+    assert all(row["source_line"] == int(str(row["example_id"])[4:])
+               for row in proposals)
+    assert all(row["proposal"] == SUGGESTED for row in proposals)
+    assert all("messages" not in row and "source_gold" not in row
+               for row in proposals)
+    assert summary["pinned_source_blob_sha1"] == PINNED_SOURCE_BLOB_SHA1
+
+
+def test_declines_source_drift_even_when_rows_are_still_valid_json() -> None:
+    raw = _source()
+    changed = raw.replace(b"give me 64 diamonds", b"give me 63 diamonds", 1)
+    assert changed != raw
+    with pytest.raises(ValueError, match="source bytes changed"):
+        build_proposals(changed)
+
+
+def test_does_not_change_candidate_dataset_bytes() -> None:
+    raw = _source()
+    build_proposals(raw)
+    assert (ROOT / G10).read_bytes() == raw
+
+
+def test_distinct_game_only_proposals_keep_gameplay_and_irl_risks_separate() -> None:
+    proposed, _ = build_proposals(_source())
+    ids = {str(row["example_id"]) for row in proposed}
+    assert {"G10-0008", "G10-0031", "G10-0219", "G10-0245"} <= ids
+    assert {"G10-0148", "G10-0195", "G10-0207", "G10-0321"} & ids == set()
+
+
+def test_no_proposal_is_marked_approved_by_a_gold_label() -> None:
+    proposals, _ = build_proposals(_source())
+    assert all(row["review_origin"] == "coordinator_provisional_screen_only"
+               for row in proposals)
+    assert all(json.dumps(row).count("admitted") == 0 for row in proposals)
