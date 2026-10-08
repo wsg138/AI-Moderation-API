@@ -2,11 +2,12 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 
 import pytest
 
 from tools.dataset_qa.freshness import ROOT
-from tools.dataset_qa.g10_independent_cohort import build_cohort
+from tools.dataset_qa.g10_independent_cohort import build_cohort, main
 from tools.dataset_qa.owner_blackmail_audit import G10
 from tools.dataset_qa.review_assignments import _check_packet, assign_reviewers
 
@@ -97,3 +98,14 @@ def test_existing_two_reviewer_assignment_can_consume_cohort() -> None:
     assert sum(len(group) for group in distributed.values()) == 1000
     assert all("example_id" not in json.dumps(group)
                for group in distributed.values())
+
+
+def test_export_rejects_nested_coordinator_crosswalk(tmp_path: Path) -> None:
+    packets = tmp_path / "reviewer" / "packets.jsonl"
+    nested_map = tmp_path / "reviewer" / "secrets" / "mapping.jsonl"
+    assert main([
+        "--packet-out", str(packets),
+        "--coordinator-map-out", str(nested_map),
+    ]) == 2
+    assert not packets.exists()
+    assert not nested_map.exists()
