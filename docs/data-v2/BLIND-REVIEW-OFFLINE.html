@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src 'none'; connect-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; form-action 'none'; base-uri 'none'">
+<title>Enthusia — Offline Blind Review</title>
+<style>
+:root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:#10151d;color:#e8eef6;font:15px/1.5 system-ui,sans-serif}main{max-width:950px;margin:auto;padding:24px}header{border-bottom:1px solid #344356;margin-bottom:22px;padding-bottom:16px}h1{margin:0;font-size:26px}h2{font-size:18px}p{color:#c2cede}.muted{color:#aab9c9}.box{background:#192330;border:1px solid #344558;border-radius:10px;padding:16px;margin:15px 0}.row{display:flex;gap:12px;flex-wrap:wrap;align-items:end}.field{flex:1;min-width:175px}label{display:block;margin:10px 0 5px;font-weight:600}input,textarea,select,button{font:inherit;color:inherit}input:not([type=checkbox]),textarea,select{background:#0e1722;border:1px solid #526276;border-radius:6px;padding:9px;width:100%}textarea{min-height:88px}button{border:1px solid #8aa4c6;background:#24364c;border-radius:7px;padding:8px 13px;cursor:pointer}button.primary{background:#286a99}button:hover{background:#315273}button:disabled{opacity:.4;cursor:not-allowed}.chat{border-left:4px solid #6d8eb0;padding:10px 14px;margin:8px 0;background:#132031;white-space:pre-wrap;overflow-wrap:anywhere}.target{border-left-color:#f2bb50;background:#2b291f}.tag{font-size:12px;color:#b8cce1}.notice{color:#ffdf9d}.evidence{display:flex;align-items:center;gap:8px;margin:5px 0;font-weight:400}.evidence input{width:auto}#reviewer{display:none}#status{white-space:pre-wrap}#counter{font-weight:700}.hidden{display:none}
+</style>
+</head>
+<body>
+<main>
+<header><h1>Enthusia · Blind Moderation Review</h1><p>Offline reviewer form · public synthetic conversations only · Policy v1</p></header>
+<section class="box">
+  <strong>Privacy and independence</strong>
+  <p>This form runs locally in your browser. It does not contact a server, store responses between reloads, or upload conversations. Only load the assigned <code>.jsonl</code> file. Do not search GitHub for the original label or discuss your decisions with the other reviewer. Send the exported results privately to the coordinator, never as a public GitHub issue.</p>
+  <div class="row">
+    <div class="field"><label for="alias">Your assigned reviewer alias</label><input id="alias" placeholder="reviewer01" autocomplete="off" maxlength="32"></div>
+    <div class="field"><label for="file">Assigned packet file (.jsonl)</label><input id="file" type="file" accept=".jsonl,.txt,application/json"></div>
+  </div>
+  <p id="status" role="status">Choose your assigned file to begin. Use the Policy-v1 instructions provided by the coordinator.</p>
+</section>
+<section id="reviewer">
+  <div class="row box">
+    <button id="prev" type="button">← Previous</button>
+    <span id="counter"></span>
+    <button id="next" type="button">Next →</button>
+    <button class="primary" id="export" type="button">Export completed decisions (.jsonl)</button>
+  </div>
+  <div id="example" class="box">
+    <h2 id="caseTitle"></h2><p class="muted" id="scope"></p><div id="chat"></div>
+  </div>
+  <form id="decision" class="box" onsubmit="return false" autocomplete="off">
+    <h2>Independent Policy-v1 decision</h2>
+    <label for="facts">What facts are observable? One short fact per line (1–32 facts, ≤200 characters each).</label>
+    <textarea id="facts" placeholder="Describe the observable context, not a guessed intention."></textarea>
+    <label for="evidence">Which displayed messages support your interpretation?</label>
+    <div id="evidence"></div>
+    <div class="row">
+      <div class="field"><label for="semantic_label">Semantic label</label><select id="semantic_label"></select></div>
+      <div class="field"><label for="action">Message action</label><select id="action"></select></div>
+      <div class="field"><label for="review_priority">Staff review priority</label><select id="review_priority"></select></div>
+    </div>
+    <div class="row">
+      <div class="field"><label for="strike">Recommend strike?</label><select id="strike"><option value="">Choose…</option><option value="false">No</option><option value="true">Yes</option></select></div>
+      <div class="field"><label for="containment">Containment</label><select id="containment"></select></div>
+      <div class="field"><label for="containment_duration_seconds">Mute duration (seconds, if defined)</label><input id="containment_duration_seconds" type="number" min="1" step="1" placeholder="Leave blank if not applicable or unset"></div>
+    </div>
+    <div class="row">
+      <div class="field"><label for="support_flow">Safety support flow</label><select id="support_flow"></select></div>
+      <div class="field"><label for="uncertainty">Uncertainty</label><select id="uncertainty"></select></div>
+    </div>
+    <p class="notice">“Unresolved policy” and “not enough evidence” are valid outcomes. Do not infer verified ages or punish legitimate Minecraft gameplay. Actual slurs in quotes/reports are handled under Policy v1 §10; use the actual policy, not personal preference.</p>
+    <button class="primary" type="button" id="save">Save this decision</button><span id="saved" class="muted"></span>
+  </form>
+</section>
+</main>
+<script>
+"use strict";
+(() => {
+const LABELS = ["SAFE","GAMEPLAY_VIOLENCE","LOW_LEVEL_HARASSMENT","SEVERE_HARASSMENT","STAFF_TARGETED_ABUSE","REAL_WORLD_THREAT","SELF_HARM_INSTRUCTION","SELF_HARM_INTENT","THIRD_PARTY_SELF_HARM_CONCERN","HATE","SLUR_USE","SEXUAL_CONTENT","SEXUAL_MINOR","DOXXING","BLACKMAIL","GROOMING","DANGEROUS_REAL_WORLD_INSTRUCTIONS","AMBIGUOUS_REVIEW"];
+const OPTIONS = {
+ semantic_label: LABELS,
+ action: ["ALLOW","BLOCK","REVIEW"],
+ review_priority: ["NONE","NORMAL","URGENT"],
+ containment: ["NONE","MUTE"],
+ support_flow: ["NONE","SELF_HARM_CHECK","TARGET_SAFETY_CHECK"],
+ uncertainty: ["CLEAR","EVIDENCE_INSUFFICIENT","POLICY_UNRESOLVED"]
+};
+const $ = id => document.getElementById(id);
+let packets = [], current = 0, responses = new Map();
+for (const [name, values] of Object.entries(OPTIONS)) {
+  const element=$(name);
+  element.add(new Option("Choose…",""));
+  for (const value of values) element.add(new Option(value.replaceAll("_"," "),value));
+}
+const blank = () => { $("decision").reset(); $("evidence").replaceChildren(); $("saved").textContent=""; };
+function validPacket(packet) {
+ const fields=["packet_id","platform_hint","channel_profile","messages","target_index"].sort();
+ if (!packet || Object.keys(packet).sort().join("|")!==fields.join("|")) return false;
+ if (!/^R-[0-9a-f]{24}$/.test(packet.packet_id)) return false;
+ if (!Array.isArray(packet.messages) || !packet.messages.length || packet.target_index!==packet.messages.length-1) return false;
+ return packet.messages.every(m => m && Object.keys(m).sort().join("|")==="offset_ms|speaker|text" &&
+   Number.isInteger(m.offset_ms) && typeof m.speaker==="string" && typeof m.text==="string");
+}
+$("file").addEventListener("change", async () => {
+ try {
+  const f=$("file").files[0]; if (!f) return;
+  if (f.size>10000000) throw Error("Packet file exceeds the 10 MB safety limit.");
+  const lines=(await f.text()).split(/\r?\n/).filter(x=>x.trim());
+  const parsed=lines.map(x=>JSON.parse(x));
+  if(!parsed.length || parsed.length>1000 || parsed.some(p=>!validPacket(p))) throw Error("This is not an approved blind-review packet file.");
+  if(new Set(parsed.map(p=>p.packet_id)).size!==parsed.length) throw Error("Duplicate packet IDs.");
+  packets=parsed;responses=new Map();current=0;
+  $("reviewer").style.display="block";$("status").textContent="Loaded "+packets.length+" synthetic cases. No labels were imported.";
+  render();
+ } catch(e) {packets=[];$("reviewer").style.display="none";$("status").textContent="Could not open packet file: "+e.message;}
+});
+function render() {
+ const p=packets[current];blank();
+ $("counter").textContent="Case "+(current+1)+" / "+packets.length+" — "+responses.size+" saved";
+ $("caseTitle").textContent="Case "+(current+1);
+ $("scope").textContent="Platform: "+p.platform_hint+" · Channel: "+p.channel_profile+" · Target message highlighted";
+ const chat=$("chat"); chat.replaceChildren();
+ for (let i=0;i<p.messages.length;i++) {
+  const m=p.messages[i], div=document.createElement("div");
+  div.className="chat"+(i===p.target_index?" target":"");
+  const head=document.createElement("div");head.className="tag";
+  head.textContent="Message "+i+" · Speaker "+m.speaker+(i===p.target_index?" · TARGET":"");
+  const content=document.createElement("div");content.textContent=m.text;
+  div.append(head,content);chat.append(div);
+  const label=document.createElement("label");label.className="evidence";
+  const check=document.createElement("input");check.type="checkbox";check.value=String(i);check.name="evidence_check";
+  label.append(check,document.createTextNode("Message "+i+" — "+m.speaker));
+  $("evidence").append(label);
+ }
+ if(responses.has(p.packet_id)) restore(responses.get(p.packet_id));
+ $("prev").disabled=current===0;$("next").disabled=current===packets.length-1;
+}
+function restore(d) {
+ $("facts").value=d.semantic_facts.join("\n");
+ for(const name of [...Object.keys(OPTIONS),"strike"]) $(name).value=String(d[name]);
+ $("containment_duration_seconds").value=d.containment_duration_seconds??"";
+ for(const item of document.querySelectorAll("[name=evidence_check]")) item.checked=d.evidence_message_indices.includes(Number(item.value));
+ $("saved").textContent="Saved";
+}
+function capture() {
+ const p=packets[current], alias=$("alias").value.trim();
+ if(!/^[A-Za-z0-9_-]{2,32}$/.test(alias)) throw Error("Enter your assigned reviewer alias (2–32 letters/numbers/-/_).");
+ const fields={};
+ for(const name of Object.keys(OPTIONS)){fields[name]=$(name).value;if(!fields[name])throw Error("Choose "+name.replaceAll("_"," "));}
+ if(!$("strike").value)throw Error("Choose whether to recommend a strike.");
+ const facts=$("facts").value.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+ if(!facts.length || facts.length>32 || facts.some(x=>x.length>200))throw Error("Enter at least one short fact; each line must be ≤200 characters.");
+ const indices=[...document.querySelectorAll("[name=evidence_check]:checked")].map(x=>Number(x.value));
+ if(!indices.length)throw Error("Select at least one evidence message.");
+ const durationRaw=$("containment_duration_seconds").value;
+ const duration=durationRaw===""?null:Number(durationRaw);
+ if(duration!==null && (!Number.isSafeInteger(duration)||duration<=0))throw Error("Mute duration must be a positive number of seconds.");
+ if(fields.containment==="NONE" && duration!==null)throw Error("Choose MUTE or clear the duration.");
+ return {packet_id:p.packet_id,reviewer_id:alias,policy_version:"v1",semantic_facts:facts,
+  semantic_label:fields.semantic_label,action:fields.action,review_priority:fields.review_priority,
+  strike:$("strike").value==="true",containment:fields.containment,
+  containment_duration_seconds:duration,support_flow:fields.support_flow,
+  uncertainty:fields.uncertainty,evidence_message_indices:indices};
+}
+function save(showErrors=true) {
+ try {const d=capture();responses.set(d.packet_id,d);$("saved").textContent="Saved ✓";$("counter").textContent="Case "+(current+1)+" / "+packets.length+" — "+responses.size+" saved";return true;}
+ catch(e){if(showErrors)alert("This case is not saved: "+e.message);return false;}
+}
+$("save").addEventListener("click",()=>save());
+$("next").addEventListener("click",()=>{if(save()){current++;render();}});
+$("prev").addEventListener("click",()=>{if(save()){current--;render();}});
+$("export").addEventListener("click",()=>{
+ if(!packets.length)return;
+ if(!responses.size){alert("Save at least one decision before exporting.");return;}
+ const alias=$("alias").value.trim();
+ if([...responses.values()].some(r=>r.reviewer_id!==alias)){alert("Reviewer alias changed during this session. Reopen the file and use one alias.");return;}
+ const content=[...responses.values()].map(r=>JSON.stringify(r)).join("\n")+"\n";
+ const blob=new Blob([content],{type:"application/x-ndjson"});
+ const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;
+ a.download="enthusia-review-"+alias+".jsonl";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+ $("status").textContent="Exported "+responses.size+" / "+packets.length+" completed decisions. Send this file privately to the coordinator.";
+});
+window.addEventListener("beforeunload",e=>{if(responses.size){e.preventDefault();e.returnValue="";}});
+})();
+</script>
+</body></html>

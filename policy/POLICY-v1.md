@@ -289,13 +289,16 @@ Confirmed real doxxing:
 If the target says the information is fake, whether the initial strike is automatically removed remains unresolved.
 
 ### Blackmail
-Clear blackmail/extortion:
+
+**Owner clarification (2026-10-08): Blackmail restricted entirely to in-game Minecraft assets or gameplay consequences is ALLOWED.** The policy does not punish players for threatening to disclose another player's Minecraft base coordinates or secret base, steal/grief an in-game base, or otherwise leverage only Minecraft items, currency, builds, or game information to demand in-game payment. This applies in Minecraft chat and Discord when the context clearly establishes the exchange is exclusively in-game. Such game-only coercion is **ALLOW; no strike, mute, or staff alert for blackmail alone**, even when the wording resembles real-world extortion. In-game base coordinates are not a real-world street address.
+
+**Real-world blackmail/extortion remains prohibited**, even when the demand is posted in Minecraft or gaming Discord. Examples include coercion involving real money, actual names/addresses/contact details, private personal photos, real-life safety, or other real-world exposure, threats, or consequences. Clear real-world blackmail/extortion:
 - block/delete related messages;
 - urgent staff review;
 - temporary mute pending staff review;
 - tell the player how to appeal through a ticket.
 
-Exact containment duration is not yet frozen.
+If it is unclear whether the threatened material or demanded payment is in-game or real-world, seek additional context / staff review rather than assume the message is a real-world violation. The game-only allowance does not exempt separate violations (e.g., threats of real-world harm, doxxing, prohibited hate speech or directed self-harm abuse). Exact containment duration for **real-world** blackmail is not yet frozen.
 
 ### Grooming
 Clear grooming/secrecy behavior involving a reliably known minor is blocked, may justify a severity-adjusted temporary mute (owner anchor about 7 days), and alerts staff. Staff alone decide any ban.
