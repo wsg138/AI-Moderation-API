@@ -92,3 +92,17 @@ integration and independent semantic adjudication are still required.
 The candidate-only freshness check is strict about all 18 batches being
 present (and unique). The compatibility mode for `main` remains an empty
 candidate no-op. None of this changes labels or establishes training readiness.
+
+## Verified code-level follow-up
+
+At code SHA `433785c701d932001ad5c6345ef3487e94d2c690`,
+the required service-ci (run `37716558660`) and candidate-only
+checks (run `37716552561`) **both succeeded**, including 133 tests,
+18/18 fresh reports and wheel build. Generator Ruff issues are resolved
+without blanket suppression. See `DATA-V2-01.md` for exact commands
+and the as-of-target/future-message regression scope.
+
+This still does **not** admit the 9,000 candidate examples to training:
+Codacy issue-level evidence and independent owner-policy semantic
+adjudication remain open, as does approved development-only split
+contamination verification. W20/W27/real holdout are excluded.

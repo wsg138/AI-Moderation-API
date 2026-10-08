@@ -63,9 +63,21 @@ W11 reproducibility, tests, and wheel build completed successfully.
 Candidate-only checks also passed at the same SHA:
 https://github.com/wsg138/AI-Moderation-API/actions/runs/37716334797 .
 
-Subsequent regression updates on the worker branch add all-corpus projection,
-runtime-context future-exclusion, exact candidate set, and duplicate-prefix
-tests. Verify the latest HEAD run before claiming final acceptance.
+## Final code validation checkpoint
+
+The final code/test head was `433785c701d932001ad5c6345ef3487e94d2c690`
+(before this documentation-only update). **Both** GitHub-hosted runs passed:
+
+- Required service-ci: https://github.com/wsg138/AI-Moderation-API/actions/runs/37716558660
+- Candidate-only checks: https://github.com/wsg138/AI-Moderation-API/actions/runs/37716552561
+- Report-refresh determinism: https://github.com/wsg138/AI-Moderation-API/actions/runs/37716459674
+
+At that code SHA, repo-wide Ruff, mypy, CCN <= 8 / <= 50 lines,
+dataset QA, W11 reproducibility, candidate report freshness (18/18,
+0 stale), **133 tests**, and the service wheel build all passed.
+The all-corpus target projection and runtime future-context regressions
+were part of that tested commit. These checks do not establish the
+independent semantic validity of labels or close Codacy's findings.
 
 ## As-of-target input boundary
 
