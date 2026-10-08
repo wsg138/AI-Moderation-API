@@ -84,3 +84,11 @@ def test_w11_audit_has_no_redundant_exact_or_unresolved_cross_worker_conflict() 
     adversarial = json.loads(ADVERSARIAL.read_text(encoding="utf-8"))
     assert adversarial["algorithm_version"] == manifest["algorithm_version"]
     assert adversarial["example_ids"] == manifest["partitions"]["frozen_adversarial"]
+
+
+def test_w11_rejects_unadmitted_candidate_batches() -> None:
+    examples = dataset_integration.load_synthetic(ROOT)
+    assert len(examples) == 4500
+    assert {row.source_prefix for row in examples} == {
+        f"G{index:02d}" for index in range(1, 10)
+    }

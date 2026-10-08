@@ -10,7 +10,7 @@ from itertools import combinations
 from pathlib import Path
 from typing import Any
 
-SYNTHETIC_GLOB = "data/synthetic/G??-*.jsonl"
+W11_SOURCE_PREFIXES = tuple(f"G{index:02d}" for index in range(1, 10))
 GOLDEN_PATH = Path("data/eval/owner-policy-v1.jsonl")
 OUTPUT_DIR = Path("data/integration")
 REPORT_PATH = Path("docs/W11-DATASET-INTEGRATION-REPORT.md")
@@ -144,22 +144,30 @@ def load_jsonl(path: Path) -> list[dict[str, Any]]:
     return records
 
 
-def load_synthetic(root: Path) -> list[Example]:
+def _load_synthetic_file(path: Path, root: Path) -> list[Example]:
     examples: list[Example] = []
-    for path in sorted(root.glob(SYNTHETIC_GLOB)):
-        for data in load_jsonl(path):
-            example_id = str(data.get("example_id", ""))
-            examples.append(
-                Example(
-                    example_id=example_id,
-                    source_file=str(path.relative_to(root)),
-                    source_prefix=_prefix_from_id(example_id),
-                    data=data,
-                    sequence_key=sequence_key(data),
-                    comparison_text=comparison_text(data),
-                    outcome_key=outcome_key(data),
-                )
+    for data in load_jsonl(path):
+        example_id = str(data.get("example_id", ""))
+        examples.append(
+            Example(
+                example_id=example_id,
+                source_file=str(path.relative_to(root)),
+                source_prefix=_prefix_from_id(example_id),
+                data=data,
+                sequence_key=sequence_key(data),
+                comparison_text=comparison_text(data),
+                outcome_key=outcome_key(data),
             )
+        )
+    return examples
+
+
+def load_synthetic(root: Path) -> list[Example]:
+    """Reproduce frozen W11 G01-G09 only; never absorb new candidate batches."""
+    examples: list[Example] = []
+    for prefix in W11_SOURCE_PREFIXES:
+        for path in sorted(root.glob(f"data/synthetic/{prefix}-*.jsonl")):
+            examples.extend(_load_synthetic_file(path, root))
     return sorted(examples, key=lambda item: item.example_id)
 
 

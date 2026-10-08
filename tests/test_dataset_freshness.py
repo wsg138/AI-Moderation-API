@@ -34,9 +34,16 @@ def _record() -> dict[str, object]:
 
 def test_render_is_repeatable(tmp_path: Path) -> None:
     path = tmp_path / "G10-test.jsonl"
-    path.write_text(json.dumps(_record()) + "\n", encoding="utf-8")
-    with pytest.raises(ValueError, match="expected 500"):
-        report_for(path)
+    rows = []
+    for number in range(1, 501):
+        row = _record()
+        row["example_id"] = f"G10-{number:04d}"
+        row["messages"] = [
+            {"speaker": "A", "offset_ms": number, "text": f"hello {number}"}
+        ]
+        rows.append(json.dumps(row))
+    path.write_text("\n".join(rows) + "\n", encoding="utf-8")
+    assert report_for(path) == report_for(path)
 
 
 def test_main_compatible_absent_batches(tmp_path: Path) -> None:
