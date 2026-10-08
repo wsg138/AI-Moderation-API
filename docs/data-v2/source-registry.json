@@ -1,0 +1,196 @@
+{
+  "schema_version": "data-v2-source-registry/1",
+  "maintained_in": "docs/data-v2/source-registry.json",
+  "public_metadata_only": true,
+  "private_manifest_location": "private/off-repository; never publish raw paths, identifiers, consent receipts, source text, or re-identification keys",
+  "snapshot_date": "2026-10-07",
+  "eligibility_values": [
+    "candidate",
+    "quarantined",
+    "legacy_acceptance_reaudit",
+    "sealed_evaluation_only",
+    "development_only",
+    "approved_training"
+  ],
+  "sources": [
+    {
+      "id": "w11-g01-g09",
+      "kind": "synthetic_labeled",
+      "rough_count": 4500,
+      "privacy": "public_synthetic",
+      "status": "legacy_acceptance_reaudit",
+      "policy_version": "v1",
+      "use": [
+        "historical_baseline",
+        "training_after_v2_provenance_and_leakage_audit"
+      ],
+      "exclusions": [
+        "W20",
+        "W27"
+      ],
+      "primary_blocker": "recheck v2 policy/split/near-duplicate compatibility",
+      "reference": "W11 and G01–G09 in main"
+    },
+    {
+      "id": "pr52-g10-g27",
+      "kind": "synthetic_labeled_candidate",
+      "rough_count": 9000,
+      "privacy": "public_synthetic",
+      "status": "candidate",
+      "policy_version": "v1",
+      "use": [
+        "qa_and_review_only"
+      ],
+      "exclusions": [
+        "training",
+        "test",
+        "W20",
+        "W27"
+      ],
+      "primary_blocker": "18 regenerated exact-head QA reports; independent semantic review; family leakage audit; Codacy triage",
+      "reference": "https://github.com/wsg138/AI-Moderation-API/pull/52"
+    },
+    {
+      "id": "real-minecraft-client-v4",
+      "kind": "real_chat_unlabeled",
+      "rough_count": 587610,
+      "privacy": "private_local_not_cloud_approved",
+      "status": "quarantined",
+      "policy_version": null,
+      "use": [
+        "local_domain_inspection",
+        "local_candidate_mining_after_privacy_checks"
+      ],
+      "exclusions": [
+        "github_raw_export",
+        "third_party_labeling_without_approval",
+        "supervised_training_without_adjudicated_labels",
+        "W20",
+        "W27"
+      ],
+      "primary_blocker": "residual in-text identifiers and consent/legal review; independently verified labeling",
+      "reference": "private corpus v4 summary; aggregate counts already recorded in public W25 checkpoint"
+    },
+    {
+      "id": "real-review-train-dev-v1",
+      "kind": "real_chat_candidate_windows",
+      "rough_count": 2279,
+      "privacy": "private_local",
+      "status": "development_only",
+      "policy_version": "v1_pending_adjudication",
+      "use": [
+        "human_review",
+        "local_model_disagreement_analysis"
+      ],
+      "exclusions": [
+        "automatic_ground_truth",
+        "public_repository_raw_data",
+        "W20",
+        "W27"
+      ],
+      "primary_blocker": "independent policy-reviewed ground truth; privacy check",
+      "reference": "local DATA_MODEL_V2 corpus plan"
+    },
+    {
+      "id": "real-review-heldout-v1",
+      "kind": "real_chat_candidate_windows",
+      "rough_count": 552,
+      "privacy": "private_sealed",
+      "status": "sealed_evaluation_only",
+      "policy_version": "v1_pending_adjudication",
+      "use": [
+        "independent_acceptance_after_freeze_only"
+      ],
+      "exclusions": [
+        "training",
+        "hyperparameter_selection",
+        "threshold_tuning",
+        "active_learning",
+        "prompt_design",
+        "synthetic_targeting"
+      ],
+      "primary_blocker": "independent frozen evaluation process; no development inspection",
+      "reference": "private heldout partition manifest"
+    },
+    {
+      "id": "w25-dev-scores",
+      "kind": "model_predictions",
+      "rough_count": 33714,
+      "privacy": "private",
+      "status": "development_only",
+      "policy_version": "v1",
+      "use": [
+        "active_learning_prioritization",
+        "disagreement_review"
+      ],
+      "exclusions": [
+        "ground_truth_labels",
+        "W20",
+        "W27",
+        "public_raw_export"
+      ],
+      "primary_blocker": "scores are not correctness and model labels are not verified truth",
+      "reference": "W25 seed-138 and local v2 scoring"
+    },
+    {
+      "id": "w27-frozen",
+      "kind": "frozen_validation",
+      "rough_count": null,
+      "privacy": "private_sealed",
+      "status": "sealed_evaluation_only",
+      "policy_version": "v1",
+      "use": [
+        "specifically_authorized_validation_after_architecture_policy_freeze"
+      ],
+      "exclusions": [
+        "training",
+        "threshold_fitting",
+        "architecture_screening",
+        "synthetic_generation",
+        "active_learning"
+      ],
+      "primary_blocker": "frozen-use gate",
+      "reference": "W27 frozen evaluation rule"
+    },
+    {
+      "id": "w20-acceptance",
+      "kind": "fresh_unseen_acceptance",
+      "rough_count": null,
+      "privacy": "private_sealed",
+      "status": "sealed_evaluation_only",
+      "policy_version": "v1",
+      "use": [
+        "final_separately_authorized_acceptance_only"
+      ],
+      "exclusions": [
+        "training",
+        "development",
+        "threshold_fitting",
+        "architecture_selection",
+        "synthetic_targeting"
+      ],
+      "primary_blocker": "final acceptance gate",
+      "reference": "https://github.com/wsg138/AI-Moderation-API/issues/43"
+    }
+  ],
+  "required_per_source_private_fields": [
+    "stable_source_id",
+    "origin_and_license_or_consent",
+    "raw_or_derived",
+    "capture_time_range",
+    "parser_version",
+    "redaction_version",
+    "data_schema_version",
+    "policy_version",
+    "content_hash",
+    "parent_source_ids",
+    "augmentation_lineage",
+    "session_or_family_grouping",
+    "split_assignment",
+    "reviewer_and_adjudication_state",
+    "authorized_compute_location",
+    "approved_uses"
+  ],
+  "promotion_rule": "A source is not supervised-training-eligible until permissions, privacy review, final-byte structure QA, policy-label adjudication, deduplication/family split, and explicit dataset acceptance all pass.",
+  "compute_rule": "Explicit owner notice and approval before expensive/heavy local or paid workloads."
+}
