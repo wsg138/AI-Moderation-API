@@ -17,6 +17,8 @@ This program is the follow-up to W25 Phase-A screening; do not replace the pinne
 
 See [source registry](source-registry.json), [training order / gates](TRAINING-ORDER.md), [provisional independent-labeling rubric](ANNOTATION-RUBRIC.md), and [PR #52 full 18-batch audit](PR52-LABEL-COUNT-AUDIT.md). For outside dataset-review input, see [collaboration questions](COLLABORATOR-REVIEW.md).
 
+The completed policy-aware methodological response is in [TECHNICAL-METHODS-REVIEW.md](TECHNICAL-METHODS-REVIEW.md). Its bounded, **synthetic-only** split/chronology fixture checks are in [tools/data_v2/test_method_invariants.py](../../tools/data_v2/test_method_invariants.py). These are design and invariant-test artifacts, not independent human adjudication or training approval.
+
 ## Nonnegotiable principles
 
 1. **Real chronology instead of toxicity stacks.** Keep everyday SAFE chat, PvP, advertisements, ordinary conversations, and occasional harmful-looking lines in their actual observed order. Do not assemble sequences of unrelated slurs/threats back-to-back. Every supervised example has a single marked target; context consists of earlier available messages and relevant metadata, *never future chat*. Use meaningful inactivity/session boundaries rather than connecting unrelated periods. Record the extraction parameters and version.
