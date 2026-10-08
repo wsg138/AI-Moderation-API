@@ -99,3 +99,22 @@ strong-cue examples first and explicitly identify any overlooked mixed or
 real-world stakes before extending the proposal set; also validate the current
 86 proposed cases independently and resolve contradictions. Grouped phrases
 or source-provided tags are not enough to certify semantic outcomes.
+
+## Second-pass update (supersedes 86/255 totals above)
+
+The [case-by-case second pass](./G10-SECOND-PASS-DISPOSITIONS.md) assessed all 21
+previously unproposed stronger-gameplay-cue examples and all 35 mixed-risk
+examples. **14 additional provisional game-only correction proposals** are now
+prepared (including game-only cheating-report and account-rule leverage); **7**
+stronger-gameplay cases remain unproposed due to missing scope evidence. All 35
+mixed/real-world-risk examples remain pending; none are accepted as game-only.
+
+**Current totals: 100 provisional SAFE/ALLOW proposals, 241 unresolved review
+candidates, zero independent approvals, zero training admissions.** Of the 241,
+7 have ambiguous strong game cues, 35 have possible mixed/IRL stakes, and 199
+still have insufficient scope evidence. Prior queue tables with 86 proposals
+remain a historical snapshot, not current queue totals.
+
+The optional coordinator-only 56-case second-pass JSONL manifest is produced
+by `python -m tools.dataset_qa.gameplay_blackmail_second_pass` and refuses
+source byte drift. No source data, model weights or production settings change.
