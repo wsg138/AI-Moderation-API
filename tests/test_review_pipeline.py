@@ -29,4 +29,4 @@ def test_candidate_cohort_to_two_reviewer_pending_queue() -> None:
 
 
 def test_no_real_data_directory_is_needed() -> None:
-    assert ROOT == Path("data/synthetic")
+    assert Path("data/synthetic") == ROOT
