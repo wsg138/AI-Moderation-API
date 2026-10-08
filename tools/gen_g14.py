@@ -1096,10 +1096,13 @@ def _inject_context():
             msgs = msgs + [M("A", rng.choice(post), 1900)]
         r["messages"] = msgs
         # fix reason codes for added context
-        if len(msgs) > 1 and "reply_context" not in r["reason_codes"]:
-            # only add reply_context when a real reply relationship exists (prepended)
-            if r["target_index"] > 0:
-                r["reason_codes"] = r["reason_codes"] + ["reply_context"]
+        if (
+            len(msgs) > 1
+            and "reply_context" not in r["reason_codes"]
+            and r["target_index"] > 0
+        ):
+            # Add only when a real reply relationship exists (prepended).
+            r["reason_codes"] = r["reason_codes"] + ["reply_context"]
 
 # ---------------------------------------------------------------- driver
 PLAN = [

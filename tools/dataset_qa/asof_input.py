@@ -11,16 +11,7 @@ from collections.abc import Mapping
 
 def serialize_as_of_target(record: Mapping[str, object]) -> dict[str, object]:
     """Project only trusted static scope and messages available at target time."""
-    raw = record.get("messages")
-    index = record.get("target_index")
-    if not isinstance(raw, list) or not isinstance(index, int) or isinstance(index, bool):
-        raise ValueError("messages must be a list and target_index an integer")
-    if index < 0 or index >= len(raw):
-        raise ValueError("target_index outside message sequence")
-    target = raw[index]
-    if not isinstance(target, dict) or not isinstance(target.get("offset_ms"), int):
-        raise ValueError("target message must have integer offset_ms")
-    cutoff = target["offset_ms"]
+    raw, index, cutoff = _target_details(record)
     messages: list[dict[str, object]] = []
     for message in raw[: index + 1]:
         messages.append(_as_of_message(message, cutoff))
@@ -30,6 +21,22 @@ def serialize_as_of_target(record: Mapping[str, object]) -> dict[str, object]:
         "messages": messages,
         "target_index": index,
     }
+
+
+def _target_details(record: Mapping[str, object]) -> tuple[list[object], int, int]:
+    raw = record.get("messages")
+    index = record.get("target_index")
+    if not isinstance(raw, list) or not isinstance(index, int) or isinstance(index, bool):
+        raise ValueError("messages must be a list and target_index an integer")
+    if index < 0 or index >= len(raw):
+        raise ValueError("target_index outside message sequence")
+    target = raw[index]
+    if not isinstance(target, dict):
+        raise ValueError("target must be a message")
+    cutoff = target.get("offset_ms")
+    if not isinstance(cutoff, int) or isinstance(cutoff, bool):
+        raise ValueError("target message must have integer offset_ms")
+    return raw, index, cutoff
 
 
 def _static_scope(record: Mapping[str, object], name: str) -> str:
