@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
 from typing import Any
 
 import pytest
@@ -72,6 +71,24 @@ def test_short_sampling_key_and_invalid_quota_fail_closed() -> None:
         sample_review(rows, KEY, label_quota=0)
 
 
+def _assert_reviewer_separation(packets: list[dict[str, object]]) -> None:
+    assert all("example_id" not in packet for packet in packets)
+    assert all("label" not in packet and "reason_codes" not in packet
+               for packet in packets)
+    assert all("selection_reasons" not in json.dumps(packet)
+               for packet in packets)
+
+
+def _assert_mapping_integrity(
+    packets: list[dict[str, object]], mapping: list[dict[str, object]]
+) -> None:
+    assert all("source_sha256" in entry for entry in mapping)
+    assert all("selection_reasons" in entry for entry in mapping)
+    assert set(packet["packet_id"] for packet in packets) == {
+        entry["packet_id"] for entry in mapping
+    }
+
+
 def test_all_available_synthetic_sources_are_sampled_blindly() -> None:
     if not batch_files(ROOT):
         pytest.skip("no G10-G27 candidate batches on main")
@@ -79,13 +96,5 @@ def test_all_available_synthetic_sources_are_sampled_blindly() -> None:
     assert len(packets) == len(mapping)
     assert len(packets) >= 100
     assert len({packet["packet_id"] for packet in packets}) == len(packets)
-    assert all("example_id" not in packet for packet in packets)
-    assert all("label" not in packet and "reason_codes" not in packet
-               for packet in packets)
-    assert all("selection_reasons" not in json.dumps(packet)
-               for packet in packets)
-    assert all("source_sha256" in entry for entry in mapping)
-    assert all("selection_reasons" in entry for entry in mapping)
-    assert set(packet["packet_id"] for packet in packets) == {
-        entry["packet_id"] for entry in mapping
-    }
+    _assert_reviewer_separation(packets)
+    _assert_mapping_integrity(packets, mapping)
