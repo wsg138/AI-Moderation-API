@@ -124,6 +124,10 @@ def _status(identifier: str, decisions: list[dict[str, Any]]) -> dict[str, objec
     if len(decisions) >= 2:
         fingerprints = {_decision_fingerprint(row) for row in decisions}
         status = "independent_agreement" if len(fingerprints) == 1 else "adjudication"
+    if len(decisions) >= 2 and any(
+        d["uncertainty"] == "EVIDENCE_INSUFFICIENT" for d in decisions
+    ):
+        status = "evidence_insufficient"
     if any(d["uncertainty"] == "POLICY_UNRESOLVED" for d in decisions):
         status = "owner_policy_question"
     return {
