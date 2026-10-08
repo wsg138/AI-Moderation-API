@@ -32,3 +32,9 @@ These are evidence-quality controls only, not source-policy or model-label chang
 4. Re-run both required CI and fresh exact-head Codacy, and document remaining findings plus explicit signoff separately on parent PRs.
 
 **Release blocks unchanged:** no PR merge, no G10 label rewrite, no independent certification without real reviewers, no admission for training, no private Minecraft data, no W20/W27, no model training or production actions.
+
+## Verified follow-up — 2026-10-08 exact head
+
+At **`12bcf8dfe6f4c856d9e3dc720a4b59c0a28b34a3`**, the [required GitHub workflow](https://github.com/wsg138/AI-Moderation-API/actions/runs/37734489967) completed successfully with **235 passed tests**. The same SHA-specific Codacy check remains `action_required` with **516 newly reported findings, 0 allowed**. This replaces the older 507-head count for current status, **not** a deduplicated catalog of defects. The actual rule/path/line-level issue list is still unavailable through permitted current connector access.
+
+The added evidence-required validation is verified by CI. No blanket scanner suppression, gold-label acceptance, source edit, merge, training, or deployment has occurred.
