@@ -93,10 +93,10 @@ def _outside_checkout(path: Path) -> Path:
 
 def _write_jsonl(path: Path, records: list[dict[str, object]]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(
-        "".join(json.dumps(row, ensure_ascii=False) + "\n" for row in records),
-        encoding="utf-8",
-    )
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    with os.fdopen(fd, "w", encoding="utf-8") as target:
+        for row in records:
+            target.write(json.dumps(row, ensure_ascii=False) + "\n")
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -113,7 +113,7 @@ def main(argv: list[str] | None = None) -> int:
         packets, crosswalk = build_packets(ROOT, secret)
         _write_jsonl(packet_out, packets)
         _write_jsonl(map_out, crosswalk)
-    except (OSError, ValueError, UnicodeError, json.JSONDecodeError) as exc:
+    except (OSError, ValueError) as exc:
         print(f"Blind packet preparation failed: {exc}", file=sys.stderr)
         return 2
     print(f"Prepared {len(packets)} public synthetic review packets; labels omitted")
