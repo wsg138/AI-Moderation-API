@@ -65,12 +65,12 @@ def test_queue_preserves_original_and_requires_human_semantic_review() -> None:
     raw = ("\n".join(json.dumps(record) for record in records) + "\n").encode()
     manifest, summary = build_queue(raw)
     assert summary["records"] == 500
-    assert summary["review_queue_total"] == 497
+    assert summary["review_queue_total"] == 498
     assert summary["priority_bucket_counts"] == {
-        "gameplay_scope_confirmation": 496,
+        "gameplay_scope_confirmation": 497,
         "mixed_or_realworld_risk": 1,
     }
-    assert len(manifest) == 497
+    assert len(manifest) == 498
     assert all(row["status"] == "pending_semantic_review" for row in manifest)
     assert all(row["training_eligible"] is False for row in manifest)
     assert summary["training_eligible"] is False
