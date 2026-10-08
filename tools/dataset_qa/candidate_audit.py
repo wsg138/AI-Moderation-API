@@ -87,7 +87,7 @@ def _chronology_flags(item: dict[str, Any], messages: list[dict[str, Any]]) -> s
     if item.get("target_index") != len(messages) - 1:
         flags.add("nonterminal_target_index_review")
     offsets = [message.get("offset_ms") for message in messages]
-    if any(a > b for a, b in zip(offsets, offsets[1:])):
+    if any(a > b for a, b in zip(offsets, offsets[1:], strict=False)):
         flags.add("nonchronological_message_offsets")
     if len(messages) >= 3 and len({m.get("speaker") for m in messages}) == 1:
         flags.add("single_speaker_multimessage_realism_review")
@@ -171,7 +171,7 @@ def _overlap_lines(groups: list[dict[str, list[str]]]) -> list[str]:
         "Exact normalized full contexts",
         "Identical target message (18+ chars)",
         "Shared explicit family ID",
-    ), groups):
+    ), groups, strict=True):
         matches = _cross_batch(values)
         sample = "; ".join(", ".join(ids[:4]) for ids in matches[:12])
         lines.append(f"- {name}: **{len(matches)} groups**; sample: {sample or '(none)'}")

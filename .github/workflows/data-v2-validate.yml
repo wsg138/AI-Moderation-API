@@ -26,7 +26,8 @@ jobs:
       - name: Ruff on DATA-V2-01 code
         run: |
           ruff check tools/dataset_qa/freshness.py tools/dataset_qa/candidate_audit.py \
-            tests/test_dataset_freshness.py tests/test_candidate_audit.py
+            tests/test_dataset_freshness.py tests/test_candidate_audit.py \
+            tests/test_generator_safety.py
       - name: Mypy
         run: mypy
       - name: Enforce complexity limits
