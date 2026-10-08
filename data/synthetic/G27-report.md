@@ -25,10 +25,10 @@
 
 | Value | Count |
 |---|---:|
-| `adversarial` | 75 |
-| `easy` | 79 |
-| `hard` | 230 |
-| `medium` | 116 |
+| `adversarial` | 67 |
+| `easy` | 102 |
+| `hard` | 223 |
+| `medium` | 108 |
 
 ### platform_hint
 
@@ -47,25 +47,25 @@
 
 | Value | Count |
 |---|---:|
-| `AMBIGUOUS_REVIEW` | 24 |
+| `AMBIGUOUS_REVIEW` | 1 |
 | `LOW_LEVEL_HARASSMENT` | 160 |
-| `SAFE` | 76 |
+| `SAFE` | 99 |
 | `SEVERE_HARASSMENT` | 240 |
 
 ### action
 
 | Value | Count |
 |---|---:|
-| `ALLOW` | 201 |
+| `ALLOW` | 224 |
 | `BLOCK` | 275 |
-| `REVIEW` | 24 |
+| `REVIEW` | 1 |
 
 ### review_priority
 
 | Value | Count |
 |---|---:|
-| `NONE` | 201 |
-| `NORMAL` | 299 |
+| `NONE` | 224 |
+| `NORMAL` | 276 |
 
 ### containment
 
@@ -101,7 +101,7 @@
 | Value | Count |
 |---|---:|
 | `consent_uncomfortable` | 30 |
-| `insufficient_context` | 24 |
+| `insufficient_context` | 1 |
 | `low_severity_insult` | 160 |
 | `mutual_banter_evidence` | 30 |
 | `prior_confirmed_incident` | 80 |

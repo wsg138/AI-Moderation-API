@@ -25,9 +25,9 @@
 
 | Value | Count |
 |---|---:|
-| `easy` | 153 |
-| `hard` | 113 |
-| `medium` | 234 |
+| `easy` | 187 |
+| `hard` | 103 |
+| `medium` | 210 |
 
 ### platform_hint
 
@@ -49,22 +49,22 @@
 
 | Value | Count |
 |---|---:|
-| `AMBIGUOUS_REVIEW` | 50 |
-| `SAFE` | 450 |
+| `AMBIGUOUS_REVIEW` | 2 |
+| `SAFE` | 498 |
 
 ### action
 
 | Value | Count |
 |---|---:|
-| `ALLOW` | 450 |
-| `REVIEW` | 50 |
+| `ALLOW` | 498 |
+| `REVIEW` | 2 |
 
 ### review_priority
 
 | Value | Count |
 |---|---:|
-| `NONE` | 450 |
-| `NORMAL` | 50 |
+| `NONE` | 498 |
+| `NORMAL` | 2 |
 
 ### containment
 
@@ -94,14 +94,13 @@
 
 | Value | Count |
 |---|---:|
-| `discord_gameplay_explicit` | 99 |
-| `discord_general_no_game_context` | 68 |
+| `discord_gameplay_explicit` | 109 |
+| `discord_general_no_game_context` | 58 |
 | `gameplay_death_context` | 36 |
-| `insufficient_context` | 20 |
+| `insufficient_context` | 2 |
 | `minecraft_gameplay_explicit` | 333 |
-| `mutual_banter_evidence` | 30 |
-| `private_context_relevant` | 74 |
-| `reply_context` | 354 |
+| `private_context_relevant` | 68 |
+| `reply_context` | 325 |
 
 ### Message count
 

@@ -25,10 +25,10 @@
 
 | Value | Count |
 |---|---:|
-| `adversarial` | 73 |
-| `easy` | 70 |
-| `hard` | 233 |
-| `medium` | 124 |
+| `adversarial` | 63 |
+| `easy` | 75 |
+| `hard` | 236 |
+| `medium` | 126 |
 
 ### platform_hint
 
@@ -50,24 +50,24 @@
 
 | Value | Count |
 |---|---:|
-| `AMBIGUOUS_REVIEW` | 26 |
+| `AMBIGUOUS_REVIEW` | 25 |
 | `BLACKMAIL` | 397 |
-| `SAFE` | 77 |
+| `SAFE` | 78 |
 
 ### action
 
 | Value | Count |
 |---|---:|
-| `ALLOW` | 77 |
+| `ALLOW` | 78 |
 | `BLOCK` | 397 |
-| `REVIEW` | 26 |
+| `REVIEW` | 25 |
 
 ### review_priority
 
 | Value | Count |
 |---|---:|
-| `NONE` | 77 |
-| `NORMAL` | 26 |
+| `NONE` | 78 |
+| `NORMAL` | 25 |
 | `URGENT` | 397 |
 
 ### containment
@@ -103,10 +103,11 @@
 | Value | Count |
 |---|---:|
 | `blackmail` | 397 |
+| `discord_gameplay_explicit` | 1 |
 | `explicit_real_world_cue` | 28 |
 | `gameplay_death_context` | 15 |
-| `insufficient_context` | 26 |
-| `minecraft_gameplay_explicit` | 444 |
+| `insufficient_context` | 25 |
+| `minecraft_gameplay_explicit` | 443 |
 | `mutual_banter_evidence` | 31 |
 | `obfuscated_evasion` | 34 |
 | `private_context_relevant` | 28 |

@@ -25,9 +25,9 @@
 
 | Value | Count |
 |---|---:|
-| `easy` | 250 |
-| `hard` | 75 |
-| `medium` | 175 |
+| `easy` | 274 |
+| `hard` | 55 |
+| `medium` | 171 |
 
 ### platform_hint
 
@@ -48,22 +48,22 @@
 
 | Value | Count |
 |---|---:|
-| `AMBIGUOUS_REVIEW` | 25 |
-| `SAFE` | 475 |
+| `AMBIGUOUS_REVIEW` | 1 |
+| `SAFE` | 499 |
 
 ### action
 
 | Value | Count |
 |---|---:|
-| `ALLOW` | 475 |
-| `REVIEW` | 25 |
+| `ALLOW` | 499 |
+| `REVIEW` | 1 |
 
 ### review_priority
 
 | Value | Count |
 |---|---:|
-| `NONE` | 475 |
-| `NORMAL` | 25 |
+| `NONE` | 499 |
+| `NORMAL` | 1 |
 
 ### containment
 
@@ -95,7 +95,7 @@
 |---|---:|
 | `discord_gameplay_explicit` | 102 |
 | `discord_general_no_game_context` | 127 |
-| `insufficient_context` | 25 |
+| `insufficient_context` | 1 |
 | `minecraft_gameplay_explicit` | 271 |
 | `reply_context` | 493 |
 | `staff_confirmed` | 50 |

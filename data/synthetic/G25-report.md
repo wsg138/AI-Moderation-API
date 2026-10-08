@@ -33,9 +33,9 @@
 
 | Value | Count |
 |---|---:|
-| `adversarial` | 199 |
-| `easy` | 2 |
-| `hard` | 299 |
+| `adversarial` | 189 |
+| `easy` | 103 |
+| `hard` | 208 |
 
 ### platform_hint
 
@@ -57,14 +57,14 @@
 
 | Value | Count |
 |---|---:|
-| `AMBIGUOUS_REVIEW` | 340 |
+| `AMBIGUOUS_REVIEW` | 239 |
 | `BLACKMAIL` | 2 |
 | `DOXXING` | 2 |
 | `GAMEPLAY_VIOLENCE` | 3 |
 | `HATE` | 2 |
 | `LOW_LEVEL_HARASSMENT` | 9 |
 | `REAL_WORLD_THREAT` | 17 |
-| `SAFE` | 109 |
+| `SAFE` | 210 |
 | `SELF_HARM_INTENT` | 2 |
 | `SEVERE_HARASSMENT` | 12 |
 | `SEXUAL_CONTENT` | 2 |
@@ -73,16 +73,16 @@
 
 | Value | Count |
 |---|---:|
-| `ALLOW` | 123 |
+| `ALLOW` | 224 |
 | `BLOCK` | 37 |
-| `REVIEW` | 340 |
+| `REVIEW` | 239 |
 
 ### review_priority
 
 | Value | Count |
 |---|---:|
-| `NONE` | 127 |
-| `NORMAL` | 369 |
+| `NONE` | 228 |
+| `NORMAL` | 268 |
 | `URGENT` | 4 |
 
 ### containment
@@ -124,15 +124,16 @@
 | `confirmed_doxxing` | 3 |
 | `consent_uncomfortable` | 15 |
 | `discord_gameplay_explicit` | 8 |
+| `discord_general_no_game_context` | 31 |
 | `explicit_real_world_cue` | 15 |
 | `gameplay_death_context` | 5 |
 | `historical_or_high_level_context` | 4 |
 | `house_ambiguous_gameplay` | 20 |
 | `identity_target` | 19 |
-| `insufficient_context` | 139 |
+| `insufficient_context` | 102 |
 | `long_gap_breaks_linkage` | 1 |
 | `low_severity_insult` | 65 |
-| `minecraft_gameplay_explicit` | 127 |
+| `minecraft_gameplay_explicit` | 133 |
 | `multi_sender_dogpile` | 1 |
 | `mutual_banter_evidence` | 41 |
 | `obfuscated_evasion` | 1 |

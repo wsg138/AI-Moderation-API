@@ -7,7 +7,7 @@
 - Exact duplicate groups: **0**
 - Near candidates: **5**
 - Minimal-pair candidates: **0**
-- Multi-message proportion: **0.960000**
+- Multi-message proportion: **0.962000**
 
 ### source
 
@@ -26,9 +26,9 @@
 | Value | Count |
 |---|---:|
 | `adversarial` | 75 |
-| `easy` | 75 |
+| `easy` | 83 |
 | `hard` | 225 |
-| `medium` | 125 |
+| `medium` | 117 |
 
 ### platform_hint
 
@@ -50,24 +50,24 @@
 
 | Value | Count |
 |---|---:|
-| `AMBIGUOUS_REVIEW` | 25 |
+| `AMBIGUOUS_REVIEW` | 12 |
 | `GROOMING` | 400 |
-| `SAFE` | 75 |
+| `SAFE` | 88 |
 
 ### action
 
 | Value | Count |
 |---|---:|
-| `ALLOW` | 75 |
+| `ALLOW` | 88 |
 | `BLOCK` | 400 |
-| `REVIEW` | 25 |
+| `REVIEW` | 12 |
 
 ### review_priority
 
 | Value | Count |
 |---|---:|
-| `NONE` | 75 |
-| `NORMAL` | 25 |
+| `NONE` | 88 |
+| `NORMAL` | 12 |
 | `URGENT` | 400 |
 
 ### containment
@@ -104,18 +104,19 @@
 | `age_reliable_minor` | 151 |
 | `age_self_report_clue` | 135 |
 | `cross_platform_linked_context` | 55 |
+| `discord_gameplay_explicit` | 2 |
 | `grooming_pattern` | 400 |
-| `insufficient_context` | 25 |
-| `minecraft_gameplay_explicit` | 244 |
-| `reply_context` | 69 |
-| `split_message_context` | 426 |
+| `insufficient_context` | 12 |
+| `minecraft_gameplay_explicit` | 255 |
+| `reply_context` | 78 |
+| `split_message_context` | 418 |
 
 ### Message count
 
 | Value | Count |
 |---|---:|
-| `1` | 20 |
-| `2` | 88 |
+| `1` | 19 |
+| `2` | 89 |
 | `3` | 128 |
 | `4` | 92 |
 | `5` | 67 |
