@@ -27,7 +27,7 @@ CARE = Decision("SELF_HARM_INTENT", "ALLOW", "NORMAL", False, "NONE", None, "SEL
         ("blackmail", "game_only", "minecraft_public", "ALLOW", False, "RESOLVED"),
         ("blackmail", "game_only", "minecraft_private", "ALLOW", False, "RESOLVED"),
         ("blackmail", "game_only", "discord_gaming", "ALLOW", False, "RESOLVED"),
-        ("blackmail", "game_only", "discord_general", "REVIEW", None, "UNRESOLVED"),
+        ("blackmail", "game_only", "discord_general", "ALLOW", False, "RESOLVED"),
         ("blackmail", "irl", "minecraft_public", "BLOCK", None, "PARTIAL"),
         ("blackmail", "unclear", "discord_general", "REVIEW", None, "UNRESOLVED"),
         ("threat", "unclear", "minecraft_public", "ALLOW", False, "RESOLVED"),
