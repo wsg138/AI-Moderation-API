@@ -7,7 +7,7 @@ from typing import Any
 import pytest
 
 from tools.dataset_qa.blind_review import make_packet
-from tools.dataset_qa.review_assignments import assign_reviewers
+from tools.dataset_qa.review_assignments import assign_reviewers, packet_digest
 from tools.dataset_qa.review_intake import intake
 
 KEY = b"offline-review-intake-test-key"
@@ -119,3 +119,13 @@ def test_two_insufficient_evidence_reviews_are_not_agreement() -> None:
     assert result[0]["status"] == "evidence_insufficient"
     assert result[0]["reviewer_count"] == 2
     assert result[0]["training_eligible"] is False
+
+
+def test_rehashed_malformed_packet_cannot_bypass_intake_schema() -> None:
+    packet, manifest = _setup()
+    changed = deepcopy(packet)
+    changed["messages"][0]["text"] = {"secret": "source label"}
+    changed_manifest = deepcopy(manifest)
+    changed_manifest[0]["packet_sha256"] = packet_digest(changed)
+    with pytest.raises(ValueError, match="speaker/text"):
+        intake([changed], changed_manifest, [])
