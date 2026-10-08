@@ -139,6 +139,7 @@ def test_full_9000_records_stay_unverified() -> None:
     if not batch_files(ROOT):
         pytest.skip("candidate sources not present on main")
     rows = load_candidates()
+    validate_source_order(rows)
     files = {path.name[:3]: str(path) for path in batch_files(ROOT, require_complete=True)}
     queue, summary = build_queue(rows, find_groups(rows), files)
     assert len(queue) == 9000
