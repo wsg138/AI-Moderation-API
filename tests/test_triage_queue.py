@@ -64,8 +64,8 @@ def test_same_visible_input_conflicting_actions_are_priority_hypothesis() -> Non
 
 
 def test_same_target_in_different_context_does_not_imply_action_conflict() -> None:
-    left = _record("G10-0001", "same message")
-    right = _record("G11-0001", "same message", label="DOXXING", action="BLOCK")
+    left = _record("G10-0001", "same target message for testing")
+    right = _record("G11-0001", "same target message for testing", label="DOXXING", action="BLOCK")
     right["messages"].insert(0, {"speaker": "B", "offset_ms": -10, "text": "context"})
     right["target_index"] = 1
     queue, summary = build_queue([left, right], find_groups([left, right]), SOURCES)
