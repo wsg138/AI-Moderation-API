@@ -72,11 +72,11 @@ def _diverse_selection(
 def _validate_frame(
     queue: list[dict[str, object]], by_id: dict[str, dict[str, Any]],
 ) -> None:
-    _require(len(queue) == len(by_id), "triage queue incomplete")
     _require(
         len({row["example_id"] for row in queue}) == len(queue),
         "triage queue duplicate",
     )
+    _require(len(queue) == len(by_id), "triage queue incomplete")
     for row in queue:
         _require(str(row["example_id"]) in by_id, "unknown candidate ID")
         _require(str(row["triage_priority"]) in QUOTAS, "unknown candidate triage tier")
