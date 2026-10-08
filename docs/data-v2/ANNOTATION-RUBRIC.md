@@ -30,12 +30,14 @@ A reviewer receives only an *approved-for-that-reviewer*, minimally necessary, p
 | Low vs severe harassment | Distinguish ordinary banter/insults, repeated unwanted targeting, coordination/dogpiling and known requests to stop. Duration and evidence of repetition matter. |
 | Staff-targeted abuse | Must actually target staff in their capacity as staff, not merely criticize server operation or use a staff label in benign speech. |
 | Self-harm instruction vs first-person intent vs third-party concern | Directed encouragement to harm oneself is not the same as someone's disclosure or another person's report of concern. Preserve support routing and avoid punishment of disclosures. |
-| Slur use vs quote/report | Actual slur used derogatorily versus someone reporting/condemning language, discussing the word, or using policy-defined non-derogatory context. |
+| Actual slur vs euphemistic reference | **Current Policy v1 §10 says any actual slur is BLOCK + strike even in quotes, reports, counterspeech, jokes, reclaimed use, and deliberate masking/obfuscation.** A euphemism such as “the n-word” may be SAFE when genuinely discussing the term, not using it as a derogatory substitute. Record quote/report/reclaimed *intent facts* without letting them override the owner’s actual-slur block rule. |
 | Identity hate vs generic insult | Requires hostility toward a protected identity; a normal interpersonal argument isn't automatically identity hate. |
 | Adult sexual content vs sexual-minor vs grooming | Distinguish adult explicit content, reliable minor evidence, coercion or a grooming *pattern*. Mere age mention or one ambiguous conversational line is not sufficient. |
 | Doxxing/blackmail vs discussion | Actual exposure or credible threat to reveal private data, invasive request, or coercive demand; merely mentioning the concept of doxxing or asking innocently about a server IP is not proof. |
 | Dangerous real-world instructions vs game crafting | Requests/instructions involving real-world harm and actionable detail versus TNT/redstone builds, historical/high-level discussion, or non-actionable quotes. |
 | REVIEW vs SAFE | `AMBIGUOUS_REVIEW` requires a genuinely unresolved decision-relevant ambiguity, not “it's short,” “maybe,” or “could eventually escalate.” Innocuous isolated messages are SAFE under owner rulings. |
+
+**Policy alignment warning:** Some early local Qwen annotation prompts and exploratory heuristics treated reported actual slurs as SAFE; that conflicts with accepted Policy v1 §10. Those pseudo-labels are quarantined and must not be copied into supervised truth. Distinguish actual slur occurrence from an indirect reference without repeating the words in public GitHub artifacts.
 
 ## Review/adjudication protocol
 
