@@ -31,19 +31,36 @@ def packet_digest(packet: dict[str, object]) -> str:
 def _check_messages(messages: object, target_index: object) -> None:
     if not isinstance(messages, list) or not messages:
         raise ValueError("review packet has no messages")
-    if target_index != len(messages) - 1:
-        raise ValueError("review packet contains post-target messages")
-    if any(not isinstance(m, dict) or set(m) != {"speaker", "offset_ms", "text"}
-           for m in messages):
+    if type(target_index) is not int or target_index != len(messages) - 1:
+        raise ValueError("review packet contains invalid target or post-target messages")
+    target = messages[-1]
+    if not isinstance(target, dict) or type(target.get("offset_ms")) is not int:
+        raise ValueError("review packet target timestamp must be an integer")
+    cutoff = target["offset_ms"]
+    for message in messages:
+        _check_message(message, cutoff)
+
+
+def _check_message(message: object, cutoff: int) -> None:
+    if not isinstance(message, dict) or set(message) != {
+        "speaker", "offset_ms", "text"
+    }:
         raise ValueError("review packet contains extra message metadata")
+    if type(message["offset_ms"]) is not int or message["offset_ms"] > cutoff:
+        raise ValueError("review packet contains future or invalid timestamp")
+    if not isinstance(message["speaker"], str) or not isinstance(message["text"], str):
+        raise ValueError("review packet message speaker/text must be strings")
 
 
 def _check_packet(packet: dict[str, object]) -> str:
-    if set(packet) != PACKET_FIELDS:
+    if not isinstance(packet, dict) or set(packet) != PACKET_FIELDS:
         raise ValueError("invalid blind packet fields")
     identifier = packet["packet_id"]
     if not isinstance(identifier, str) or not re.fullmatch(r"R-[a-f0-9]{24}", identifier):
         raise ValueError("invalid opaque packet ID")
+    for scope in ("platform_hint", "channel_profile"):
+        if not isinstance(packet[scope], str) or not packet[scope]:
+            raise ValueError(f"review packet invalid static scope: {scope}")
     _check_messages(packet["messages"], packet["target_index"])
     return identifier
 
