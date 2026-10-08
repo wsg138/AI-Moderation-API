@@ -26,6 +26,8 @@ CARE = Decision("SELF_HARM_INTENT", "ALLOW", "NORMAL", False, "NONE", None, "SEL
     [
         ("blackmail", "game_only", "minecraft_public", "ALLOW", False, "RESOLVED"),
         ("blackmail", "game_only", "minecraft_private", "ALLOW", False, "RESOLVED"),
+        ("blackmail", "game_only", "discord_gaming", "ALLOW", False, "RESOLVED"),
+        ("blackmail", "game_only", "discord_general", "REVIEW", None, "UNRESOLVED"),
         ("blackmail", "irl", "minecraft_public", "BLOCK", None, "PARTIAL"),
         ("blackmail", "unclear", "discord_general", "REVIEW", None, "UNRESOLVED"),
         ("threat", "unclear", "minecraft_public", "ALLOW", False, "RESOLVED"),
@@ -197,3 +199,13 @@ def test_truth_with_undecided_mute_duration_is_not_full_gold(tmp_path: Path) -> 
     _write(pred, [_pred()])
     with pytest.raises(ValueError, match="Unresolved mute duration"):
         load_pairs(truth, pred)
+
+
+
+def test_game_only_discord_blackmail_is_allowed_but_real_stakes_never_are() -> None:
+    game = resolve(SemanticFacts("blackmail", "game_only", "discord_gaming"))
+    real = resolve(SemanticFacts("blackmail", "irl", "discord_gaming"))
+    assert game.action == "ALLOW" and game.strike is False
+    assert game.review_priority == "NONE" and game.containment == "NONE"
+    assert real.action == "BLOCK" and real.review_priority == "URGENT"
+    assert real.status == "PARTIAL"
