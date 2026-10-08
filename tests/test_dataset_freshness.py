@@ -111,3 +111,18 @@ def test_required_one_batch_set_fails_closed(tmp_path: Path) -> None:
     (tmp_path / "G10-fixture.jsonl").touch()
     with pytest.raises(ValueError, match="incomplete"):
         process(tmp_path, require_complete=True)
+
+def test_candidate_cli_fails_for_all_missing_batches(tmp_path: Path) -> None:
+    from tools.dataset_qa.freshness import main
+
+    assert main(["--directory", str(tmp_path), "--require-complete"]) == 2
+
+
+def test_duplicate_batch_prefix_is_rejected(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from tools.dataset_qa import freshness
+
+    monkeypatch.setattr(freshness, "EXPECTED", {"G10"})
+    (tmp_path / "G10-one.jsonl").touch()
+    (tmp_path / "G10-two.jsonl").touch()
+    with pytest.raises(ValueError, match="duplicate"):
+        batch_files(tmp_path, require_complete=True)

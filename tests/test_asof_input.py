@@ -3,10 +3,12 @@ from __future__ import annotations
 
 import json
 from copy import deepcopy
+from pathlib import Path
 
 import pytest
 
 from tools.dataset_qa.asof_input import serialize_as_of_target
+from tools.dataset_qa.freshness import batch_files
 
 
 def _record() -> dict[str, object]:
@@ -85,3 +87,17 @@ def test_future_message_metadata_is_not_forwarded() -> None:
     record["messages"][0]["moderation_outcome"] = "FUTURE_ONLY_ANSWER"
     item = serialize_as_of_target(record)
     assert "FUTURE_ONLY_ANSWER" not in json.dumps(item)
+
+def test_every_available_synthetic_batch_projects_only_target_time_messages() -> None:
+    directory = Path("data/synthetic")
+    count = 0
+    for path in batch_files(directory):
+        for line in path.read_text(encoding="utf-8").splitlines():
+            record = json.loads(line)
+            features = serialize_as_of_target(record)
+            target = record["target_index"]
+            assert len(features["messages"]) == target + 1
+            assert features["messages"][-1]["text"] == record["messages"][target]["text"]
+            assert "label" not in features and "notes" not in features
+            count += 1
+    assert count in (0, 9000)

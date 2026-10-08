@@ -30,6 +30,8 @@ def batch_files(directory: Path, require_complete: bool = False) -> list[Path]:
     files = sorted(directory.glob("G??-*.jsonl"))
     selected = [path for path in files if path.name[:3] in EXPECTED]
     found = {path.name[:3] for path in selected}
+    if len(selected) != len(found):
+        raise ValueError("duplicate candidate batch prefix detected")
     if (found or require_complete) and found != EXPECTED:
         raise ValueError(f"incomplete G10-G27 batches: missing {sorted(EXPECTED - found)}")
     return selected
