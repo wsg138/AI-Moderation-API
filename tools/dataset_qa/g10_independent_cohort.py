@@ -75,8 +75,9 @@ def main(argv: list[str] | None = None) -> int:
         map_out = _outside_checkout(args.coordinator_map_out)
         if packet_out == map_out or packet_out.exists() or map_out.exists():
             raise ValueError("output paths must differ and not exist")
-        if packet_out.parent == map_out.parent:
-            raise ValueError("keep coordinator crosswalk separate from packets")
+        if (packet_out.is_relative_to(map_out.parent)
+                or map_out.is_relative_to(packet_out.parent)):
+            raise ValueError("keep crosswalk outside reviewer packet directory")
         secret = os.environ.get(KEY_ENV, "").encode("utf-8")
         packets, mapping = build_cohort((ROOT / G10).read_bytes(), secret)
         _write_jsonl(packet_out, packets)
