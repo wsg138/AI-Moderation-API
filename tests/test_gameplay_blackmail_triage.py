@@ -116,6 +116,11 @@ def test_complete_source_queues_all_341_original_tagged_candidates() -> None:
     manifest, summary = build_queue(source.read_bytes())
     assert summary["records"] == 500
     assert summary["review_queue_total"] == 341
+    assert summary["priority_bucket_counts"] == {
+        "gameplay_scope_confirmation": 108,
+        "insufficient_scope_evidence": 208,
+        "mixed_or_realworld_risk": 25,
+    }
     assert sum(summary["priority_bucket_counts"].values()) == 341
     assert len({row["example_id"] for row in manifest}) == 341
     assert {row["source_sha256"] for row in manifest} == {
