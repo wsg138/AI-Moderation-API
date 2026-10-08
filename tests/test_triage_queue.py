@@ -9,7 +9,7 @@ import pytest
 
 from tools.check_complexity import analyze
 from tools.data_v2.synthetic_family_audit import Group, find_groups, load_candidates
-from tools.data_v2.triage_queue import build_queue
+from tools.data_v2.triage_queue import build_queue, validate_source_order
 from tools.dataset_qa.blind_review import _outside_checkout
 from tools.dataset_qa.freshness import ROOT, batch_files
 
@@ -17,6 +17,7 @@ SOURCES = {
     "G10": "data/synthetic/G10-blackmail-extortion.jsonl",
     "G11": "data/synthetic/G11-doxxing.jsonl",
     "G20": "data/synthetic/G20-school-threats.jsonl",
+    "G21": "data/synthetic/G21-multilingual.jsonl",
 }
 
 
@@ -108,6 +109,25 @@ def test_unexpected_source_or_line_rejected() -> None:
         build_queue([_record("G11-0501")], [], SOURCES)
     with pytest.raises(ValueError, match="unknown or out-of-range"):
         build_queue([_record("G15-0001")], [], SOURCES)
+
+
+def test_source_lineage_check_detects_reordered_rows() -> None:
+    rows = [_record("G10-0001"), _record("G10-0002")]
+    validate_source_order(rows)
+    with pytest.raises(ValueError, match="source record order"):
+        validate_source_order(list(reversed(rows)))
+
+
+def test_multilingual_and_self_disclosure_are_only_review_hypotheses() -> None:
+    rows = [
+        _record("G21-0001", "salut"),
+        _record("G11-0001", "my phone number is 555-555-5555"),
+    ]
+    queue, summary = build_queue(rows, [], SOURCES)
+    assert summary["priority_counts"]["01_policy_conflict_candidate"] == 2
+    assert any("multilingual_policy_boundary" in r["triage_flags"] for r in queue)
+    assert any("self_disclosed_contact_policy_boundary" in r["triage_flags"] for r in queue)
+    assert all(r["training_eligible"] is False for r in queue)
 
 
 def test_coordinator_queue_must_not_be_saved_in_checkout() -> None:
