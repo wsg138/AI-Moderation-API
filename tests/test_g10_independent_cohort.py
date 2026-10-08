@@ -42,7 +42,7 @@ def test_packet_excludes_source_answer_proposal_category_and_future_content() ->
         json.loads, raw.decode("utf-8").splitlines()
     )}
     _, mapping = build_cohort(raw, KEY)
-    for packet, entry in zip(packets, mapping):
+    for packet, entry in zip(packets, mapping, strict=True):
         original = source[entry["example_id"]]
         assert packet["target_index"] == len(packet["messages"]) - 1
         assert len(packet["messages"]) == original["target_index"] + 1
