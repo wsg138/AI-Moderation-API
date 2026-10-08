@@ -61,15 +61,21 @@ def _validate_outcomes(row: dict[str, Any]) -> None:
 def _validate_facts(facts: object) -> None:
     if not isinstance(facts, list):
         raise ValueError("semantic facts must be bounded text entries")
-    if not all(isinstance(f, str) and 0 < len(f) <= 200 for f in facts):
-        raise ValueError("semantic facts must be bounded text entries")
+    if not 1 <= len(facts) <= 32:
+        raise ValueError("semantic facts require 1-32 evidence-backed entries")
+    if not all(isinstance(f, str) and f.strip() and len(f) <= 200 for f in facts):
+        raise ValueError("semantic facts must be bounded nonblank text entries")
 
 
 def _validate_evidence(indices: object, messages: object) -> None:
     if not isinstance(messages, list) or not isinstance(indices, list):
         raise ValueError("invalid packet context or evidence indices")
+    if not indices:
+        raise ValueError("review decision must cite at least one visible message")
     if not all(type(i) is int and 0 <= i < len(messages) for i in indices):
         raise ValueError("evidence index outside as-of-target context")
+    if len(indices) != len(set(indices)):
+        raise ValueError("duplicate evidence message index")
 
 
 def validate_decision(
