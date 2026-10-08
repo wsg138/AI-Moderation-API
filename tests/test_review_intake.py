@@ -94,3 +94,17 @@ def test_tampered_assignment_and_unapproved_field_fail_closed() -> None:
     decision["training_eligible"] = True
     with pytest.raises(ValueError, match="prohibited"):
         intake([packet], manifest, [decision])
+
+
+@pytest.mark.parametrize("field,bad", [
+    ("semantic_facts", []),
+    ("evidence_message_indices", []),
+])
+def test_unsubstantiated_reviewer_submission_fails_intake(
+    field: str, bad: list[object],
+) -> None:
+    packet, manifest = _setup()
+    row = _decision(packet, "reviewerA")
+    row[field] = bad
+    with pytest.raises(ValueError, match="semantic facts|at least one"):
+        intake([packet], manifest, [row])
