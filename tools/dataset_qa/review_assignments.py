@@ -17,6 +17,7 @@ from contextlib import suppress
 from pathlib import Path
 
 from .blind_review import KEY_ENV, _outside_checkout, _write_jsonl
+from .review_jsonl import read_jsonl
 
 PACKET_FIELDS = {
     "packet_id", "platform_hint", "channel_profile", "messages", "target_index",
@@ -152,9 +153,7 @@ def main(argv: list[str] | None = None) -> int:
         if manifest_path.is_relative_to(directory):
             raise ValueError("coordinator manifest must not be visible to reviewers")
         secret = os.environ.get(KEY_ENV, "").encode()
-        packets = [
-            json.loads(line) for line in args.packet_input.read_text(encoding="utf-8").splitlines()
-        ]
+        packets = read_jsonl(args.packet_input)
         per_reviewer, manifest = assign_reviewers(
             packets, args.reviewers.split(","), secret
         )
