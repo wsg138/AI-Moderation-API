@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 from tools.dataset_qa.blind_review import _write_jsonl, _write_review_outputs
-from tools.dataset_qa.review_assignments import _check_packet, _write_assignment_outputs
+from tools.dataset_qa.review_assignments import _check_packet, _write_assignment_outputs, main as assignment_main
 from tools.dataset_qa.review_intake import _read_jsonl
 
 
@@ -99,3 +99,26 @@ def test_failed_assignment_manifest_does_not_leave_reviewers_exposed(
         )
     assert not reviewer_dir.exists()
     assert manifest.read_text(encoding="utf-8") == "do not overwrite"
+
+
+@pytest.mark.parametrize("payload", [
+    '{"packet_id":"R-aaaaaaaaaaaaaaaaaaaaaaaa","packet_id":"R-bbbbbbbbbbbbbbbbbbbbbbbb"}',
+    '{"packet_id":"R-aaaaaaaaaaaaaaaaaaaaaaaa","messages":[{"speaker":"a","text":"hello","text":"hidden","offset_ms":0}]}',
+])
+def test_assignment_cli_rejects_duplicate_json_keys_before_file_creation(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, payload: str,
+) -> None:
+    monkeypatch.setenv("ENTHUSIA_REVIEW_PACKET_KEY", "test-secret-over-sixteen-bytes")
+    input_file = tmp_path / "packets.jsonl"
+    input_file.write_text(payload + "\n", encoding="utf-8")
+    reviewers = tmp_path / "reviewers"
+    manifest = tmp_path / "coordinator" / "assignments.jsonl"
+    result = assignment_main([
+        "--packet-input", str(input_file),
+        "--reviewers", "reviewerA,reviewerB",
+        "--reviewer-out-dir", str(reviewers),
+        "--coordinator-manifest-out", str(manifest),
+    ])
+    assert result == 2
+    assert not reviewers.exists()
+    assert not manifest.exists()
