@@ -114,6 +114,30 @@ def assign_reviewers(
     return {alias: per_reviewer[alias] for alias in roster}, manifest
 
 
+def _write_assignment_outputs(
+    directory: Path, manifest_path: Path,
+    per_reviewer: dict[str, list[dict[str, object]]],
+    manifest: list[dict[str, object]],
+) -> None:
+    """Remove newly written reviewer files if a later output fails."""
+    directory.mkdir(mode=0o700, parents=True)
+    created: list[Path] = []
+    try:
+        for alias, selected in per_reviewer.items():
+            destination = directory / f"{alias}.jsonl"
+            _write_jsonl(destination, selected)
+            created.append(destination)
+        _write_jsonl(manifest_path, manifest)
+    except BaseException:
+        for destination in created:
+            destination.unlink(missing_ok=True)
+        try:
+            directory.rmdir()
+        except OSError:
+            pass
+        raise
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--packet-input", type=Path, required=True)
@@ -135,10 +159,7 @@ def main(argv: list[str] | None = None) -> int:
         per_reviewer, manifest = assign_reviewers(
             packets, args.reviewers.split(","), secret
         )
-        directory.mkdir(mode=0o700, parents=True)
-        for alias, selected in per_reviewer.items():
-            _write_jsonl(directory / f"{alias}.jsonl", selected)
-        _write_jsonl(manifest_path, manifest)
+        _write_assignment_outputs(directory, manifest_path, per_reviewer, manifest)
     except (OSError, ValueError, TypeError, KeyError) as exc:
         print(f"Blind assignment failed: {exc}", file=sys.stderr)
         return 2
