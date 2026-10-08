@@ -13,9 +13,11 @@ import os
 import re
 import sys
 from collections import defaultdict
+from contextlib import suppress
 from pathlib import Path
 
 from .blind_review import KEY_ENV, _outside_checkout, _write_jsonl
+from .review_jsonl import read_jsonl
 
 PACKET_FIELDS = {
     "packet_id", "platform_hint", "channel_profile", "messages", "target_index",
@@ -36,12 +38,19 @@ def _check_messages(messages: object, target_index: object) -> None:
     target = messages[-1]
     if not isinstance(target, dict) or type(target.get("offset_ms")) is not int:
         raise ValueError("review packet target timestamp must be an integer")
-    cutoff = target["offset_ms"]
+    _check_ordered_messages(messages, target["offset_ms"])
+
+
+def _check_ordered_messages(messages: list[object], cutoff: int) -> None:
+    previous: int | None = None
     for message in messages:
-        _check_message(message, cutoff)
+        offset = _check_message(message, cutoff)
+        if previous is not None and offset < previous:
+            raise ValueError("review packet timestamps must be chronological")
+        previous = offset
 
 
-def _check_message(message: object, cutoff: int) -> None:
+def _check_message(message: object, cutoff: int) -> int:
     if not isinstance(message, dict) or set(message) != {
         "speaker", "offset_ms", "text"
     }:
@@ -50,6 +59,7 @@ def _check_message(message: object, cutoff: int) -> None:
         raise ValueError("review packet contains future or invalid timestamp")
     if not isinstance(message["speaker"], str) or not isinstance(message["text"], str):
         raise ValueError("review packet message speaker/text must be strings")
+    return message["offset_ms"]
 
 
 def _check_packet(packet: dict[str, object]) -> str:
@@ -86,6 +96,8 @@ def assign_reviewers(
 ) -> tuple[dict[str, list[dict[str, object]]], list[dict[str, object]]]:
     """Each packet goes to two distinct aliases; workloads are balanced."""
     roster = _validate_roster(reviewer_ids, secret)
+    if not packets:
+        raise ValueError("review assignment requires at least one packet")
     seen: set[str] = set()
     for packet in packets:
         identifier = _check_packet(packet)
@@ -106,6 +118,28 @@ def assign_reviewers(
     return {alias: per_reviewer[alias] for alias in roster}, manifest
 
 
+def _write_assignment_outputs(
+    directory: Path, manifest_path: Path,
+    per_reviewer: dict[str, list[dict[str, object]]],
+    manifest: list[dict[str, object]],
+) -> None:
+    """Remove newly written reviewer files if a later output fails."""
+    directory.mkdir(mode=0o700, parents=True)
+    created: list[Path] = []
+    try:
+        for alias, selected in per_reviewer.items():
+            destination = directory / f"{alias}.jsonl"
+            _write_jsonl(destination, selected)
+            created.append(destination)
+        _write_jsonl(manifest_path, manifest)
+    except BaseException:
+        for destination in created:
+            destination.unlink(missing_ok=True)
+        with suppress(OSError):
+            directory.rmdir()
+        raise
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--packet-input", type=Path, required=True)
@@ -121,16 +155,11 @@ def main(argv: list[str] | None = None) -> int:
         if manifest_path.is_relative_to(directory):
             raise ValueError("coordinator manifest must not be visible to reviewers")
         secret = os.environ.get(KEY_ENV, "").encode()
-        packets = [
-            json.loads(line) for line in args.packet_input.read_text(encoding="utf-8").splitlines()
-        ]
+        packets = read_jsonl(args.packet_input)
         per_reviewer, manifest = assign_reviewers(
             packets, args.reviewers.split(","), secret
         )
-        directory.mkdir(mode=0o700, parents=True)
-        for alias, selected in per_reviewer.items():
-            _write_jsonl(directory / f"{alias}.jsonl", selected)
-        _write_jsonl(manifest_path, manifest)
+        _write_assignment_outputs(directory, manifest_path, per_reviewer, manifest)
     except (OSError, ValueError, TypeError, KeyError) as exc:
         print(f"Blind assignment failed: {exc}", file=sys.stderr)
         return 2

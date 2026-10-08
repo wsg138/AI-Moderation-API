@@ -109,3 +109,20 @@ def test_export_rejects_nested_coordinator_crosswalk(tmp_path: Path) -> None:
     ]) == 2
     assert not packets.exists()
     assert not nested_map.exists()
+
+
+def test_g10_existing_crosswalk_rolls_back_new_blind_packet(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("ENTHUSIA_REVIEW_PACKET_KEY", KEY.decode())
+    reviewer = tmp_path / "reviewer" / "packets.jsonl"
+    coordinator = tmp_path / "coordinator" / "private-crosswalk.jsonl"
+    coordinator.parent.mkdir()
+    coordinator.write_text("preserve existing private evidence", encoding="utf-8")
+    result = main([
+        "--packet-out", str(reviewer),
+        "--coordinator-map-out", str(coordinator),
+    ])
+    assert result == 2
+    assert not reviewer.exists()
+    assert coordinator.read_text(encoding="utf-8") == "preserve existing private evidence"

@@ -208,6 +208,18 @@ SHA-256 of the canonical packet, and two assigned reviewer aliases. The
 assignment manifest is not the source-ID crosswalk; keep both separated
 from reviewers and gold/source labels.
 
+The shared offline JSONL reader used for assignments and intake is
+**bounded and fail-closed**: no empty inputs, at most 10,000 JSONL objects,
+64 MiB total bytes per input file and 64 KiB per line. Duplicate JSON keys
+(including nested message fields) and non-object rows are rejected.
+An empty **decision-input argument list** is still valid to report pending
+reviews, but an empty packet/manifest cohort cannot masquerade as a completed
+run. Each assignment manifest entry must contain **only**
+`packet_id`, `packet_sha256`, and `assigned_reviewers`, and reviewer
+aliases must match the validated 2–32-character assignment alias syntax.
+These checks validate file structure, **not** reviewer independence,
+ownership of the manifest, or human identity.
+
 Each reviewer independently completes records with the exact
 `review_decisions.py` schema described above. Collect those files only
 after decisions are complete; do not give reviewers access to another

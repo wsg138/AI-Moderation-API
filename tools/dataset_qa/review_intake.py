@@ -13,22 +13,19 @@ from pathlib import Path
 from typing import Any
 
 from .blind_review import _outside_checkout, _write_jsonl
-from .review_assignments import _check_packet, packet_digest
+from .review_assignments import REVIEWER_ID, _check_packet, packet_digest
 from .review_decisions import review_summary, validate_decision
-
-
-def _read_jsonl(path: Path) -> list[dict[str, Any]]:
-    rows = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()]
-    if any(not isinstance(row, dict) for row in rows):
-        raise ValueError("JSONL input must contain objects only")
-    return rows
+from .review_jsonl import read_jsonl as _read_jsonl
 
 
 def _reviewer_pair(entry: dict[str, Any]) -> set[str]:
     reviewers = entry.get("assigned_reviewers")
     if not isinstance(reviewers, list) or len(reviewers) != 2:
         raise ValueError("each packet requires two assigned reviewers")
-    if not all(isinstance(alias, str) for alias in reviewers):
+    if not all(
+        isinstance(alias, str) and REVIEWER_ID.fullmatch(alias)
+        for alias in reviewers
+    ):
         raise ValueError("invalid reviewer identity")
     if len(set(reviewers)) != 2:
         raise ValueError("reviewers must be distinct")
@@ -39,6 +36,8 @@ def _check_manifest_entry(
     entry: dict[str, Any], packet_by_id: dict[str, dict[str, object]],
     assigned: dict[str, set[str]],
 ) -> None:
+    if set(entry) != {"packet_id", "packet_sha256", "assigned_reviewers"}:
+        raise ValueError("manifest has missing or prohibited fields")
     identifier = entry.get("packet_id")
     if identifier not in packet_by_id or identifier in assigned:
         raise ValueError("unknown or duplicate manifest packet")
@@ -64,6 +63,8 @@ def intake(
     decisions: list[dict[str, Any]],
 ) -> list[dict[str, object]]:
     """Reject unauthorized or copied submissions before status creation."""
+    if not packets:
+        raise ValueError("review intake requires at least one packet")
     for packet in packets:
         _check_packet(packet)
     assigned = _manifest_index(packets, manifest)

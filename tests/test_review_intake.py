@@ -129,3 +129,33 @@ def test_rehashed_malformed_packet_cannot_bypass_intake_schema() -> None:
     changed_manifest[0]["packet_sha256"] = packet_digest(changed)
     with pytest.raises(ValueError, match="speaker/text"):
         intake([changed], changed_manifest, [])
+
+
+def test_review_intake_rejects_empty_batch() -> None:
+    with pytest.raises(ValueError, match="at least one packet"):
+        intake([], [], [])
+
+
+@pytest.mark.parametrize("extra_field", [
+    ("source_label", "BLACKMAIL"),
+    ("training_eligible", True),
+])
+def test_coordinator_manifest_rejects_hidden_extra_fields(
+    extra_field: tuple[str, object],
+) -> None:
+    packet, manifest = _setup()
+    altered = deepcopy(manifest)
+    altered[0][extra_field[0]] = extra_field[1]
+    with pytest.raises(ValueError, match="prohibited fields"):
+        intake([packet], altered, [])
+
+
+@pytest.mark.parametrize("bad_alias", ["", "reviewer name", "x", "reviewer@outside"])
+def test_coordinator_manifest_rejects_invalid_reviewer_alias(
+    bad_alias: str,
+) -> None:
+    packet, manifest = _setup()
+    altered = deepcopy(manifest)
+    altered[0]["assigned_reviewers"][0] = bad_alias
+    with pytest.raises(ValueError, match="invalid reviewer identity"):
+        intake([packet], altered, [])
