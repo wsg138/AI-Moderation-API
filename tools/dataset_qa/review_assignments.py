@@ -96,6 +96,8 @@ def assign_reviewers(
 ) -> tuple[dict[str, list[dict[str, object]]], list[dict[str, object]]]:
     """Each packet goes to two distinct aliases; workloads are balanced."""
     roster = _validate_roster(reviewer_ids, secret)
+    if not packets:
+        raise ValueError("review assignment requires at least one packet")
     seen: set[str] = set()
     for packet in packets:
         identifier = _check_packet(packet)
