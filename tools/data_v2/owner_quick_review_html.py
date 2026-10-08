@@ -41,7 +41,7 @@ footer{font-size:.8rem;color:#aebccc;margin:20px 0}
 @media(max-width:500px){.choices{grid-template-columns:1fr}}
 </style>"""
 
-SCRIPT = """<script>
+SCRIPT = r"""<script>
 'use strict';
 const cards = Array.from(document.querySelectorAll('.case'));
 const progress = document.getElementById('progress');
