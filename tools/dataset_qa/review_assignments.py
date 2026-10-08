@@ -14,7 +14,6 @@ import re
 import sys
 from collections import defaultdict
 from pathlib import Path
-from typing import Any
 
 from .blind_review import KEY_ENV, _outside_checkout, _write_jsonl
 
