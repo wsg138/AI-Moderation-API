@@ -2,8 +2,6 @@
 from __future__ import annotations
 
 import json
-from typing import Any
-
 import pytest
 
 from tools.dataset_qa.freshness import ROOT
@@ -29,12 +27,12 @@ def _source_candidates(raw: bytes) -> set[str]:
 
 
 def _matching_ids(
-    rows: list[dict[str, Any]], field: str, expected: str,
+    rows: list[dict[str, object]], field: str, expected: str,
 ) -> set[str]:
     return {str(row["example_id"]) for row in rows if row[field] == expected}
 
 
-def _unadmitted(*groups: list[dict[str, Any]]) -> bool:
+def _unadmitted(*groups: list[dict[str, object]]) -> bool:
     return all(row["training_eligible"] is False for group in groups
                for row in group)
 
