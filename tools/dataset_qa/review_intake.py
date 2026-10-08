@@ -24,6 +24,29 @@ def _read_jsonl(path: Path) -> list[dict[str, Any]]:
     return rows
 
 
+def _reviewer_pair(entry: dict[str, Any]) -> set[str]:
+    reviewers = entry.get("assigned_reviewers")
+    if not isinstance(reviewers, list) or len(reviewers) != 2:
+        raise ValueError("each packet requires two assigned reviewers")
+    if not all(isinstance(alias, str) for alias in reviewers):
+        raise ValueError("invalid reviewer identity")
+    if len(set(reviewers)) != 2:
+        raise ValueError("reviewers must be distinct")
+    return set(reviewers)
+
+
+def _check_manifest_entry(
+    entry: dict[str, Any], packet_by_id: dict[str, dict[str, object]],
+    assigned: dict[str, set[str]],
+) -> None:
+    identifier = entry.get("packet_id")
+    if identifier not in packet_by_id or identifier in assigned:
+        raise ValueError("unknown or duplicate manifest packet")
+    if entry.get("packet_sha256") != packet_digest(packet_by_id[identifier]):
+        raise ValueError("packet content differs from frozen assignment")
+    assigned[identifier] = _reviewer_pair(entry)
+
+
 def _manifest_index(
     packets: list[dict[str, object]], manifest: list[dict[str, Any]],
 ) -> dict[str, set[str]]:
@@ -32,19 +55,7 @@ def _manifest_index(
         raise ValueError("manifest/packet count or identity mismatch")
     assigned: dict[str, set[str]] = {}
     for entry in manifest:
-        identifier = entry.get("packet_id")
-        if identifier not in packet_by_id or identifier in assigned:
-            raise ValueError("unknown or duplicate manifest packet")
-        if entry.get("packet_sha256") != packet_digest(packet_by_id[identifier]):
-            raise ValueError("packet content differs from frozen assignment")
-        reviewers = entry.get("assigned_reviewers")
-        if not isinstance(reviewers, list) or len(reviewers) != 2:
-            raise ValueError("each packet requires two assigned reviewers")
-        if not all(isinstance(alias, str) for alias in reviewers):
-            raise ValueError("invalid reviewer identity")
-        if len(set(reviewers)) != 2:
-            raise ValueError("reviewers must be distinct")
-        assigned[identifier] = set(reviewers)
+        _check_manifest_entry(entry, packet_by_id, assigned)
     return assigned
 
 
