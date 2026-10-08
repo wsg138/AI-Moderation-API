@@ -139,3 +139,39 @@ def test_zero_evidence_can_never_create_a_false_independent_agreement() -> None:
     second["evidence_message_indices"] = []
     with pytest.raises(ValueError, match="at least one"):
         review_summary([packet], [first, second])
+
+
+@pytest.mark.parametrize("uncertainties", [
+    ("EVIDENCE_INSUFFICIENT", "EVIDENCE_INSUFFICIENT"),
+    ("CLEAR", "EVIDENCE_INSUFFICIENT"),
+    ("EVIDENCE_INSUFFICIENT", "CLEAR"),
+])
+def test_insufficient_evidence_does_not_become_independent_agreement(
+    uncertainties: tuple[str, str],
+) -> None:
+    packet = _packet()
+    first = _decision(packet, "r1")
+    second = _decision(packet, "r2")
+    first["uncertainty"], second["uncertainty"] = uncertainties
+    statuses = review_summary([packet], [first, second])
+    assert statuses[0]["status"] == "evidence_insufficient"
+    assert statuses[0]["training_eligible"] is False
+
+
+def test_evidence_insufficient_one_review_still_awaits_second() -> None:
+    packet = _packet()
+    first = _decision(packet, "r1")
+    first["uncertainty"] = "EVIDENCE_INSUFFICIENT"
+    result = review_summary([packet], [first])
+    assert result[0]["status"] == "awaiting_second_review"
+
+
+def test_unresolved_policy_has_precedence_over_insufficient_evidence() -> None:
+    packet = _packet()
+    first = _decision(packet, "r1")
+    second = _decision(packet, "r2")
+    first["uncertainty"] = "POLICY_UNRESOLVED"
+    second["uncertainty"] = "EVIDENCE_INSUFFICIENT"
+    result = review_summary([packet], [first, second])
+    assert result[0]["status"] == "owner_policy_question"
+    assert result[0]["training_eligible"] is False
