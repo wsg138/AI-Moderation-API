@@ -33,7 +33,7 @@
   </div>
   <form id="decision" class="box" onsubmit="return false" autocomplete="off">
     <h2>Independent Policy-v1 decision</h2>
-    <label for="facts">What facts are observable? One short fact per line (≤200 characters each).</label>
+    <label for="facts">What facts are observable? One short fact per line (1–32 facts, ≤200 characters each).</label>
     <textarea id="facts" placeholder="Describe the observable context, not a guessed intention."></textarea>
     <label for="evidence">Which displayed messages support your interpretation?</label>
     <div id="evidence"></div>
@@ -132,7 +132,7 @@ function capture() {
  for(const name of Object.keys(OPTIONS)){fields[name]=$(name).value;if(!fields[name])throw Error("Choose "+name.replaceAll("_"," "));}
  if(!$("strike").value)throw Error("Choose whether to recommend a strike.");
  const facts=$("facts").value.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
- if(!facts.length || facts.some(x=>x.length>200))throw Error("Enter at least one short fact; each line must be ≤200 characters.");
+ if(!facts.length || facts.length>32 || facts.some(x=>x.length>200))throw Error("Enter at least one short fact; each line must be ≤200 characters.");
  const indices=[...document.querySelectorAll("[name=evidence_check]:checked")].map(x=>Number(x.value));
  if(!indices.length)throw Error("Select at least one evidence message.");
  const durationRaw=$("containment_duration_seconds").value;
