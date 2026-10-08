@@ -196,7 +196,13 @@ python -m tools.dataset_qa.review_assignments \
 
 Use the **same coordinator-only HMAC key** for sample creation and
 assignment. Each packet goes to two distinct aliases, balanced across the
-roster. Every reviewer gets a separate file containing only their blinded
+roster. The packet-assignment and coordinator-intake boundaries also reject
+malformed scope, nonstring speaker/text values, boolean/fractional timestamp
+or target-index values, nested source-label objects, and earlier messages
+whose offset occurs after the target's timestamp (even if the target index
+is the final array element). This is defense in depth beyond the original
+as-of-target serializer; the packet manifest hash is not itself proof that
+input content was eligible. Every reviewer gets a separate file containing only their blinded
 packets; the coordinator manifest (never distributed) records packet ID,
 SHA-256 of the canonical packet, and two assigned reviewer aliases. The
 assignment manifest is not the source-ID crosswalk; keep both separated
