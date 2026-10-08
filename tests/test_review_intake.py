@@ -108,3 +108,14 @@ def test_unsubstantiated_reviewer_submission_fails_intake(
     row[field] = bad
     with pytest.raises(ValueError, match="semantic facts|at least one"):
         intake([packet], manifest, [row])
+
+
+def test_two_insufficient_evidence_reviews_are_not_agreement() -> None:
+    packet, manifest = _setup()
+    first = _decision(packet, "reviewerA")
+    second = _decision(packet, "reviewerB")
+    first["uncertainty"] = second["uncertainty"] = "EVIDENCE_INSUFFICIENT"
+    result = intake([packet], manifest, [first, second])
+    assert result[0]["status"] == "evidence_insufficient"
+    assert result[0]["reviewer_count"] == 2
+    assert result[0]["training_eligible"] is False
