@@ -10,9 +10,9 @@ Initial target-time-text audit of that 341-case queue using `tools/dataset_qa/ga
 
 | Pending triage bucket | Cases | Next step |
 |---|---:|---|
-| `gameplay_scope_confirmation` | 108 | Explicit game-payment and game-asset terms, no defined mixed/real-world risk match; **verify both the demand and threat are exclusively gameplay** |
-| `mixed_or_realworld_risk` | 25 | Possible purchase of server ranks for actual money, personal/voice-chat disclosure, or other real-world exposure; **do not assume game-only** |
-| `insufficient_scope_evidence` | 208 | Not enough explicit game-economy *and* game-asset wording for the conservative screen; **inspect target and preceding messages** |
+| `gameplay_scope_confirmation` | 107 | Explicit game-payment and game-asset terms, no defined mixed/real-world risk match; **verify both the demand and threat are exclusively gameplay** |
+| `mixed_or_realworld_risk` | 35 | Possible purchase of server ranks for actual money, personal/voice-chat disclosure, or other real-world exposure; **do not assume game-only** |
+| `insufficient_scope_evidence` | 199 | Not enough explicit game-economy *and* game-asset wording for the conservative screen; **inspect target and preceding messages** |
 | **Total pending** | **341** | **0 reviewed/admitted by this script** |
 
 These are rough lexical review-priority groups. In particular, a `minecraft_gameplay_explicit` source tag is not evidence that a requested **store purchase** is merely an in-game item. A video of Minecraft cheating may be purely game-related; a voice-chat embarrassment or private screenshot might involve real people. The script must not infer without additional context.
@@ -43,8 +43,8 @@ The default prints only source SHA-256, counts and flags. The optional JSONL man
 
 ## Accepting corrections safely
 
-1. Prioritize reviewing the 108 straightforward candidates; independently confirm both threatened information and requested payment are strictly gameplay, and preserve a record of the evidence. Reclassify only those verified, not on keyword matches alone.
-2. Independently inspect the 25 mixed-risk candidates and 208 underspecified cases. Some belong in game-only ALLOW, some in real-world BLOCK, and some need REVIEW.
+1. Prioritize reviewing the 107 stronger gameplay-cue candidates; independently confirm both threatened information and requested payment are strictly gameplay, and preserve a record of the evidence. Reclassify only those verified, not on keyword matches alone.
+2. Independently inspect the 35 mixed-risk candidates and 199 underspecified cases. Some belong in game-only ALLOW, some in real-world BLOCK, and some need REVIEW.
 3. For confirmed pure gameplay extortion, propose `semantic_label=SAFE`, `action=ALLOW`, `review_priority=NONE`, `strike=false`, `containment=NONE`, duration `null`, and `support_flow=NONE`. Keep real-world blackmail blocked, with appropriate urgent review and containment; preserve uncertainties as unresolved.
 4. Do **not** edit G10 or any other dataset JSONL based on this preliminary screen, owner solo pilot, or AI-generated guesses. Obtain separate review/adjudication, source/split checks and release acceptance first.
 5. The 9,000 synthetic records remain **candidate-only**. No model training, deployment, private player-data access, W20/W27 use, or automatic punishments are authorized.
