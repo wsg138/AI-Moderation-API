@@ -42,7 +42,15 @@ An **identical target-time input with different candidate actions** is explicitl
 prioritized for manual investigation. A repeated target with different earlier
 context, channel or platform is *not* automatically declared contradictory.
 The source fields used as triage hints (label, reason codes, family ID, action)
-remain untrusted proposals. All text inspection uses the as-of-target
+remain untrusted proposals. G21 receives a `multilingual_policy_boundary`
+flag **because it is the synthetic multilingual source batch**, not because
+the tool has reliably identified the language of each message. This is a
+review hypothesis rather than permission to block every G21 record. Simple
+first-person contact-sharing patterns receive a separate
+`self_disclosed_contact_policy_boundary` flag; this does not certify a
+phone/address or turn all self-disclosures into doxxing. The loader additionally
+checks that every ID's numeric suffix equals its original JSONL line before
+citing per-line source provenance. All text inspection uses the as-of-target
 projection, never post-target replies; post-target presence is recorded only
 as a structural flag. The collector performs no model inference, training,
 semantic adjudication, owner-answer import, source edits, group-action
