@@ -4,6 +4,11 @@ from __future__ import annotations
 import json
 from copy import deepcopy
 
+import pytest
+
+from tools.dataset_qa.freshness import ROOT
+from tools.dataset_qa.owner_blackmail_audit import G10
+
 from tools.dataset_qa.gameplay_blackmail_triage import build_queue, scope_bucket
 
 
@@ -103,3 +108,17 @@ def test_queue_does_not_auto_change_games_or_real_world_outcomes() -> None:
     risk = next(row for row in manifest if row["example_id"] == "G10-0011")
     assert risk["status"] == "pending_semantic_review"
     assert risk["training_eligible"] is False
+
+
+def test_complete_source_queues_all_341_original_tagged_candidates() -> None:
+    source = ROOT / G10
+    if not source.exists():
+        pytest.skip("G10 not present on this checkout")
+    manifest, summary = build_queue(source.read_bytes())
+    assert summary["records"] == 500
+    assert summary["review_queue_total"] == 341
+    assert sum(summary["priority_bucket_counts"].values()) == 341
+    assert len({row["example_id"] for row in manifest}) == 341
+    assert {row["source_sha256"] for row in manifest} == {
+        summary["source_sha256"],
+    }
