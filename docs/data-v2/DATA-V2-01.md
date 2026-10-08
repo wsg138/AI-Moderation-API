@@ -33,3 +33,39 @@ A regression test verifies this source allowlist.
 For these 19 synthetic examples, the follow-up offset was changed from a
 negative millisecond value to its positive magnitude; no other field or
 message text was changed. Audit SHA-256s reflect the repaired final bytes.
+
+## Validated GitHub Actions checkpoint
+
+Tested source commit: `6afb852c43f53c6a8cc6ddc4e32b857c0355f5b8`.
+GitHub-hosted CI (not the owner's PC):
+https://github.com/wsg138/AI-Moderation-API/actions/runs/37714450592
+
+- Ruff: passed on DATA-V2-01 code, freshness tests and generator safety test.
+- Mypy: passed.
+- Complexity CCN <= 8 / functions <= 50 lines: passed.
+- G10-G27 report freshness (all 18): passed.
+- Pytest: **116 passed in 7.13 s** (including W11 frozen outputs).
+- Wheel build: passed.
+- Report regeneration/final-byte repeat check:
+  https://github.com/wsg138/AI-Moderation-API/actions/runs/37714311210
+
+Existing `service-ci` is still red at Ruff due pre-existing generator
+lint debt introduced on PR #52 (162 initially at run 37703372884,
+mostly E501). Do not mask the required CI check; resolve separately.
+
+Codacy's 53 reported findings still require **individual issue-level evidence**
+and justified dispositions, especially the one critical and 40 high alerts.
+See CODACY-PR52-TRIAGE.md. The dashboard's aggregated comment cannot
+establish the validity or false-positive status of each issue.
+
+The audit queues **1,584 nonterminal target indices** (not necessarily
+wrong), **354 grooming examples without literal minor-age cues**,
+**26 SAFE examples carrying a severe reason code** (often quoted reports),
+**10 staff-targeted abuse reason-code/SAFE examples**, and **109 single-speaker
+multi-message contexts** for independent adjudication. It found **one
+cross-batch exact context group** (G18-0327 / G23-0451, both SAFE) and
+**five shared-target-text groups**. The 19 G24 chronological offset
+anomalies have been corrected, without relabeling.
+
+**Decision: NOT TRAINING-READY / review-only PR.** Do not merge, train,
+deploy or claim verified semantic correctness from structural QA.
