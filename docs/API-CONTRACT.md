@@ -80,6 +80,28 @@ Semantic labels match the Policy-v1 dataset vocabulary exactly:
 
 `SAFE`, `GAMEPLAY_VIOLENCE`, `LOW_LEVEL_HARASSMENT`, `SEVERE_HARASSMENT`, `STAFF_TARGETED_ABUSE`, `REAL_WORLD_THREAT`, `SELF_HARM_INSTRUCTION`, `SELF_HARM_INTENT`, `THIRD_PARTY_SELF_HARM_CONCERN`, `HATE`, `SLUR_USE`, `SEXUAL_CONTENT`, `SEXUAL_MINOR`, `DOXXING`, `BLACKMAIL`, `GROOMING`, `DANGEROUS_REAL_WORLD_INSTRUCTIONS`, and `AMBIGUOUS_REVIEW`.
 
+### Player-facing block explanation
+
+Successful `BLOCK` responses also include `player_notice`, a neutral,
+fixed-template string selected from the existing `semantic_label`. For example,
+a harassment classification may produce:
+
+> Your message was blocked because it may contain harassment. If this seems wrong, contact staff.
+
+A quoted/prohibited-language block says "prohibited language" without accusing
+the reporting player. Sensitive/safety categories use a general "chat safety
+concern" rather than revealing evidence, victim identities, incident details,
+model scores, or private rule codes. Unknown labels get a generic block notice.
+
+`player_notice=null` on ALLOW, REVIEW-priority-only, exempt,
+degraded or fail-open outcomes. The response field alone **does not message
+a player**. The authorized RoseChat/Discord client must deliver it privately
+**only after confirming the current message was actually blocked**; never
+broadcast it, feed it back into AI moderation, show it for retroactive
+deletion of an older message, or send duplicates on canonical replay.
+Client adapters must avoid duplicate notifications across aliases/mirrors.
+No live client or punishment behavior is activated by this draft.
+
 ### Idempotency and mirrors
 
 A repeated external message key with identical input is an idempotent replay. Reusing that key with different input returns `409 Conflict`.
@@ -194,6 +216,41 @@ current truth.
 This is optional enrichment only. A support client must fail soft when the
 endpoint is unavailable and must never make live moderation depend on support
 availability.
+
+## Every finalized decision — staff-only history
+
+`GET /v1/decisions?limit=100&cursor=<event_id>` requires `review:read`.
+This is different from `GET /v1/review-items`, which lists only flagged
+events. Decision history includes every persisted **FINAL** event, including
+normal ALLOW, BLOCK, REVIEW-priority outcomes, and committed FAIL_OPEN
+outcomes. It provides at most 250 entries per page in descending
+`finalized_at,event_id` order; `next_cursor` is the last returned event's
+ID when another page exists. Use the cursor to avoid skipping events when
+new records arrive. An unknown or nonfinal cursor returns 404.
+
+Each summary includes event ID, timestamps, platform/channel profile,
+action, semantic label, review priority, bounded reason codes, model/policy
+versions, ingestion status, degraded state and whether an accepted staff
+correction exists. **No raw chat, player identifiers or neighboring messages**
+are included. The authorized per-event read endpoint remains the opt-in
+drill-down and correction route.
+
+Audit scope does not imply that every attempted network request is an AI
+classification. `SKIPPED_EXEMPT` bypasses classifier and storage **by
+design** to protect ticket/staff content. Network timeouts/queue saturation
+may be handled as fail-open by the client without a new durable server
+decision. A storage outage cannot be both fail-open and guaranteed durably
+logged; explicit `FAIL_OPEN` responses without persisted event IDs are not
+misrepresented as stored. Retry and client-side operational metrics may
+account for these gaps, but must not ingest exempt message text.
+
+Repeated external/canonical message aliases refer to the **same original
+decision** rather than creating duplicate training examples. A stored
+ALLOW is **not** a verified correct ALLOW. Staff corrections, owner-reviewed
+examples, and a separate rights-checked/redacted curated export are needed
+before any training or fine-tuning. Preserve original immutable AI decision,
+subsequent approved correction, and provenance. No automatic re-training,
+bulk export, or new unrestricted raw-message retention is authorized.
 
 ## Review and correction API
 
