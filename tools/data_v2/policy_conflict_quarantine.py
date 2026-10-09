@@ -116,8 +116,12 @@ def _owner_index(
     return owner
 
 
+def _safety_disagreement(owner_action: str | None, candidate: str, label: str) -> bool:
+    return owner_action == "ALLOW" and candidate == "BLOCK" and label in POTENTIAL_SAFETY
+
+
 def _tier(owner_action: str | None, candidate: str, label: str, tracks: list[str]) -> str:
-    if owner_action == "ALLOW" and candidate == "BLOCK" and label in POTENTIAL_SAFETY:
+    if _safety_disagreement(owner_action, candidate, label):
         return "01_safety_policy_conflict_review"
     if owner_action is not None and owner_action != candidate:
         return "02_owner_vs_candidate_action_review"
