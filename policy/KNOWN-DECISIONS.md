@@ -95,3 +95,35 @@ ALLOW. Exact thresholds remain calibration rather than approved automation.
 For realistic slur recognition, private developer-only synthetic cases may
 contain real slur spellings. These should remain secured off public Git and
 not be treated as owner-adjudicated semantic labels or training admission.
+
+## Owner follow-up — 15-case natural private-message review (2026-10-09)
+
+The owner completed 15 **blinded action-only** decisions on fictional PM
+messages, with 11 ALLOW and 4 BLOCK. Independently frozen model comparisons
+are retained privately; agreement was 12/15 for local 8B, 13/15 for local
+14B and 14/15 against the author's candidate actions. These small,
+development-selected examples do not establish population accuracy.
+
+The owner preferred **ALLOW** over the proposed BLOCK for one continued,
+fairly mild build-insult message. Later continuation could be blocked or
+referred to staff, and a materially more hurtful insult could justify
+intervention earlier. **Do not hardcode a fixed number of messages** as an
+automatic punishment threshold: severity and actual unwanted repetition
+matter.
+
+A short `stop` is **not automatically a harassment boundary**. It may refer
+to gameplay or something else in the conversation. Before using it to
+escalate private-message moderation, check whether the recipient clearly
+wants the *particular targeting or contact* to stop. Mutual joking, joking
+"stop", and topic changes must not create false BLOCKs or repeated alerts.
+
+The owner's priority is **high precision on clear harmful cases**, tolerating
+some missed borderline harassment instead of aggressively interfering with
+normal private conversation. Players can use manual reports/tickets when the
+automatic system is not certain. This preference does **not** exempt explicit
+slurs, credible threats, exploitation or independently severe misconduct from
+the existing prohibited-content rules.
+
+These are message-action preferences only. No semantic culpability, age,
+strike, mute, or training eligibility is inferred. Keep private packet
+identifiers and detailed review explanations off the public repository.
