@@ -244,7 +244,12 @@ def _apply_v3(connection: sqlite3.Connection) -> None:
 
 
 def _apply_v4(connection: sqlite3.Connection) -> None:
-    """Make staff all-decision pagination bounded at larger audit volumes."""
+    """Normalize legacy FINAL timestamps before indexing paginated history."""
+    connection.execute(
+        """UPDATE moderation_events
+           SET finalized_at=COALESCE(occurred_at,created_at)
+           WHERE status='FINAL' AND finalized_at IS NULL"""
+    )
     connection.execute(
         """CREATE INDEX IF NOT EXISTS idx_events_finalized_page
            ON moderation_events(finalized_at DESC, event_id DESC)
