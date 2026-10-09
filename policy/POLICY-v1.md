@@ -49,6 +49,29 @@ Discord DMs involving the bot are not yet defined by this policy.
 ### Mirrors
 Minecraft/Discord mirrors are one canonical moderation event. Do not double-count mirrored copies in context, harassment history, or strikes. Linked copies may be deleted together when the canonical event is blocked.
 
+### English-primary chat rule (owner update 2026-10-08)
+
+**Message action, only on surfaces where the English-only rule is applicable:**
+BLOCK a message that is **primarily non-English**. ALLOW occasional foreign
+words, short greetings (such as `hola` and `bonjour`), player names, recognized
+game terms, and messages otherwise primarily in English with minor
+code-switching. A single greeting is not a violation solely because it is
+not an English word. Do not interpret this as a ban on every foreign word.
+
+A short or mixed-language example that cannot be judged reliably must not
+be automatically blocked on a crude script/keyword test. Language-only
+enforcement is conceptually separate from the semantic detection of hate,
+harassment, threats, doxxing, grooming, and self-harm; those rules still
+apply independently. The policy does not grant any additional strike or
+mute for language alone. The owner has **not decided** language-only
+sanction escalation, nor the final list of applicable chat surfaces. Such
+fields remain open. An English-primary language detector has not been
+validated or enabled for production.
+
+This is a versioned message-action decision, **not training approval** for
+any G21 synthetic labels; G21 is a synthetic source-batch hint and not
+a reliable language classifier.
+
 ## 4. Context and incident linkage
 
 Relevant context may include:
