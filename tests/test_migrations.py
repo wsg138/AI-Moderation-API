@@ -72,7 +72,7 @@ async def test_w01_database_migrates_in_place_and_preserves_legacy_review(tmp_pa
     await store.initialize()
 
     decision = await store.load_decision("legacy")
-    assert await store.schema_version() == 3  # nosec B101  # nosemgrep
+    assert await store.schema_version() == 4  # nosec B101  # nosemgrep
     assert decision.message_action.value == "ALLOW"
     assert decision.review_priority.value == "NORMAL"
     assert decision.semantic_label.value == "AMBIGUOUS_REVIEW"
@@ -114,7 +114,7 @@ def test_pending_row_gets_recoverable_lease_during_migration(tmp_path: Path) -> 
         ).fetchone()
         version = connection.execute("PRAGMA user_version").fetchone()[0]
 
-    assert version == 3  # nosec B101  # nosemgrep
+    assert version == 4  # nosec B101  # nosemgrep
     assert row == ("pending-legacy", "2026-10-02T04:00:00+00:00")
 
 
@@ -129,10 +129,35 @@ def test_v3_adds_sender_identity_support_context_index(tmp_path: Path) -> None:
                WHERE type='index' AND name='idx_events_sender_identity_time'"""
         ).fetchone()
 
-    assert version == 3  # nosec B101  # nosemgrep
+    assert version == 4  # nosec B101  # nosemgrep
     assert index is not None  # nosec B101  # nosemgrep
     assert "sender_identity_id" in str(index[0])  # nosec B101  # nosemgrep
     assert "occurred_at DESC" in str(index[0])  # nosec B101  # nosemgrep
+
+
+def test_v4_audit_pagination_index_upgrades_existing_v3_without_data_loss(
+    tmp_path: Path,
+) -> None:
+    path = tmp_path / "v3-to-v4.sqlite3"
+    seed_legacy(path)
+    with sqlite3.connect(path) as connection:
+        migrate(connection)
+        connection.execute("DROP INDEX idx_events_finalized_page")
+        connection.execute("PRAGMA user_version = 3")
+        connection.commit()
+        migrate(connection)
+        row = connection.execute(
+            """SELECT sql FROM sqlite_master
+               WHERE type='index' AND name='idx_events_finalized_page'"""
+        ).fetchone()
+        original = connection.execute(
+            "SELECT event_id,text,action FROM moderation_events"
+        ).fetchone()
+        assert connection.execute("PRAGMA user_version").fetchone()[0] == 4
+    assert original == ("legacy", "review me", "REVIEW")
+    assert row is not None
+    assert "finalized_at DESC" in str(row[0])
+    assert "WHERE status='FINAL'" in str(row[0])
 
 
 def test_failed_migration_rolls_back_without_recreating_database(tmp_path: Path) -> None:
