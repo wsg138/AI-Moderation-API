@@ -33,10 +33,11 @@ These items do not invalidate the settled policy above. They are either genuinel
 9. **Accidental slur lexical matches**
    - Actual/obfuscated slurs are blocked and struck. Naive substring false positives must be avoided, but exact lexical disambiguation examples still belong in dataset calibration.
 
-10. **English-only deployment and sanctions (scope resolved, operational details open)**
+10. **English-only rule: channel coverage resolved; sanctions and ambiguity still open**
     - Owner approved (2026-10-08): BLOCK messages primarily non-English while ALLOWING occasional foreign words, short greetings, names and game terms.
-    - Still unresolved: precisely which moderated channels have English-only enabled; whether language-only violations ever cause strikes, mutes or staff escalation; how ambiguous short/mixed-language content is routed.
-    - No strike or mute is authorized by the current answer alone. Detection and calibration must be validated before production use.
+    - Owner also confirmed **"everywhere"**: all currently moderated Minecraft public/global, other configured RoseChat channels, Minecraft /msg /tell /r private messages, and Discord public/general/gaming channels. Existing exempt Discord ticket/staff and other exempt channels remain excluded; Discord bot DMs remain undefined by the broader moderation policy.
+    - Still unresolved: language-only strikes, mutes and staff escalation; handling of short/mixed-language content when predominant language cannot be assessed reliably.
+    - The channel scope is now settled. No strike or mute is authorized by this message-action/scope decision alone. Detection and calibration must be validated before production use.
 
 ## Downstream implementation/calibration, not owner-policy blockers
 
