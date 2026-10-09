@@ -1,8 +1,8 @@
 """Verification Stage 1: full 9,000-case audit stays candidate-only."""
 from __future__ import annotations
 
-import json
 import hashlib
+import json
 from collections import Counter
 from pathlib import Path
 from typing import Any
