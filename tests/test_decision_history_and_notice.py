@@ -1,0 +1,141 @@
+"""Block notices and the authenticated ALL-decisions audit, never live enforcement."""
+from __future__ import annotations
+
+from fastapi.testclient import TestClient
+from moderation_api.app import create_app
+from moderation_api.models import (
+    ClassificationInput,
+    Label,
+    MessageAction,
+)
+
+from .helpers import payload, result
+
+
+class ClassificationForAudit:
+    async def classify(self, item: ClassificationInput):
+        current = item.current.text
+        if current == "broken":
+            raise RuntimeError("simulated classification error")
+        if current == "harassment":
+            return result(
+                action=MessageAction.BLOCK,
+                label=Label.SEVERE_HARASSMENT,
+                reasons=("repeated_targeted_abuse",),
+            )
+        if current == "quoted":
+            return result(
+                action=MessageAction.BLOCK,
+                label=Label.SLUR_USE,
+                reasons=("quoted_prohibited_word",),
+            )
+        return result(label=Label.SAFE, reasons=("safe",))
+
+    def health(self) -> dict[str, object]:
+        return {"ready": True, "mode": "fake", "model_version": "fake-audit-1"}
+
+
+def test_player_notice_is_category_based_and_replay_safe(settings, rose_headers) -> None:
+    app = create_app(settings=settings, classifier=ClassificationForAudit())
+    with TestClient(app) as client:
+        allow = client.post(
+            "/v1/moderate", headers=rose_headers, json=payload("allow-1", "ordinary")
+        ).json()
+        block = client.post(
+            "/v1/moderate", headers=rose_headers, json=payload("block-1", "harassment")
+        ).json()
+        replay = client.post(
+            "/v1/moderate", headers=rose_headers, json=payload("block-1", "harassment")
+        ).json()
+        quote = client.post(
+            "/v1/moderate", headers=rose_headers, json=payload("quote-1", "quoted")
+        ).json()
+        fail = client.post(
+            "/v1/moderate", headers=rose_headers, json=payload("fail-1", "broken")
+        ).json()
+
+    assert allow["player_notice"] is None
+    assert block["player_notice"] is not None
+    assert "possible" in block["player_notice"]
+    assert "harassment" in block["player_notice"]
+    assert replay["player_notice"] == block["player_notice"]
+    assert replay["idempotent_replay"] is True
+    assert quote["player_notice"] is not None
+    assert "prohibited language" in quote["player_notice"]
+    assert "you used" not in quote["player_notice"].lower()
+    assert fail["message_action"] == "ALLOW"
+    assert fail["player_notice"] is None
+
+
+def test_all_decisions_are_reviewable_with_cursor(settings, rose_headers, staff_headers) -> None:
+    app = create_app(settings=settings, classifier=ClassificationForAudit())
+    with TestClient(app) as client:
+        for n, word in enumerate(("ordinary", "harassment", "broken", "quoted"), 1):
+            response = client.post(
+                "/v1/moderate", headers=rose_headers, json=payload(f"audit-{n}", word, n)
+            )
+            assert response.status_code == 200
+        page1 = client.get(
+            "/v1/decisions", headers=staff_headers, params={"limit": 2}
+        )
+        assert page1.status_code == 200
+        cursor = page1.json()["next_cursor"]
+        assert cursor
+        page2 = client.get(
+            "/v1/decisions",
+            headers=staff_headers,
+            params={"limit": 2, "cursor": cursor},
+        )
+        final = client.get(
+            "/v1/decisions",
+            headers=staff_headers,
+            params={"cursor": page2.json()["items"][-1]["event_id"]},
+        )
+
+    first = page1.json()
+    second = page2.json()
+    assert len(first["items"]) == 2
+    assert len(second["items"]) == 2
+    assert second["next_cursor"] is None
+    assert final.json()["items"] == []
+    all_items = first["items"] + second["items"]
+    ids = [r["event_id"] for r in all_items]
+    assert len(set(ids)) == 4
+    assert {r["message_action"] for r in all_items} == {"ALLOW", "BLOCK"}
+    assert {r["ingestion_status"] for r in all_items} == {"INGESTED", "FAIL_OPEN"}
+    assert all("text" not in r and "sender_id" not in r for r in all_items)
+    assert all(r["policy_version"] == "v1" for r in all_items)
+
+
+def test_exempt_no_ingestion_or_notice(settings, rose_headers, staff_headers) -> None:
+    app = create_app(settings=settings, classifier=ClassificationForAudit())
+    body = payload(
+        "exempt-1", "quoted", platform="discord",
+        channel_profile="discord_ticket_exempt", scope_id="tickets",
+    )
+    with TestClient(app) as client:
+        skipped = client.post("/v1/moderate", headers=rose_headers, json=body)
+        listing = client.get("/v1/decisions", headers=staff_headers)
+    assert skipped.status_code == 200
+    assert skipped.json()["ingestion_status"] == "SKIPPED_EXEMPT"
+    assert skipped.json()["player_notice"] is None
+    assert listing.json() == {"items": [], "next_cursor": None}
+
+
+def test_decision_list_access_and_invalid_cursor(
+    settings, rose_headers, staff_headers,
+) -> None:
+    app = create_app(settings=settings, classifier=ClassificationForAudit())
+    with TestClient(app) as client:
+        missing_auth = client.get("/v1/decisions")
+        non_staff = client.get("/v1/decisions", headers=rose_headers)
+        missing_cursor = client.get(
+            "/v1/decisions", headers=staff_headers, params={"cursor": "missing"}
+        )
+        invalid_limit = client.get(
+            "/v1/decisions", headers=staff_headers, params={"limit": 300}
+        )
+    assert missing_auth.status_code == 401
+    assert non_staff.status_code == 403
+    assert missing_cursor.status_code == 404
+    assert invalid_limit.status_code == 422
