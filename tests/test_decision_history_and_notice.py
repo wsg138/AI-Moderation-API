@@ -54,17 +54,17 @@ def test_player_notice_is_category_based_and_replay_safe(settings, rose_headers)
             "/v1/moderate", headers=rose_headers, json=payload("fail-1", "broken")
         ).json()
 
-    assert allow["player_notice"] is None
-    assert block["player_notice"] is not None
-    assert "may contain" in block["player_notice"]
-    assert "harassment" in block["player_notice"]
-    assert replay["player_notice"] == block["player_notice"]
-    assert replay["idempotent_replay"] is True
-    assert quote["player_notice"] is not None
-    assert "prohibited language" in quote["player_notice"]
-    assert "you used" not in quote["player_notice"].lower()
-    assert fail["message_action"] == "ALLOW"
-    assert fail["player_notice"] is None
+    assert allow["player_notice"] is None  # nosec B101  # nosemgrep
+    assert block["player_notice"] is not None  # nosec B101  # nosemgrep
+    assert "may contain" in block["player_notice"]  # nosec B101  # nosemgrep
+    assert "harassment" in block["player_notice"]  # nosec B101  # nosemgrep
+    assert replay["player_notice"] == block["player_notice"]  # nosec B101  # nosemgrep
+    assert replay["idempotent_replay"] is True  # nosec B101  # nosemgrep
+    assert quote["player_notice"] is not None  # nosec B101  # nosemgrep
+    assert "prohibited language" in quote["player_notice"]  # nosec B101  # nosemgrep
+    assert "you used" not in quote["player_notice"].lower()  # nosec B101  # nosemgrep
+    assert fail["message_action"] == "ALLOW"  # nosec B101  # nosemgrep
+    assert fail["player_notice"] is None  # nosec B101  # nosemgrep
 
 
 def test_all_decisions_are_reviewable_with_cursor(settings, rose_headers, staff_headers) -> None:
@@ -74,13 +74,13 @@ def test_all_decisions_are_reviewable_with_cursor(settings, rose_headers, staff_
             response = client.post(
                 "/v1/moderate", headers=rose_headers, json=payload(f"audit-{n}", word, n)
             )
-            assert response.status_code == 200
+            assert response.status_code == 200  # nosec B101  # nosemgrep
         page1 = client.get(
             "/v1/decisions", headers=staff_headers, params={"limit": 2}
         )
-        assert page1.status_code == 200
+        assert page1.status_code == 200  # nosec B101  # nosemgrep
         cursor = page1.json()["next_cursor"]
-        assert cursor
+        assert cursor  # nosec B101  # nosemgrep
         page2 = client.get(
             "/v1/decisions",
             headers=staff_headers,
@@ -94,17 +94,17 @@ def test_all_decisions_are_reviewable_with_cursor(settings, rose_headers, staff_
 
     first = page1.json()
     second = page2.json()
-    assert len(first["items"]) == 2
-    assert len(second["items"]) == 2
-    assert second["next_cursor"] is None
-    assert final.json()["items"] == []
+    assert len(first["items"]) == 2  # nosec B101  # nosemgrep
+    assert len(second["items"]) == 2  # nosec B101  # nosemgrep
+    assert second["next_cursor"] is None  # nosec B101  # nosemgrep
+    assert final.json()["items"] == []  # nosec B101  # nosemgrep
     all_items = first["items"] + second["items"]
     ids = [r["event_id"] for r in all_items]
-    assert len(set(ids)) == 4
-    assert {r["message_action"] for r in all_items} == {"ALLOW", "BLOCK"}
-    assert {r["ingestion_status"] for r in all_items} == {"INGESTED", "FAIL_OPEN"}
-    assert all("text" not in r and "sender_id" not in r for r in all_items)
-    assert all(r["policy_version"] == "v1" for r in all_items)
+    assert len(set(ids)) == 4  # nosec B101  # nosemgrep
+    assert {r["message_action"] for r in all_items} == {"ALLOW", "BLOCK"}  # nosec B101  # nosemgrep
+    assert {r["ingestion_status"] for r in all_items} == {"INGESTED", "FAIL_OPEN"}  # nosec B101  # nosemgrep
+    assert all("text" not in r and "sender_id" not in r for r in all_items)  # nosec B101  # nosemgrep
+    assert all(r["policy_version"] == "v1" for r in all_items)  # nosec B101  # nosemgrep
 
 
 def test_exempt_no_ingestion_or_notice(settings, rose_headers, staff_headers) -> None:
@@ -116,10 +116,10 @@ def test_exempt_no_ingestion_or_notice(settings, rose_headers, staff_headers) ->
     with TestClient(app) as client:
         skipped = client.post("/v1/moderate", headers=rose_headers, json=body)
         listing = client.get("/v1/decisions", headers=staff_headers)
-    assert skipped.status_code == 200
-    assert skipped.json()["ingestion_status"] == "SKIPPED_EXEMPT"
-    assert skipped.json()["player_notice"] is None
-    assert listing.json() == {"items": [], "next_cursor": None}
+    assert skipped.status_code == 200  # nosec B101  # nosemgrep
+    assert skipped.json()["ingestion_status"] == "SKIPPED_EXEMPT"  # nosec B101  # nosemgrep
+    assert skipped.json()["player_notice"] is None  # nosec B101  # nosemgrep
+    assert listing.json() == {"items": [], "next_cursor": None}  # nosec B101  # nosemgrep
 
 
 def test_decision_list_access_and_invalid_cursor(
@@ -135,7 +135,7 @@ def test_decision_list_access_and_invalid_cursor(
         invalid_limit = client.get(
             "/v1/decisions", headers=staff_headers, params={"limit": 300}
         )
-    assert missing_auth.status_code == 401
-    assert non_staff.status_code == 403
-    assert missing_cursor.status_code == 404
-    assert invalid_limit.status_code == 422
+    assert missing_auth.status_code == 401  # nosec B101  # nosemgrep
+    assert non_staff.status_code == 403  # nosec B101  # nosemgrep
+    assert missing_cursor.status_code == 404  # nosec B101  # nosemgrep
+    assert invalid_limit.status_code == 422  # nosec B101  # nosemgrep
