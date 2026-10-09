@@ -77,6 +77,10 @@ def _predict(model: Any, text: str) -> tuple[str, float, float] | None:
     return label[len(LABEL_PREFIX):], top, second
 
 
+def _unsafe_for_language_block(words: list[str], text: str) -> bool:
+    return len(words) < 3 or "/" in text or "@" in text or "§" in text
+
+
 def candidate_assessment(model: Any, text: str) -> str:
     """Deliberately conservative, *unvalidated* candidate, never live blocking."""
     clean = _prepared_text(text)
@@ -85,7 +89,7 @@ def candidate_assessment(model: Any, text: str) -> str:
     if clean.casefold().strip("!?., ") in GREETING_EXCEPTIONS:
         return "occasional_foreign_words_or_short_greetings"
     words = [word for word in re.findall(r"\b\w+\b", clean) if word.isalpha()]
-    if len(words) < 3 or "/" in clean or "@" in clean or "§" in clean:
+    if _unsafe_for_language_block(words, clean):
         return "unreliably_assessed_or_ambiguous"
     prediction = _predict(model, clean)
     if prediction is None or prediction[1] < CANDIDATE_SCORE:
