@@ -62,14 +62,20 @@ def _prepared_text(text: str) -> str | None:
     return clean
 
 
+def _valid_scores(top: float, second: float) -> bool:
+    return (
+        math.isfinite(top) and math.isfinite(second)
+        and 0 <= second <= top <= 1
+        and top - second >= CANDIDATE_MARGIN
+    )
+
+
 def _predict(model: Any, text: str) -> tuple[str, float, float] | None:
     raw_labels, raw_scores = model.predict(text, k=2)
     if len(raw_labels) != 2 or len(raw_scores) != 2:
         return None
     top, second = float(raw_scores[0]), float(raw_scores[1])
-    if not all(math.isfinite(n) and 0 <= n <= 1 for n in (top, second)):
-        return None
-    if top < second or top - second < CANDIDATE_MARGIN:
+    if not _valid_scores(top, second):
         return None
     label = raw_labels[0]
     if not isinstance(label, str) or not label.startswith(LABEL_PREFIX):
