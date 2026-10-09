@@ -3,8 +3,28 @@
   "rule_id": "english_primary_2026_10_08",
   "owner_approved_date": "2026-10-08",
   "status": "owner_approved_message_action_only",
-  "scope": "only_on_explicitly_configured_english_only_chat_surfaces",
-  "applicable_channel_config": "not_yet_frozen",
+  "scope": "all_currently_moderated_minecraft_public_private_and_discord_public_gaming_surfaces",
+  "applicable_channel_config": {
+    "status": "owner_approved",
+    "decision_date": "2026-10-08",
+    "includes": [
+      "minecraft_public",
+      "minecraft_private",
+      "minecraft_other_configured_rosechat_channels",
+      "discord_general",
+      "discord_gaming"
+    ],
+    "excludes_existing_policy_exemptions": [
+      "discord_ticket",
+      "discord_staff_only",
+      "discord_other_explicitly_exempt"
+    ],
+    "undefined_not_authorized": [
+      "discord_bot_direct_messages"
+    ],
+    "mirror_handling": "one_canonical_event_do_not_double_count",
+    "rule_application": "all_moderated_surfaces_including_private_messages"
+  },
   "evidence_requirement": "independent_validated_primary_language_assessment_not_source_batch",
   "message_action_by_verified_assessment": {
     "primarily_non_english": "BLOCK",
@@ -67,6 +87,10 @@
     "Do not use this illustrative list as automated lexical matching rules or adjudicated gold.",
     "Review ambiguous, context-poor and mixed-language cases rather than block on non-English words alone.",
     "Other safety and harassment rules remain independent of language-only action.",
-    "G21 dataset membership is not primary-language evidence."
+    "G21 dataset membership is not primary-language evidence.",
+    "Owner's 'everywhere' answer applies to every surface already moderated in Policy v1, including Minecraft PMs and Discord gaming/general.",
+    "Existing exempt Discord staff/ticket channels remain exempt because no explicit override of the established exemption was requested.",
+    "Discord bot DMs are undefined in Policy v1 and not silently added.",
+    "No strikes/mutes/staff escalation are granted by this scope confirmation."
   ]
 }
