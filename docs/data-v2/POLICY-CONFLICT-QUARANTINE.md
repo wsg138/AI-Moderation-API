@@ -27,7 +27,7 @@ and routing only. No rule here decides final enforcement outcomes.
 
 | Review track | Status | Meaning |
 |---|---|---|
-| language_enforcement | **New scope decision needed** | Existing English-only owner preference must be formalized separately from toxicity/doxxing semantics. G21 is a **batch proxy**, not a language detector, and may contain English. |
+| language_enforcement | **Owner message-action decision recorded; detector/configuration unverified** | BLOCK primarily non-English chat while ALLOWING occasional foreign words/greetings, names, and game terms. Applies only where English-only is configured. G21 remains a **source-batch proxy**, not a language detector. Language-only strike/mute/escalation and configured channels remain unresolved. |
 | self_published_contact | **New scope decision needed** | First-person contact disclosure must not silently inherit third-party doxxing strike/mute rules. Lexical hints are not verification. |
 | uncertain_minor_context | **Existing policy gap** | Policy v1 protects reliably known minors; uncertain minor age and secrecy/contact patterns need distinct policy adjudication. |
 | dangerous_domain_scope | **Existing policy gap** | Actionable real-world explosives are covered; domains beyond explosives require explicit handling. |
@@ -40,7 +40,12 @@ and routing only. No rule here decides final enforcement outcomes.
 
 The *category routing* relies in part on **unverified source candidate labels**.
 It is a search hint, not a finding of misconduct. The G21 language bucket uses
-a known batch prefix, not language inference. The first-person contact pattern
+a known batch prefix, not language inference. The owner-approved language rule is
+versioned in `policy/english-primary-message-action-v1.json` and is **not**
+a source of new approved training labels, detection confidence, or automatic
+strikes/mutes. Classification of predominantly non-English text has not been
+validated. The rule's outcome is distinct from the underlying harmful-content
+semantic classification. The first-person contact pattern
 search is conservative and only inspects target-time-visible text.
 
 ## Prioritization
@@ -51,7 +56,9 @@ search is conservative and only inspects target-time-visible text.
    the policy. No rule invents a strike or human reviewer.
 2. **02_owner_vs_candidate_action_review**: another action disagreement.
 3. **03_unresolved_policy_boundary**: source candidate touches a known open
-   scope decision, regardless of label agreement.
+   scope decision, regardless of label agreement. The already decided
+   English-primary message-action rule is no longer treated as an undecided
+   rule, though its technical detection and deployment remain blocked.
 4. **04_contextual_policy_application_review**: settled policy still
    requires interpreting the specific situation.
 5. **05_other_unverified_candidate**: everything else still unverified.
@@ -102,6 +109,7 @@ from reviewer files and do not publish it to GitHub or Discord.
 
 **Next dependency:** Version the open rule boundaries with the owner before
 adjudicating high-risk cases. Keep the response small and specific, e.g.,
-whether non-English chat should be removed without strikes and how
-self-disclosed personal contact details should be treated. Do not bury
+which chat surfaces receive the English-only rule, whether language-only
+violations trigger any additional sanctions, and how self-disclosed personal
+contact details should be treated. Do not bury
 these safety decisions inside a new round of random sample labeling.

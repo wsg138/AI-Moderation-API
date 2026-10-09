@@ -1,0 +1,72 @@
+{
+  "schema_version": "enthusia.owner_language_message_action.v1",
+  "rule_id": "english_primary_2026_10_08",
+  "owner_approved_date": "2026-10-08",
+  "status": "owner_approved_message_action_only",
+  "scope": "only_on_explicitly_configured_english_only_chat_surfaces",
+  "applicable_channel_config": "not_yet_frozen",
+  "evidence_requirement": "independent_validated_primary_language_assessment_not_source_batch",
+  "message_action_by_verified_assessment": {
+    "primarily_non_english": "BLOCK",
+    "primarily_english": "ALLOW",
+    "occasional_foreign_words_or_short_greetings": "ALLOW",
+    "player_names_and_recognized_game_terms": "ALLOW",
+    "unreliably_assessed_or_ambiguous": "UNDECIDED"
+  },
+  "unapproved_fields": {
+    "semantic_harm_category": "do_not_infer",
+    "strike": "not_owner_decided",
+    "mute": "not_owner_decided",
+    "staff_escalation": "not_owner_decided"
+  },
+  "runtime_enabled": false,
+  "gold_training_eligible": false,
+  "illustrative_exemplars_not_training_gold": [
+    {
+      "message": "hola",
+      "assessment": "occasional_foreign_words_or_short_greetings",
+      "action": "ALLOW"
+    },
+    {
+      "message": "bonjour",
+      "assessment": "occasional_foreign_words_or_short_greetings",
+      "action": "ALLOW"
+    },
+    {
+      "message": "hi bonjour everyone",
+      "assessment": "primarily_english",
+      "action": "ALLOW"
+    },
+    {
+      "message": "gracias for the diamonds",
+      "assessment": "primarily_english",
+      "action": "ALLOW"
+    },
+    {
+      "message": "My username is SeñorLobo",
+      "assessment": "player_names_and_recognized_game_terms",
+      "action": "ALLOW"
+    },
+    {
+      "message": "Estoy buscando diamantes en la mina",
+      "assessment": "primarily_non_english",
+      "action": "BLOCK"
+    },
+    {
+      "message": "que risa, eres malísimo",
+      "assessment": "primarily_non_english",
+      "action": "BLOCK"
+    },
+    {
+      "message": "gg bien joué",
+      "assessment": "unreliably_assessed_or_ambiguous",
+      "action": "UNDECIDED"
+    }
+  ],
+  "notes": [
+    "Do not use this illustrative list as automated lexical matching rules or adjudicated gold.",
+    "Review ambiguous, context-poor and mixed-language cases rather than block on non-English words alone.",
+    "Other safety and harassment rules remain independent of language-only action.",
+    "G21 dataset membership is not primary-language evidence."
+  ]
+}

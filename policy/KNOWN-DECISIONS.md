@@ -2,6 +2,15 @@
 
 These are policy anchors already established before the formal interview. They are not a substitute for the full interview.
 
+## English-only chat — owner message-action decision (2026-10-08)
+
+- **BLOCK** a message when its content is **primarily non-English**, in chat where the English-only rule applies.
+- **ALLOW** occasional foreign-language words or short greetings (for example `hola` or `bonjour`), player names, recognized game terms, or an otherwise English message containing a small foreign-language phrase.
+- Do not interpret the rule as "block any non-English word." Mixed-language or short content without reliable evidence of which language predominates must not be automatically punished by a lexical guess.
+- This is a **message-visibility rule**, not a finding of hate speech, harassment, doxxing, or dangerous behavior. Independently prohibited content still follows its own policy.
+- **Not yet owner-decided:** exact channel/surface configuration and language-only strike/mute/escalation rules. A previous no-strikes/no-mutes suggestion was *not* selected in the owner's answer. No strike or mute is authorized by this message-action decision alone.
+- **Implementation guard:** language identification is not validated; G21 membership or non-ASCII characters alone are not evidence a message violates this rule. No production enforcement or bulk relabeling until detector validation and rollout authorization.
+
 ## Allow / generally allow
 
 - **Owner decision (2026-10-08):** Blackmail/extortion involving **only Minecraft gameplay stakes** (e.g. threatening to reveal another player's Minecraft base coordinates unless paid diamonds or ancient debris) is fully allowed: ALLOW with no blackmail-related strike, staff ping, or mute. This applies in Minecraft and gaming Discord when the case is clearly only in-game. The same words involving real money, personal information, real-world harm or exposure remain prohibited real-world blackmail regardless of channel. Ambiguous mixed/unknown stakes require additional context or staff review. Does not override separately prohibited conduct.
