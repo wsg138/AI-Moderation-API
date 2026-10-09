@@ -57,6 +57,19 @@ def test_low_confidence_low_margin_or_short_foreign_abstains(
     )
 
 
+def test_even_high_scoring_foreign_short_chat_abstains() -> None:
+    assert candidate.candidate_assessment(
+        FakeModel("es", 0.999, 0.0001), "quiero jugar contigo hoy"
+    ) == "unreliably_assessed_or_ambiguous"
+
+
+def test_contiguous_non_latin_text_abstains_until_validated() -> None:
+    assert candidate.candidate_assessment(
+        FakeModel("zh", 0.999, 0.0001),
+        "我们今天晚上一起去山洞里面寻找钻石",
+    ) == "unreliably_assessed_or_ambiguous"
+
+
 def test_large_or_malformed_input_cannot_block() -> None:
     assert candidate.candidate_assessment(FakeModel("es"), "abc " * 130) == (
         "unreliably_assessed_or_ambiguous"
