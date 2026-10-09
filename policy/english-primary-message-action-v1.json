@@ -89,7 +89,8 @@
     "Existing exempt Discord staff/ticket channels remain exempt because no explicit override of the established exemption was requested.",
     "Discord bot DMs are undefined in Policy v1 and not silently added.",
     "Owner confirmed 'just block it' (2026-10-08): language-only violation causes message block alone, with no strike, mute, staff alert, or repeat-violation escalation.",
-    "If the same content independently violates threats, harassment, hate speech or other safety policy, those separate violations are assessed under their established rules."
+    "If the same content independently violates threats, harassment, hate speech or other safety policy, those separate violations are assessed under their established rules.",
+    "Runtime channel gating must use the exact API profiles; unknown or exempt profiles cannot trigger English-only blocks."
   ],
   "language_only_consequences": {
     "message_action": "BLOCK",
@@ -99,5 +100,21 @@
     "repeat_violation_escalation": "NONE",
     "other_punishment": "NONE",
     "interpretation": "Block the offending message only; no punitive action for a language-only violation, including repeated language-only violations."
+  },
+  "runtime_surface_profiles": {
+    "source": "docs/API-CONTRACT.md POST /v1/moderate channel_profile",
+    "moderated": [
+      "minecraft_public",
+      "minecraft_private",
+      "discord_general",
+      "discord_gaming"
+    ],
+    "exempt": [
+      "discord_staff_exempt",
+      "discord_ticket_exempt",
+      "discord_configured_exempt"
+    ],
+    "out_of_scope_on_unrecognized_profile": true,
+    "note": "The configured RoseChat public/global variants use the minecraft_public runtime profile. This table is exact runtime API syntax; other applicable_channel_config labels are human-policy scope descriptions."
   }
 }
