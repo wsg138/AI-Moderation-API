@@ -69,11 +69,18 @@ A short or mixed-language example that cannot be judged reliably must not
 be automatically blocked on a crude script/keyword test. Language-only
 enforcement is conceptually separate from the semantic detection of hate,
 harassment, threats, doxxing, grooming, and self-harm; those rules still
-apply independently. The policy does not grant any additional strike or
-mute for language alone. The owner has **not decided** language-only
-sanction escalation; the applicable moderated chat surfaces **are** now
-confirmed as listed above. An English-primary language detector has not been
-validated or enabled for production.
+apply independently.
+
+**Owner consequence decision (2026-10-08): for a language-only violation,
+just block/delete the offending message. Do not issue strikes, mutes,
+punishment, automatic staff alerts, or repeated-violation escalation solely
+because of the language rule.** Repeated language-only violations remain
+message-block-only, not a new sanction category. A message that separately
+violates a serious safety or misconduct rule is still evaluated under that
+independent rule. The applicable moderated chat surfaces are confirmed above.
+
+An English-primary language detector has not been validated or enabled
+for production.
 
 This is a versioned message-action decision, **not training approval** for
 any G21 synthetic labels; G21 is a synthetic source-batch hint and not
