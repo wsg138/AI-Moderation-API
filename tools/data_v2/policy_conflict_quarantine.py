@@ -37,7 +37,7 @@ HARASSMENT = frozenset({
     "LOW_LEVEL_HARASSMENT", "SEVERE_HARASSMENT", "HARASSMENT",
 })
 RECONCILIATION_PATHS = {
-    "language_enforcement": "owner_rule_scope_not_versioned",
+    "language_enforcement": "owner_rule_recorded_detector_not_validated",
     "self_published_contact": "owner_rule_scope_not_versioned",
     "uncertain_minor_context": "policy_edge_open",
     "dangerous_domain_scope": "policy_edge_open",
