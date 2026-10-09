@@ -12,6 +12,7 @@ from tools.check_complexity import analyze
 from tools.data_v2.corpus_verification_stage1 import outcome_conflicts, stage1
 from tools.data_v2.corpus_verification_stage2 import (
     FROZEN_WAVE1_SHA256,
+    _greedy_batch,
     _select_batch,
     _target_counts,
     select_next_wave,
@@ -75,6 +76,39 @@ def test_distinct_target_quota_trumps_duplicate_rows() -> None:
         "03_stratified_audit_candidate": 3,
     }
     assert all(value == 0 for value in report["quota_shortfalls"].values())
+
+
+def test_shared_target_can_move_to_scarce_tier_without_quota_loss() -> None:
+    """A greedily taking 'a' would starve B; a matching preserves 4/3/3."""
+    data = _pool()
+    groups = (
+        ("01_policy_conflict_candidate", ("a", "b", "c", "d", "k")),
+        ("02_high_impact_candidate", ("a", "e", "i")),
+        ("03_stratified_audit_candidate", ("f", "g", "h")),
+    )
+    counter = 13
+    for tier_number, (tier, messages) in enumerate(groups):
+        for target in messages:
+            identifier = f"G10-{counter:04d}"
+            counter += 1
+            data[tier].append(_toy(identifier, target, f"family.tier{tier_number}"))
+    baseline, before = _greedy_batch(
+        data, {"01_policy_conflict_candidate": 4,
+               "02_high_impact_candidate": 3,
+               "03_stratified_audit_candidate": 3}, set(), set()
+    )
+    assert len(baseline) == 10
+    assert any(before["quota_shortfalls"].values())
+    selected, result = _select_batch(data, set(), set())
+    indexed = {row["example_id"]: row for rows in data.values() for row in rows}
+    assert len(selected) == 10
+    assert len({indexed[i]["messages"][0]["text"] for i in selected}) == 10
+    assert result["actual"] == {
+        "01_policy_conflict_candidate": 4,
+        "02_high_impact_candidate": 3,
+        "03_stratified_audit_candidate": 3,
+    }
+    assert not any(result["quota_shortfalls"].values())
 
 
 def test_absent_tier_batch_does_not_invent_high_risk_examples() -> None:
