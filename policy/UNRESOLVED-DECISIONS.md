@@ -33,11 +33,11 @@ These items do not invalidate the settled policy above. They are either genuinel
 9. **Accidental slur lexical matches**
    - Actual/obfuscated slurs are blocked and struck. Naive substring false positives must be avoided, but exact lexical disambiguation examples still belong in dataset calibration.
 
-10. **English-only rule: channel coverage resolved; sanctions and ambiguity still open**
-    - Owner approved (2026-10-08): BLOCK messages primarily non-English while ALLOWING occasional foreign words, short greetings, names and game terms.
-    - Owner also confirmed **"everywhere"**: all currently moderated Minecraft public/global, other configured RoseChat channels, Minecraft /msg /tell /r private messages, and Discord public/general/gaming channels. Existing exempt Discord ticket/staff and other exempt channels remain excluded; Discord bot DMs remain undefined by the broader moderation policy.
-    - Still unresolved: language-only strikes, mutes and staff escalation; handling of short/mixed-language content when predominant language cannot be assessed reliably.
-    - The channel scope is now settled. No strike or mute is authorized by this message-action/scope decision alone. Detection and calibration must be validated before production use.
+10. **English-only rule: action, coverage, and no-penalty consequences resolved; detection ambiguity remains**
+    - Owner approved (2026-10-08): BLOCK primarily non-English messages; ALLOW occasional foreign words, greetings, names, recognized game terms, and English-primary text with minor code-switching.
+    - Owner confirmed **"everywhere"**: all currently moderated Minecraft public/global, configured RoseChat, private /msg /tell /r, and Discord public/general/gaming channels. Previously exempt Discord tickets/staff/other exempt channels remain outside scope; Discord bot DMs remain undefined.
+    - Owner confirmed **"just block it"**: BLOCK/DELETE a language-only violating message, with **no strike, mute, other punishment, staff alert, or repeat-violation escalation** for that rule alone. Independent serious violations still follow their own policy.
+    - Remaining implementation/calibration: robust primary-language assessment and handling short/ambiguous mixed-language content without false positives. This does not authorize live deployment or admission of G21 synthetic labels.
 
 ## Downstream implementation/calibration, not owner-policy blockers
 
