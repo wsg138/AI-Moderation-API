@@ -1,0 +1,9 @@
+---
+# Codacy false-positive exception for the Wave-2 pytest-only module.
+# This file is exercised by GitHub CI (pytest, Ruff, mypy and complexity).
+# Codacy reported 44 warnings on intentional pytest assertions plus one
+# "pytest could not be resolved" warning despite the CI dependency install.
+# Keep all production modules and all other tests in the Codacy scope.
+# Do not use this path exclusion for application or moderation API code.
+exclude_paths:
+  - "tests/test_corpus_verification_stage2.py"
