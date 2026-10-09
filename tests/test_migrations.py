@@ -143,6 +143,8 @@ def test_v4_audit_pagination_index_upgrades_existing_v3_without_data_loss(
     with sqlite3.connect(path) as connection:
         migrate(connection)
         connection.execute("DROP INDEX idx_events_finalized_page")
+        # Simulate a valid legacy FINAL row with its nullable finalization time.
+        connection.execute("UPDATE moderation_events SET finalized_at=NULL WHERE event_id='legacy'")
         connection.execute("PRAGMA user_version = 3")
         connection.commit()
         migrate(connection)
@@ -151,10 +153,12 @@ def test_v4_audit_pagination_index_upgrades_existing_v3_without_data_loss(
                WHERE type='index' AND name='idx_events_finalized_page'"""
         ).fetchone()
         original = connection.execute(
-            "SELECT event_id,text,action FROM moderation_events"
+            "SELECT event_id,text,action,finalized_at FROM moderation_events"
         ).fetchone()
         assert connection.execute("PRAGMA user_version").fetchone()[0] == 4  # nosec B101  # nosemgrep
-    assert original == ("legacy", "review me", "REVIEW")  # nosec B101  # nosemgrep
+    assert original == (  # nosec B101  # nosemgrep
+        "legacy", "review me", "REVIEW", "2026-10-02T04:00:00+00:00"
+    )
     assert row is not None  # nosec B101  # nosemgrep
     assert "finalized_at DESC" in str(row[0])  # nosec B101  # nosemgrep
     assert "WHERE status='FINAL'" in str(row[0])  # nosec B101  # nosemgrep
