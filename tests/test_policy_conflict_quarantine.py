@@ -1,6 +1,7 @@
 """Toy-only regressions for policy reconciliation without label admission."""
 from __future__ import annotations
 
+import json
 from copy import deepcopy
 from pathlib import Path
 from typing import Any
@@ -82,6 +83,37 @@ def test_language_bucket_is_source_heuristic_not_language_classifier() -> None:
     assert "language_enforcement" in policy_tracks(
         _candidate("G21-0002", target="bonjour")
     )
+
+
+def test_english_policy_scope_recorded_without_automatic_classification() -> None:
+    """A G21 source hint cannot establish a language violation or gold label."""
+    sample = _candidate("G21-0001", "SAFE", "ALLOW", "Hi, how is your day?")
+    queue, summary = make_reconciliation([sample], [_triage(sample)], [])
+    assert queue[0]["policy_track_state"]["language_enforcement"] == (
+        "owner_rule_recorded_detector_not_validated"
+    )
+    assert queue[0]["priority"] == "04_contextual_policy_application_review"
+    assert queue[0]["training_eligible"] is False
+    assert queue[0]["full_outcome_status"] == "quarantined_unverified"
+    assert summary["semantic_fields_adjudicated"] == 0
+
+
+def test_versioned_english_rule_preserves_exceptions_and_no_sanction_grant() -> None:
+    rule_file = Path("policy/english-primary-message-action-v1.json")
+    rule = json.loads(rule_file.read_text(encoding="utf-8"))
+    assert rule["rule_id"] == "english_primary_2026_10_08"
+    assert rule["runtime_enabled"] is False
+    assert rule["gold_training_eligible"] is False
+    choices = rule["message_action_by_verified_assessment"]
+    assert choices["primarily_non_english"] == "BLOCK"
+    assert choices["primarily_english"] == "ALLOW"
+    assert choices["occasional_foreign_words_or_short_greetings"] == "ALLOW"
+    assert choices["player_names_and_recognized_game_terms"] == "ALLOW"
+    assert choices["unreliably_assessed_or_ambiguous"] == "UNDECIDED"
+    assert rule["unapproved_fields"]["strike"] == "not_owner_decided"
+    assert rule["unapproved_fields"]["mute"] == "not_owner_decided"
+    for example in rule["illustrative_exemplars_not_training_gold"]:
+        assert choices[example["assessment"]] == example["action"]
 
 
 def test_self_disclosure_scope_is_not_equated_to_doxxing() -> None:
