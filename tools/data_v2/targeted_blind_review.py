@@ -24,6 +24,7 @@ from tools.dataset_qa.blind_review import (
 from tools.dataset_qa.freshness import ROOT, batch_files
 from tools.dataset_qa.review_assignments import _check_packet
 
+from .owner_action_registry import merge_action_only, validate_round4
 from .private_owner_actions import (
     _require,
     _source_index,
@@ -148,12 +149,22 @@ def build_blind_sample(
     return packets, crosswalk, summary
 
 
-def _owner_reviewed(path: Path | None) -> set[str]:
-    if path is None:
+def _owner_reviewed(round3: Path | None, round4: Path | None) -> set[str]:
+    if round3 is None and round4 is None:
         return set()
-    _outside_checkout(path)
-    corrections, _ = validate_ledger(read_private_ledger(path), *_source_index())
-    return {str(item["example_id"]) for item in corrections}
+    source_rows, source_files = _source_index()
+    prior3: list[dict[str, object]] = []
+    prior4: list[dict[str, object]] = []
+    if round3 is not None:
+        prior3, _ = validate_ledger(
+            read_private_ledger(_outside_checkout(round3)), source_rows, source_files
+        )
+    if round4 is not None:
+        prior4, _ = validate_round4(
+            read_private_ledger(_outside_checkout(round4)), source_rows, source_files
+        )
+    combined, _ = merge_action_only(prior3, prior4)
+    return {str(item["example_id"]) for item in combined}
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -161,6 +172,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--packet-out", type=Path, required=True)
     parser.add_argument("--coordinator-map-out", type=Path, required=True)
     parser.add_argument("--private-owner-ledger", type=Path)
+    parser.add_argument("--private-round4-ledger", type=Path)
     args = parser.parse_args(argv)
     try:
         packet_out = _outside_checkout(args.packet_out)
@@ -173,7 +185,9 @@ def main(argv: list[str] | None = None) -> int:
         files = {p.name[:3]: str(p) for p in batch_files(ROOT, require_complete=True)}
         queue, _ = build_queue(rows, find_groups(rows), files)
         packets, crosswalk, summary = build_blind_sample(
-            rows, queue, _owner_reviewed(args.private_owner_ledger), secret
+            rows, queue, _owner_reviewed(
+                args.private_owner_ledger, args.private_round4_ledger
+            ), secret
         )
         _write_review_outputs(packet_out, packets, map_out, crosswalk)
     except (OSError, ValueError, KeyError, TypeError, UnicodeError) as exc:
