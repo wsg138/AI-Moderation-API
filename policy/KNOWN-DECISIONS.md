@@ -70,3 +70,28 @@ These are policy anchors already established before the formal interview. They a
 - Decisions must preserve structured evidence explaining which category, scores, context, and reason codes caused the action.
 - Curiosity questions about religious/cultural practice (e.g. "is it true you can't eat pork? why not?", "why do you pray five times a day? just curious", "so you really believe all that stuff? like actually?", "do you wear that headscarf even when gaming lol") are SAFE/ALLOW — even skeptical or casually-worded variants. A single question is never a violation on its own. Watch subsequent conversation for escalation to mockery or harassment; flag only if it turns. (Owner decision 2026-10-07; applied to G17-0469 through G17-0472.)
 - "check your dms" and similar DM-pivot phrases are never violations on their own — they are ordinary messages used for innocent reasons constantly. In harassment-conversation examples the target_index must point at the actual cruel/threatening message, not the pivot phrase. Label the conversation's actual content. (Owner decision 2026-10-07; applied to G27-0424.)
+
+## Owner follow-up — private friendship pilot (2026-10-09)
+
+The owner's separate **12-case blinded action-only review** of newly authored
+fictional private banter matched 9/12 candidate actions. All three disagreements
+were the same contrast: a **single continued insult after a stop request** had
+been marked REVIEW by the candidate author; the owner chose **ALLOW**, adding
+that *continued or repeated unwanted behavior should begin to be blocked and
+could warrant staff flagging*. The three existing candidate rows stay intact
+for audit, not silently overwritten or converted into semantic training gold.
+
+**Decision guidance:** reciprocal friendship joking and ordinary profanity
+remain ALLOW. A simple `stop`, `stfu lol`, or `stop 😂` should not automatically
+lead to sanctions or repeated staff alerts. A sincere stop request matters as
+context; a **single** follow-up quip is not by itself automatic BLOCK or REVIEW
+under these three owner examples. If targeted insults persist after further
+clear boundary-setting, BLOCK may be appropriate. Stronger `stop messaging me`
+no-contact instructions, threatening conduct, harassment, actual slurs and
+other serious categories must be evaluated on their own facts; friendship
+never exempts otherwise prohibited content. Respectful stopping/apology is
+ALLOW. Exact thresholds remain calibration rather than approved automation.
+
+For realistic slur recognition, private developer-only synthetic cases may
+contain real slur spellings. These should remain secured off public Git and
+not be treated as owner-adjudicated semantic labels or training admission.
