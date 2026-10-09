@@ -110,8 +110,14 @@ def test_versioned_english_rule_preserves_exceptions_and_no_sanction_grant() -> 
     assert choices["occasional_foreign_words_or_short_greetings"] == "ALLOW"
     assert choices["player_names_and_recognized_game_terms"] == "ALLOW"
     assert choices["unreliably_assessed_or_ambiguous"] == "UNDECIDED"
-    assert rule["unapproved_fields"]["strike"] == "not_owner_decided"
-    assert rule["unapproved_fields"]["mute"] == "not_owner_decided"
+    consequences = rule["language_only_consequences"]
+    assert consequences["message_action"] == "BLOCK"
+    assert consequences["strike"] == "NONE"
+    assert consequences["mute"] == "NONE"
+    assert consequences["staff_escalation"] == "NONE"
+    assert consequences["repeat_violation_escalation"] == "NONE"
+    assert consequences["other_punishment"] == "NONE"
+    assert rule["unapproved_fields"] == {"semantic_harm_category": "do_not_infer"}
     coverage = rule["applicable_channel_config"]
     assert coverage["status"] == "owner_approved"
     assert coverage["rule_application"] == "all_moderated_surfaces_including_private_messages"
