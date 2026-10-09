@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 from collections import Counter
 from pathlib import Path
 from typing import Any
@@ -127,6 +128,15 @@ def test_full_source_pinned_9000_candidate_stage1(capsys: Any) -> None:
     assert "all_source_hashes_verified" not in report  # untrusted caller boundary
     assert report["source_batches"] == 18
     assert report["first_blind_review_wave"] == 180
+    # Packet review already began: these IDs/order and tier totals are frozen.
+    assert report["selected_priority_counts"] == {
+        "01_policy_conflict_candidate": 34,
+        "02_high_impact_candidate": 72,
+        "03_stratified_audit_candidate": 74,
+    }
+    assert hashlib.sha256(",".join(selected).encode("ascii")).hexdigest() == (
+        "bec3d820706c4b8e42c9e17ce1e8455bb38811d30c25d293c27e12a4f1350407"
+    )
     assert report["independent_reviews_completed"] == 0
     assert report["semantically_verified_records"] == 0
     assert report["training_eligible"] is False
