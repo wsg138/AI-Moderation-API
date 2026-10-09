@@ -1,0 +1,7 @@
+---
+# Codacy reports Python test assertions as removed under -O (B101).
+# pytest does not run its normal test assertions under optimized -O.
+# Avoid 1 finding per legitimate pytest assertion in this test module only.
+# Application code, other tests, and all CI test execution remain scanned/run.
+exclude_paths:
+  - "tests/test_owner_blind_action_intake.py"
