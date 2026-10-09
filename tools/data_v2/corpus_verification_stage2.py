@@ -52,6 +52,70 @@ def _fresh_families(pool: list[dict[str, Any]], used: set[str]) -> int:
     return len({_unique_key(row)[0] for row in pool if _unique_key(row)[0] not in used})
 
 
+def _tier_options(
+    by_tier: dict[str, list[dict[str, Any]]],
+    families: set[str], targets: set[str],
+) -> dict[str, dict[str, dict[str, Any]]]:
+    """Keep one deterministic representative for each target and tier."""
+    result: dict[str, dict[str, dict[str, Any]]] = {}
+    for tier in TIERS:
+        options: dict[str, dict[str, Any]] = {}
+        ordered = sorted(by_tier[tier], key=lambda row: (
+            _unique_key(row)[0] in families, _rank(row)
+        ))
+        for row in ordered:
+            target = _unique_key(row)[1]
+            if target not in targets:
+                options.setdefault(target, row)
+        result[tier] = options
+    return result
+
+
+def _augment(
+    slot: int, slots: list[str], targets_by_tier: dict[str, list[str]],
+    assigned: dict[str, int], visited: set[str],
+) -> bool:
+    """Reassign earlier choices to preserve achievable tier quotas."""
+    for target in targets_by_tier[slots[slot]]:
+        if target in visited:
+            continue
+        visited.add(target)
+        previous = assigned.get(target)
+        if previous is None or _augment(previous, slots, targets_by_tier, assigned, visited):
+            assigned[target] = slot
+            return True
+    return False
+
+
+def _match_quotas(
+    options: dict[str, dict[str, dict[str, Any]]], goals: dict[str, int],
+    families: set[str],
+) -> list[tuple[str, dict[str, Any]]]:
+    """Maximum target-distinct assignment to quota slots, before fallback."""
+    counts = Counter(target for tier in TIERS for target in options[tier])
+    order = sorted(TIERS, key=lambda tier: (len(options[tier]), TIERS.index(tier)))
+    slots = [tier for tier in order for _ in range(goals[tier])]
+    ranked = {tier: sorted(options[tier], key=lambda target: (
+        counts[target], _unique_key(options[tier][target])[0] in families,
+        _rank(options[tier][target]),
+    )) for tier in TIERS}
+    assignment: dict[str, int] = {}
+    for slot in range(len(slots)):
+        _augment(slot, slots, ranked, assignment, set())
+    return [(slots[slot], options[slots[slot]][target])
+            for target, slot in sorted(assignment.items(), key=lambda pair: pair[1])]
+
+
+def _pick_family_representative(
+    rows: list[dict[str, Any]], target: str, used_families: set[str],
+) -> dict[str, Any]:
+    """Select the most family-diverse row for a matched target."""
+    choices = [row for row in rows if _unique_key(row)[1] == target]
+    return min(choices, key=lambda row: (
+        _unique_key(row)[0] in used_families, _rank(row)
+    ))
+
+
 def _choose_tier(
     pool: list[dict[str, Any]], required: int, chosen: list[str],
     families: set[str], targets: set[str], selected_ids: set[str],
@@ -102,14 +166,11 @@ def _batch_diagnostic(
     }
 
 
-def _select_batch(
-    by_tier: dict[str, list[dict[str, Any]]],
+def _greedy_batch(
+    by_tier: dict[str, list[dict[str, Any]]], goals: dict[str, int],
     families: set[str], targets: set[str],
 ) -> tuple[list[str], dict[str, dict[str, int]]]:
-    available = Counter({
-        tier: _available_targets(by_tier[tier], targets) for tier in TIERS
-    })
-    goals = _target_counts(available)
+    """Keep the original diversity-preferring choice if quotas are met."""
     order = sorted(TIERS, key=lambda tier: (
         _fresh_families(by_tier[tier], families), -goals[tier], TIERS.index(tier)
     ))
@@ -123,6 +184,58 @@ def _select_batch(
     _fill_remaining(by_tier, chosen, selected_ids, families, targets)
     _require(len(chosen) == PER_BATCH, "could not choose ten distinct targets")
     return chosen, _batch_diagnostic(by_tier, selected_ids, goals)
+
+
+def _matched_batch(
+    by_tier: dict[str, list[dict[str, Any]]], goals: dict[str, int],
+    families: set[str], targets: set[str],
+) -> tuple[list[str], dict[str, dict[str, int]]]:
+    """Reroute targets shared between priority tiers to preserve quotas."""
+    options = _tier_options(by_tier, families, targets)
+    matched = _match_quotas(options, goals, families)
+    chosen: list[str] = []
+    selected_ids: set[str] = set()
+    for tier, assigned in matched:
+        _, target = _unique_key(assigned)
+        row = _pick_family_representative(by_tier[tier], target, families)
+        identifier = str(row["example_id"])
+        chosen.append(identifier)
+        selected_ids.add(identifier)
+        family, target = _unique_key(row)
+        families.add(family)
+        targets.add(target)
+    _fill_remaining(by_tier, chosen, selected_ids, families, targets)
+    _require(len(chosen) == PER_BATCH, "could not choose ten distinct targets")
+    return chosen, _batch_diagnostic(by_tier, selected_ids, goals)
+
+
+def _shortfall(report: dict[str, dict[str, int]]) -> int:
+    return sum(report["quota_shortfalls"].values())
+
+
+def _select_batch(
+    by_tier: dict[str, list[dict[str, Any]]],
+    families: set[str], targets: set[str],
+) -> tuple[list[str], dict[str, dict[str, int]]]:
+    available = Counter({
+        tier: _available_targets(by_tier[tier], targets) for tier in TIERS
+    })
+    goals = _target_counts(available)
+    greedy_families, greedy_targets = set(families), set(targets)
+    first, diagnostic = _greedy_batch(by_tier, goals, greedy_families, greedy_targets)
+    if _shortfall(diagnostic) == 0:
+        families.update(greedy_families)
+        targets.update(greedy_targets)
+        return first, diagnostic
+    matched_families, matched_targets = set(families), set(targets)
+    second, matched = _matched_batch(by_tier, goals, matched_families, matched_targets)
+    if _shortfall(matched) < _shortfall(diagnostic):
+        families.update(matched_families)
+        targets.update(matched_targets)
+        return second, matched
+    families.update(greedy_families)
+    targets.update(greedy_targets)
+    return first, diagnostic
 
 
 def _build_pools(
