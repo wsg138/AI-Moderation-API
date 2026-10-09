@@ -1,0 +1,161 @@
+{
+  "version": "enthusia_owner_offline_probe_v1_1",
+  "source": "invented_toy_inputs_only",
+  "model_validation_claim": false,
+  "training_eligible": false,
+  "cases": [
+    {
+      "id": "quote_self_harm_shorthand",
+      "channel_profile": "discord_general",
+      "context": [],
+      "target": "Someone typed 'kys' earlier; I'm reporting that here",
+      "expected_action": "BLOCK",
+      "rule": "quoted_abusive_expression",
+      "status": "developer_probe_not_gold",
+      "training_eligible": false,
+      "review_only": true
+    },
+    {
+      "id": "direct_self_harm_shorthand",
+      "channel_profile": "minecraft_public",
+      "context": [],
+      "target": "kys",
+      "expected_action": "BLOCK",
+      "rule": "direct_abusive_expression",
+      "status": "developer_probe_not_gold",
+      "training_eligible": false,
+      "review_only": true
+    },
+    {
+      "id": "reported_threat",
+      "channel_profile": "minecraft_private",
+      "context": [
+        "That message from the other person was awful"
+      ],
+      "target": "He wrote 'I know where you live'; I'm reporting it",
+      "expected_action": "ALLOW",
+      "rule": "reported_other_threat",
+      "status": "developer_probe_not_gold",
+      "training_eligible": false,
+      "review_only": true
+    },
+    {
+      "id": "short_familiar_greeting",
+      "channel_profile": "minecraft_public",
+      "context": [],
+      "target": "hola",
+      "expected_action": "ALLOW",
+      "rule": "familiar_greeting",
+      "status": "developer_probe_not_gold",
+      "training_eligible": false,
+      "review_only": true
+    },
+    {
+      "id": "foreign_insult_single_word",
+      "channel_profile": "discord_gaming",
+      "context": [],
+      "target": "perdedor",
+      "expected_action": "BLOCK",
+      "rule": "substantive_foreign_word",
+      "status": "developer_probe_not_gold",
+      "training_eligible": false,
+      "review_only": true
+    },
+    {
+      "id": "foreign_phrase",
+      "channel_profile": "minecraft_public",
+      "context": [],
+      "target": "du bist peinlich",
+      "expected_action": "BLOCK",
+      "rule": "foreign_phrase",
+      "status": "developer_probe_not_gold",
+      "training_eligible": false,
+      "review_only": true
+    },
+    {
+      "id": "english_dominant_filler",
+      "channel_profile": "minecraft_public",
+      "context": [],
+      "target": "hola everyone, good luck today",
+      "expected_action": "ALLOW",
+      "rule": "english_dominant",
+      "status": "developer_probe_not_gold",
+      "training_eligible": false,
+      "review_only": true
+    },
+    {
+      "id": "gameplay_banter",
+      "channel_profile": "minecraft_public",
+      "context": [],
+      "target": "I'm going to destroy your base in the next raid",
+      "expected_action": "ALLOW",
+      "rule": "gameplay_only",
+      "status": "developer_probe_not_gold",
+      "training_eligible": false,
+      "review_only": true
+    },
+    {
+      "id": "ordinary_private_flirt",
+      "channel_profile": "minecraft_private",
+      "context": [],
+      "target": "Want to go on a date after the event?",
+      "expected_action": "ALLOW",
+      "rule": "private_flirting",
+      "status": "developer_probe_not_gold",
+      "training_eligible": false,
+      "review_only": true
+    },
+    {
+      "id": "single_photo_request_with_age_clue",
+      "channel_profile": "minecraft_private",
+      "context": [
+        "I'm 13",
+        "okay, nice to meet you"
+      ],
+      "target": "Can you send me a picture of your new bike?",
+      "expected_action": "ALLOW",
+      "rule": "unverified_age_and_normal_photo",
+      "status": "developer_probe_not_gold",
+      "training_eligible": false,
+      "review_only": true
+    },
+    {
+      "id": "escalating_pressure_with_age_clue",
+      "channel_profile": "minecraft_private",
+      "context": [
+        "I'm 13",
+        "Stop asking me to share private photos"
+      ],
+      "target": "Keep it secret from your parents, you have to send them",
+      "expected_action": "BLOCK",
+      "rule": "coercive_escalation",
+      "status": "developer_probe_not_gold",
+      "training_eligible": false,
+      "review_only": true
+    },
+    {
+      "id": "ambiguous_game_or_real_stakes",
+      "channel_profile": "minecraft_public",
+      "context": [
+        "give me 64 diamonds"
+      ],
+      "target": "or everyone learns where you're from",
+      "expected_action": "REVIEW",
+      "rule": "unclear_real_world_exposure",
+      "status": "developer_probe_not_gold",
+      "training_eligible": false,
+      "review_only": true
+    },
+    {
+      "id": "clear_real_world_exposure",
+      "channel_profile": "minecraft_private",
+      "context": [],
+      "target": "Give me in-game diamonds or I'll post your real home address",
+      "expected_action": "BLOCK",
+      "rule": "real_world_extortion",
+      "status": "developer_probe_not_gold",
+      "training_eligible": false,
+      "review_only": true
+    }
+  ]
+}

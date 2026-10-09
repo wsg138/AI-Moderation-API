@@ -13,10 +13,10 @@ These items do not invalidate the settled policy above. They are either genuinel
    - Exact message action and alert timing for excessively graphic first-person disclosure before the player answers the safety check.
 
 3. **Private explicit sexual content**
-   - Ordinary non-explicit flirting is allowed in PMs and nude solicitation is prohibited, but the exact boundary for consensual explicit adult PM conversation is not frozen.
+   - Owner clarified 2026-10-09: adult-compatible private romantic/intimate discussion and some isolated picture requests may be ALLOW; the old universal private-request BLOCK rule is superseded. Exact consent evidence, explicit-content threshold, and sanction matrix still need case-sensitive adjudication; no automatic strike.
 
 4. **Grooming with uncertain age**
-   - Age claims are clues, not proof. Exact behavior when grooming-like secrecy/contact patterns exist but minor status is uncertain needs a later policy decision.
+   - Owner clarified 2026-10-09: rare-event false positives are especially costly; a generic private picture request, unknown age, or one age clue alone must not imply grooming. Track meaningful subsequent escalation, pressure, coercion, secrecy, and exploitation cues. Exact thresholds for BLOCK vs staff REVIEW, and verified age evidence, still need evaluation.
 
 5. **Broader dangerous-instruction domains**
    - Explosive examples are covered. Weapons, poisons, malicious files, and other real-world dangerous instruction classes need explicit dataset/policy treatment rather than assumption.
@@ -37,7 +37,7 @@ These items do not invalidate the settled policy above. They are either genuinel
     - Owner approved (2026-10-08): BLOCK primarily non-English messages; ALLOW occasional foreign words, greetings, names, recognized game terms, and English-primary text with minor code-switching.
     - Owner confirmed **"everywhere"**: all currently moderated Minecraft public/global, configured RoseChat, private /msg /tell /r, and Discord public/general/gaming channels. Previously exempt Discord tickets/staff/other exempt channels remain outside scope; Discord bot DMs remain undefined.
     - Owner confirmed **"just block it"**: BLOCK/DELETE a language-only violating message, with **no strike, mute, other punishment, staff alert, or repeat-violation escalation** for that rule alone. Independent serious violations still follow their own policy.
-    - Remaining implementation/calibration: robust primary-language assessment and handling short/ambiguous mixed-language content without false positives. This does not authorize live deployment or admission of G21 synthetic labels.
+    - Owner clarified 2026-10-09: a substantive standalone foreign-language word or sentence is blocked even if short; familiar greetings like `hola` are allowed. Remaining implementation/calibration: validated assessment of short/ambiguous content, not language keyword guessing. This does not authorize live deployment or admission of G21 synthetic labels.
 
 ## Downstream implementation/calibration, not owner-policy blockers
 

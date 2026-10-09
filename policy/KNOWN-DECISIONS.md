@@ -12,6 +12,31 @@ These are policy anchors already established before the formal interview. They a
 - **Owner consequence decision (2026-10-08): just BLOCK/DELETE the language-only violating message.** No strike, mute, additional punishment, automatic staff alert, or escalation for repeat language-only violations. This does not exempt messages from independent safety/moderation categories that also apply. Channel coverage is all currently moderated surfaces noted above.
 - **Implementation guard:** language identification is not validated; G21 membership or non-ASCII characters alone are not evidence a message violates this rule. No production enforcement or bulk relabeling until detector validation and rollout authorization.
 
+## Owner calibration clarifications — 2026-10-09
+
+- Explicit directed self-harm-abuse wording (including the common three-letter
+  shorthand) is BLOCK as message content **even when quoted while reporting**;
+  do not treat a good-faith reporter as the original offender or automatically
+  penalize them. Existing staff/ticket exemptions remain.
+- Genuine quoted real-world threats used to condemn or report somebody else's
+  conduct are preferably ALLOW. Blocking may sometimes be acceptable, but a
+  quotation is not by itself evidence the sender made the threat.
+- Genuine short foreign greetings and known familiar fillers such as `hola`
+  remain ALLOW. Substantive standalone non-English content, including an insult
+  expressed as one word, and meaningful non-English phrases should be BLOCK
+  when reliably identified. Uncertain language should not be guessed.
+- Private messages are more tolerant of adult-compatible romantic and intimate
+  conversation; an ambiguous picture request or unknown ages do not alone
+  justify an automatic BLOCK or grooming flag. Monitor linked progression, and
+  REVIEW credible but uncertain escalation. Independently evidenced coercion,
+  exploitation or minor involvement remains serious.
+- The owner accepted ALLOW for a single generic picture request after an
+  unverified age clue, provided later escalation can be detected. The owner
+  also preferred ALLOW for a condemnatory quote of a real-world threat, while
+  accepting that a cautious BLOCK could be reasonable in context.
+- This is **action-only policy feedback**, not proof of model correctness,
+  verified semantic labels, punishment recommendations, or training admission.
+
 ## Allow / generally allow
 
 - **Owner decision (2026-10-08):** Blackmail/extortion involving **only Minecraft gameplay stakes** (e.g. threatening to reveal another player's Minecraft base coordinates unless paid diamonds or ancient debris) is fully allowed: ALLOW with no blackmail-related strike, staff ping, or mute. This applies in Minecraft and gaming Discord when the case is clearly only in-game. The same words involving real money, personal information, real-world harm or exposure remain prohibited real-world blackmail regardless of channel. Ambiguous mixed/unknown stakes require additional context or staff review. Does not override separately prohibited conduct.
