@@ -93,6 +93,18 @@ def _include(row: dict[str, Any], families: set[str], targets: set[str]) -> None
     targets.add(target)
 
 
+def _add_if_new(
+    row: dict[str, Any], selected: list[str],
+    families: set[str], targets: set[str],
+) -> bool:
+    identifier = str(row["example_id"])
+    if identifier in selected or not _unseen(row, families, targets):
+        return False
+    selected.append(identifier)
+    _include(row, families, targets)
+    return True
+
+
 def _select_batch(
     rows: list[dict[str, Any]], tiers: dict[str, str],
     families: set[str], targets: set[str],
@@ -103,21 +115,16 @@ def _select_batch(
     for tier, limit in TARGET_QUOTA.items():
         chosen = 0
         for row in ordered:
-            identifier = str(row["example_id"])
-            if tiers[identifier] != tier or not _unseen(row, families, targets):
+            if tiers[str(row["example_id"])] != tier:
                 continue
-            selected.append(identifier)
-            _include(row, families, targets)
-            chosen += 1
+            if _add_if_new(row, selected, families, targets):
+                chosen += 1
             if chosen == limit:
                 break
     for row in ordered:
         if len(selected) >= WAVE_PER_BATCH:
             break
-        identifier = str(row["example_id"])
-        if identifier not in selected and _unseen(row, families, targets):
-            selected.append(identifier)
-            _include(row, families, targets)
+        _add_if_new(row, selected, families, targets)
     _require(len(selected) == WAVE_PER_BATCH, "could not fill distinct review wave")
     return selected
 
