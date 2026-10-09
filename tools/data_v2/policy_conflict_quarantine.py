@@ -59,13 +59,9 @@ def _asof_target(row: dict[str, Any]) -> str:
     return str(view["messages"][view["target_index"]]["text"])
 
 
-def policy_tracks(row: dict[str, Any]) -> list[str]:
-    """Candidate-only issue routing; no language, age or intent inference."""
-    label = str(row.get("label", ""))
-    batch = str(row["example_id"])[:3]
-    target = _asof_target(row)
+def _open_policy_tracks(row: dict[str, Any], label: str, target: str) -> set[str]:
     tracks: set[str] = set()
-    if batch == "G21":
+    if str(row["example_id"]).startswith("G21-"):
         tracks.add("language_enforcement")
     if CONTACT.search(target):
         tracks.add("self_published_contact")
@@ -75,6 +71,11 @@ def policy_tracks(row: dict[str, Any]) -> list[str]:
         tracks.add("dangerous_domain_scope")
     if label in {"SEXUAL_CONTENT", "SEXUAL_MINOR"} and "private" in row["channel_profile"]:
         tracks.add("private_sexual_boundary")
+    return tracks
+
+
+def _settled_policy_tracks(label: str) -> set[str]:
+    tracks: set[str] = set()
     if label == "REAL_WORLD_THREAT":
         tracks.add("real_world_threat_evidence")
     if label == "DOXXING":
@@ -85,7 +86,15 @@ def policy_tracks(row: dict[str, Any]) -> list[str]:
         tracks.add("self_harm_safety_flow")
     if label in HARASSMENT:
         tracks.add("harassment_incident_context")
-    return sorted(tracks)
+    return tracks
+
+
+def policy_tracks(row: dict[str, Any]) -> list[str]:
+    """Candidate-only issue routing; no language, age or intent inference."""
+    label = str(row.get("label", ""))
+    return sorted(
+        _open_policy_tracks(row, label, _asof_target(row)) | _settled_policy_tracks(label)
+    )
 
 
 def _owner_index(
