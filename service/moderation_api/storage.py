@@ -866,25 +866,26 @@ def _list_decisions(
             ).fetchone()
             if anchor is None:
                 raise EventNotFound(cursor)
-        cutoff = anchor["finalized_at"] if anchor is not None else None
-        anchor_id = anchor["event_id"] if anchor is not None else None
-        rows = connection.execute(
-            """SELECT e.event_id,e.occurred_at,e.finalized_at,
-                      e.platform,e.channel_profile,e.degraded,
-                      d.ingestion_status,d.message_action,d.semantic_label,
-                      d.review_priority,d.reason_codes_json,
-                      d.local_model_version,d.policy_version,
-                      (a.event_id IS NOT NULL) AS corrected
-               FROM moderation_events e
-               JOIN decision_evidence d ON d.event_id=e.event_id
-               LEFT JOIN accepted_corrections a ON a.event_id=e.event_id
-               WHERE e.status='FINAL'
-                 AND (? IS NULL OR e.finalized_at < ?
-                      OR (e.finalized_at = ? AND e.event_id < ?))
-               ORDER BY e.finalized_at DESC,e.event_id DESC
-               LIMIT ?""",
-            (cutoff, cutoff, cutoff, anchor_id, limit + 1),
-        ).fetchall()
+        # SQL is fixed source text; only cursor values are ever bound.
+        base_query = """SELECT e.event_id,e.occurred_at,e.finalized_at,
+                              e.platform,e.channel_profile,e.degraded,
+                              d.ingestion_status,d.message_action,d.semantic_label,
+                              d.review_priority,d.reason_codes_json,
+                              d.local_model_version,d.policy_version,
+                              (a.event_id IS NOT NULL) AS corrected
+                       FROM moderation_events e
+                       JOIN decision_evidence d ON d.event_id=e.event_id
+                       LEFT JOIN accepted_corrections a ON a.event_id=e.event_id
+                       WHERE e.status='FINAL'"""
+        order_query = " ORDER BY e.finalized_at DESC,e.event_id DESC LIMIT ?"
+        if anchor is None:
+            query = base_query + order_query
+            params = (limit + 1,)
+        else:
+            # An indexed tuple range avoids rescanning preceding pages.
+            query = base_query + " AND (e.finalized_at,e.event_id) < (?, ?)" + order_query
+            params = (anchor["finalized_at"], anchor["event_id"], limit + 1)
+        rows = connection.execute(query, params).fetchall()
     has_more = len(rows) > limit
     records = rows[:limit]
     return DecisionHistoryPage(
