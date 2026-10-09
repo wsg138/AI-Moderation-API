@@ -80,7 +80,10 @@ def _predict(model: Any, text: str) -> tuple[str, float, float] | None:
     label = raw_labels[0]
     if not isinstance(label, str) or not label.startswith(LABEL_PREFIX):
         return None
-    return label[len(LABEL_PREFIX):], top, second
+    code = label[len(LABEL_PREFIX):]
+    if re.fullmatch(r"[a-z]{2,3}", code) is None:
+        return None
+    return code, top, second
 
 
 def _unsafe_for_language_block(words: list[str], text: str) -> bool:

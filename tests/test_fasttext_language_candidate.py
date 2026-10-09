@@ -94,6 +94,14 @@ def test_invalid_detector_scores_must_abstain(
     ) == "unreliably_assessed_or_ambiguous"
 
 
+@pytest.mark.parametrize("label", ["", "es1", "EN", "english", "e", "../es"])
+def test_malformed_language_label_cannot_block(label: str) -> None:
+    assert candidate.candidate_assessment(
+        FakeModel(label, 0.99, 0.001),
+        "Estoy buscando diamantes en la mina ahora mismo",
+    ) == "unreliably_assessed_or_ambiguous"
+
+
 def test_invalid_model_prediction_cannot_trigger_block() -> None:
     assert candidate.candidate_assessment(
         FakeModel("es", float("nan"), 0.01),
