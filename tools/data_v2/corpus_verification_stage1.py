@@ -162,6 +162,19 @@ def sample_wave(
     return chosen
 
 
+def _selected_repeat_counts(
+    selected: list[str], rows: list[dict[str, Any]],
+) -> tuple[int, int]:
+    chosen = set(selected)
+    keys = [_unique_key(row) for row in rows if row["example_id"] in chosen]
+    family_counts = Counter(family for family, _ in keys)
+    target_counts = Counter(target for _, target in keys)
+    return (
+        sum(count - 1 for count in family_counts.values()),
+        sum(count - 1 for count in target_counts.values()),
+    )
+
+
 def stage1(
     rows: list[dict[str, Any]], groups: list[Group], files: dict[str, str],
 ) -> tuple[list[str], dict[str, dict[str, object]], dict[str, object]]:
@@ -175,9 +188,7 @@ def stage1(
     counters = Counter(tiers.values())
     chosen_counts = Counter(tiers[identifier] for identifier in selected)
     fields = Counter(field for names in contrasts.values() for field in names)
-    chosen_keys = [_unique_key(row) for row in rows if row["example_id"] in set(selected)]
-    family_counts = Counter(family for family, _ in chosen_keys)
-    target_counts = Counter(target for _, target in chosen_keys)
+    repeat_families, repeat_targets = _selected_repeat_counts(selected, rows)
     return selected, indexed, {
         "source_commit": SOURCE_COMMIT,
         "all_source_hashes_verified": True,
@@ -189,8 +200,8 @@ def stage1(
         "priority_candidates": dict(sorted(counters.items())),
         "first_blind_review_wave": len(selected),
         "selected_priority_counts": dict(sorted(chosen_counts.items())),
-        "selected_declared_family_repetitions": sum(n - 1 for n in family_counts.values()),
-        "selected_normalized_target_repetitions": sum(n - 1 for n in target_counts.values()),
+        "selected_declared_family_repetitions": repeat_families,
+        "selected_normalized_target_repetitions": repeat_targets,
         "independent_reviews_completed": 0,
         "semantically_verified_records": 0,
         "training_eligible": False,
