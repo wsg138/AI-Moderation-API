@@ -51,8 +51,15 @@ Minecraft/Discord mirrors are one canonical moderation event. Do not double-coun
 
 ### English-primary chat rule (owner update 2026-10-08)
 
-**Message action, only on surfaces where the English-only rule is applicable:**
-BLOCK a message that is **primarily non-English**. ALLOW occasional foreign
+**Message action on every currently moderated surface (owner confirmed
+"everywhere", 2026-10-08):** Minecraft public/global and configured RoseChat
+channels; Minecraft private player messages (/msg, /tell, /r); Discord public,
+general, and gaming channels unless exempt. The established Discord staff-only,
+ticket, and separately exempt channel exclusions still apply: exempt content is
+not classified. Discord bot DMs remain undefined rather than being silently
+added. Minecraft/Discord mirror events count only once.
+
+**BLOCK** a message that is **primarily non-English**. ALLOW occasional foreign
 words, short greetings (such as `hola` and `bonjour`), player names, recognized
 game terms, and messages otherwise primarily in English with minor
 code-switching. A single greeting is not a violation solely because it is
@@ -64,8 +71,8 @@ enforcement is conceptually separate from the semantic detection of hate,
 harassment, threats, doxxing, grooming, and self-harm; those rules still
 apply independently. The policy does not grant any additional strike or
 mute for language alone. The owner has **not decided** language-only
-sanction escalation, nor the final list of applicable chat surfaces. Such
-fields remain open. An English-primary language detector has not been
+sanction escalation; the applicable moderated chat surfaces **are** now
+confirmed as listed above. An English-primary language detector has not been
 validated or enabled for production.
 
 This is a versioned message-action decision, **not training approval** for

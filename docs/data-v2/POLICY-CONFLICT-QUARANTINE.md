@@ -27,7 +27,7 @@ and routing only. No rule here decides final enforcement outcomes.
 
 | Review track | Status | Meaning |
 |---|---|---|
-| language_enforcement | **Owner message-action decision recorded; detector/configuration unverified** | BLOCK primarily non-English chat while ALLOWING occasional foreign words/greetings, names, and game terms. Applies only where English-only is configured. G21 remains a **source-batch proxy**, not a language detector. Language-only strike/mute/escalation and configured channels remain unresolved. |
+| language_enforcement | **Owner message action and scope confirmed; detector still unvalidated** | BLOCK primarily non-English chat across all currently moderated Minecraft public/private and Discord public/gaming channels; ALLOW occasional foreign words/greetings, names, and game terms. Existing ticket/staff exemptions remain. G21 remains a **source-batch proxy**, not a language detector. Language-only strike/mute/escalation remain unresolved. |
 | self_published_contact | **New scope decision needed** | First-person contact disclosure must not silently inherit third-party doxxing strike/mute rules. Lexical hints are not verification. |
 | uncertain_minor_context | **Existing policy gap** | Policy v1 protects reliably known minors; uncertain minor age and secrecy/contact patterns need distinct policy adjudication. |
 | dangerous_domain_scope | **Existing policy gap** | Actionable real-world explosives are covered; domains beyond explosives require explicit handling. |

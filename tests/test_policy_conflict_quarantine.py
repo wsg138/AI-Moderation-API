@@ -112,6 +112,21 @@ def test_versioned_english_rule_preserves_exceptions_and_no_sanction_grant() -> 
     assert choices["unreliably_assessed_or_ambiguous"] == "UNDECIDED"
     assert rule["unapproved_fields"]["strike"] == "not_owner_decided"
     assert rule["unapproved_fields"]["mute"] == "not_owner_decided"
+    coverage = rule["applicable_channel_config"]
+    assert coverage["status"] == "owner_approved"
+    assert coverage["rule_application"] == "all_moderated_surfaces_including_private_messages"
+    assert set(coverage["includes"]) == {
+        "minecraft_public", "minecraft_private",
+        "minecraft_other_configured_rosechat_channels",
+        "discord_general", "discord_gaming",
+    }
+    assert set(coverage["excludes_existing_policy_exemptions"]) == {
+        "discord_ticket", "discord_staff_only",
+        "discord_other_explicitly_exempt",
+    }
+    assert "discord_bot_direct_messages" in coverage["undefined_not_authorized"]
+    assert not set(coverage["includes"]) & set(coverage["excludes_existing_policy_exemptions"])
+    assert coverage["mirror_handling"] == "one_canonical_event_do_not_double_count"
     for example in rule["illustrative_exemplars_not_training_gold"]:
         assert choices[example["assessment"]] == example["action"]
 

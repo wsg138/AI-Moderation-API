@@ -4,11 +4,12 @@ These are policy anchors already established before the formal interview. They a
 
 ## English-only chat — owner message-action decision (2026-10-08)
 
-- **BLOCK** a message when its content is **primarily non-English**, in chat where the English-only rule applies.
+- **BLOCK** a message when its content is **primarily non-English**, across **all currently moderated chat surfaces**: Minecraft public/global and configured RoseChat channels, Minecraft private player messages (/msg, /tell, /r), and Discord public/general and gaming channels. Owner confirmed "everywhere" on 2026-10-08.
+- Existing Discord ticket, staff-only and other explicitly exempt channels remain exempt; the policy does not silently add Discord bot DMs, whose moderation remains undefined.
 - **ALLOW** occasional foreign-language words or short greetings (for example `hola` or `bonjour`), player names, recognized game terms, or an otherwise English message containing a small foreign-language phrase.
 - Do not interpret the rule as "block any non-English word." Mixed-language or short content without reliable evidence of which language predominates must not be automatically punished by a lexical guess.
 - This is a **message-visibility rule**, not a finding of hate speech, harassment, doxxing, or dangerous behavior. Independently prohibited content still follows its own policy.
-- **Not yet owner-decided:** exact channel/surface configuration and language-only strike/mute/escalation rules. A previous no-strikes/no-mutes suggestion was *not* selected in the owner's answer. No strike or mute is authorized by this message-action decision alone.
+- **Owner-decided channel coverage:** all currently moderated surfaces noted above. **Not yet owner-decided:** language-only strike/mute/escalation rules. A previous no-strikes/no-mutes suggestion was *not* selected in the owner's answer. No strike or mute is authorized by this message-action decision alone.
 - **Implementation guard:** language identification is not validated; G21 membership or non-ASCII characters alone are not evidence a message violates this rule. No production enforcement or bulk relabeling until detector validation and rollout authorization.
 
 ## Allow / generally allow
