@@ -25,6 +25,8 @@ from .models import (
     CorrectionResponse,
     CorrectionStatus,
     CorrectionVote,
+    DecisionHistoryItem,
+    DecisionHistoryPage,
     EventDetails,
     IncidentKind,
     IncidentSignal,
@@ -138,6 +140,11 @@ class ModerationStore:
 
     async def list_review_items(self, limit: int) -> list[ReviewItem]:
         return await asyncio.to_thread(_list_review_items, self._path, limit)
+
+    async def list_decisions(
+        self, limit: int, cursor: str | None = None,
+    ) -> DecisionHistoryPage:
+        return await asyncio.to_thread(_list_decisions, self._path, limit, cursor)
 
     async def list_support_context(
         self,
@@ -840,6 +847,69 @@ def _list_review_items(path: Path, limit: int) -> list[ReviewItem]:
             (limit,),
         ).fetchall()
     return [_review_item(row) for row in rows]
+
+
+
+def _list_decisions(
+    path: Path, limit: int, cursor: str | None,
+) -> DecisionHistoryPage:
+    """Paginate every finalized, non-exempt event, including ordinary ALLOW."""
+    if not 1 <= limit <= 250:
+        raise ValueError("invalid page size")
+    with _connect(path) as connection:
+        anchor = None
+        if cursor is not None:
+            anchor = connection.execute(
+                """SELECT finalized_at,event_id FROM moderation_events
+                   WHERE event_id=? AND status='FINAL'""",
+                (cursor,),
+            ).fetchone()
+            if anchor is None:
+                raise EventNotFound(cursor)
+        cutoff = anchor["finalized_at"] if anchor is not None else None
+        anchor_id = anchor["event_id"] if anchor is not None else None
+        rows = connection.execute(
+            """SELECT e.event_id,e.occurred_at,e.finalized_at,
+                      e.platform,e.channel_profile,e.degraded,
+                      d.ingestion_status,d.message_action,d.semantic_label,
+                      d.review_priority,d.reason_codes_json,
+                      d.local_model_version,d.policy_version,
+                      (a.event_id IS NOT NULL) AS corrected
+               FROM moderation_events e
+               JOIN decision_evidence d ON d.event_id=e.event_id
+               LEFT JOIN accepted_corrections a ON a.event_id=e.event_id
+               WHERE e.status='FINAL'
+                 AND (? IS NULL OR e.finalized_at < ?
+                      OR (e.finalized_at = ? AND e.event_id < ?))
+               ORDER BY e.finalized_at DESC,e.event_id DESC
+               LIMIT ?""",
+            (cutoff, cutoff, cutoff, anchor_id, limit + 1),
+        ).fetchall()
+    has_more = len(rows) > limit
+    records = rows[:limit]
+    return DecisionHistoryPage(
+        items=[_decision_history_item(row) for row in records],
+        next_cursor=str(records[-1]["event_id"]) if has_more else None,
+    )
+
+
+def _decision_history_item(row: sqlite3.Row) -> DecisionHistoryItem:
+    return DecisionHistoryItem(
+        event_id=str(row["event_id"]),
+        occurred_at=datetime.fromisoformat(row["occurred_at"]),
+        finalized_at=datetime.fromisoformat(row["finalized_at"]),
+        platform=Platform(row["platform"]),
+        channel_profile=_profile_from_row(row),
+        ingestion_status=IngestionStatus(row["ingestion_status"]),
+        message_action=MessageAction(row["message_action"]),
+        semantic_label=Label(row["semantic_label"]),
+        review_priority=ReviewPriority(row["review_priority"]),
+        reason_codes=json.loads(row["reason_codes_json"]),
+        local_model_version=str(row["local_model_version"]),
+        policy_version=str(row["policy_version"]),
+        degraded=bool(row["degraded"]),
+        corrected=bool(row["corrected"]),
+    )
 
 
 def _create_correction(
