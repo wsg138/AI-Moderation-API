@@ -87,6 +87,18 @@ def _unsafe_for_language_block(words: list[str], text: str) -> bool:
     return len(words) < 3 or "/" in text or "@" in text or "§" in text
 
 
+def _assessment_from_prediction(
+    prediction: tuple[str, float, float] | None, word_count: int,
+) -> str:
+    if prediction is None or prediction[1] < CANDIDATE_SCORE:
+        return "unreliably_assessed_or_ambiguous"
+    if prediction[0] == "en":
+        return "primarily_english"
+    if word_count < MIN_BLOCK_WORDS:
+        return "unreliably_assessed_or_ambiguous"
+    return "primarily_non_english"
+
+
 def candidate_assessment(model: Any, text: str) -> str:
     """Deliberately conservative, *unvalidated* candidate, never live blocking."""
     clean = _prepared_text(text)
@@ -97,14 +109,7 @@ def candidate_assessment(model: Any, text: str) -> str:
     words = [word for word in re.findall(r"\b\w+\b", clean) if word.isalpha()]
     if _unsafe_for_language_block(words, clean):
         return "unreliably_assessed_or_ambiguous"
-    prediction = _predict(model, clean)
-    if prediction is None or prediction[1] < CANDIDATE_SCORE:
-        return "unreliably_assessed_or_ambiguous"
-    if prediction[0] == "en":
-        return "primarily_english"
-    if len(words) < MIN_BLOCK_WORDS:
-        return "unreliably_assessed_or_ambiguous"
-    return "primarily_non_english"
+    return _assessment_from_prediction(_predict(model, clean), len(words))
 
 
 def _fixture(row: object) -> dict[str, str]:
