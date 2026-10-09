@@ -90,9 +90,8 @@ class TargetLexicalProbeTests(unittest.TestCase):
     def test_invalid_configuration_rejected(self) -> None:
         invalid = ([], ["word", "word"], [" "], ["x"], ["word "])
         for words in invalid:
-            with self.subTest(words=words):
-                with self.assertRaises(ValueError):
-                    propose_target_visibility("minecraft_public", "word", words)
+            with self.subTest(words=words), self.assertRaises(ValueError):
+                propose_target_visibility("minecraft_public", "word", words)
         with self.assertRaises(ValueError):
             propose_target_visibility("minecraft_public", "word", "word")
         with self.assertRaises(ValueError):
