@@ -56,7 +56,7 @@ def test_player_notice_is_category_based_and_replay_safe(settings, rose_headers)
 
     assert allow["player_notice"] is None
     assert block["player_notice"] is not None
-    assert "possible" in block["player_notice"]
+    assert "may contain" in block["player_notice"]
     assert "harassment" in block["player_notice"]
     assert replay["player_notice"] == block["player_notice"]
     assert replay["idempotent_replay"] is True
