@@ -124,7 +124,7 @@ def test_full_source_pinned_9000_candidate_stage1(capsys: Any) -> None:
         rows, find_groups(rows), {p.name[:3]: str(p) for p in files},
     )
     assert report["records_audited"] == 9000
-    assert report["all_source_hashes_verified"] is True
+    assert "all_source_hashes_verified" not in report  # untrusted caller boundary
     assert report["source_batches"] == 18
     assert report["first_blind_review_wave"] == 180
     assert report["independent_reviews_completed"] == 0
@@ -133,6 +133,18 @@ def test_full_source_pinned_9000_candidate_stage1(capsys: Any) -> None:
     assert len(selected) == len(set(selected)) == 180
     assert set(Counter(i[:3] for i in selected).values()) == {10}
     print("STAGE1_AGGREGATE=" + json.dumps(report, sort_keys=True))
+
+
+def test_cli_attests_only_after_pinned_source_ingestion(capsys: Any) -> None:
+    if not batch_files(ROOT):
+        pytest.skip("G10-G27 are draft-only, absent on main")
+    from tools.data_v2.corpus_verification_stage1 import main
+
+    assert main([]) == 0
+    report = json.loads(capsys.readouterr().out.strip())
+    assert report["all_source_hashes_verified"] is True
+    assert report["records_audited"] == 9000
+    assert report["training_eligible"] is False
 
 
 def test_stage1_code_stays_within_complexity_budget() -> None:
