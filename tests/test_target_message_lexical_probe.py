@@ -1,5 +1,6 @@
 """Synthetic policy-contract probes; not real classifier accuracy."""
 import unittest
+from itertools import repeat
 
 from tools.data_v2.target_message_lexical_probe import propose_target_visibility
 
@@ -94,6 +95,8 @@ class TargetLexicalProbeTests(unittest.TestCase):
                 propose_target_visibility("minecraft_public", "word", words)
         with self.assertRaises(ValueError):
             propose_target_visibility("minecraft_public", "word", "word")
+        with self.assertRaises(ValueError):
+            propose_target_visibility("minecraft_public", "word", repeat("word"))
         with self.assertRaises(ValueError):
             propose_target_visibility("minecraft_public", "x" * 9000, ["word"])
 
