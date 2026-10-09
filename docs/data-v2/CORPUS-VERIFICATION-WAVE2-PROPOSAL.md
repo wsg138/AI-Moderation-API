@@ -34,8 +34,13 @@ This experimental implementation:
 4. Computes feasible tier allocations using **distinct normalized targets**
    remaining at each batch, rather than raw row counts; redistributes missing
    quota slots proportionally to the other tiers.
-5. Picks scarcer-family tiers before more common tiers. Repeated families are
-   recorded, *not* magically treated as independent source scenarios.
+5. First attempts the existing diversity-preferring greedy selection. When
+   shared target messages make that selection miss a priority quota, a
+   deterministic augmenting-path matching step can reassign shared targets
+   to preserve a **feasible** tier balance. A focused regression reproduces
+   the old 5/2/3 mistake and verifies the corrected 4/3/3 allocation.
+   Repeated families are recorded, *not* magically treated as independent
+   source scenarios. The pinned proposal's selected IDs are unchanged.
 6. Outputs aggregate diagnostics and an ordered-selection checksum **only**.
    It creates no review packets, crosswalk, train/dev/test splits, or labels.
 
