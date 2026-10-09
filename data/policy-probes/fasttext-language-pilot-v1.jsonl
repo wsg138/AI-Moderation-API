@@ -1,0 +1,34 @@
+{"probe_id":"pilot-english-chat","channel_profile":"minecraft_public","text":"hey are we doing koth tonight","illustrative_expected_action":"ALLOW"}
+{"probe_id":"pilot-english-command","channel_profile":"minecraft_public","text":"run /warp spawn and then trade","illustrative_expected_action":"ALLOW"}
+{"probe_id":"pilot-english-pvp","channel_profile":"minecraft_private","text":"can we fight for netherite armor","illustrative_expected_action":"ALLOW"}
+{"probe_id":"pilot-english-discord","channel_profile":"discord_general","text":"Does anyone know when the event starts","illustrative_expected_action":"ALLOW"}
+{"probe_id":"pilot-english-game-terms","channel_profile":"discord_gaming","text":"bring your elytra and enchanted sword","illustrative_expected_action":"ALLOW"}
+{"probe_id":"pilot-english-diamonds","channel_profile":"minecraft_public","text":"I found diamonds in the cave","illustrative_expected_action":"ALLOW"}
+{"probe_id":"pilot-english-username","channel_profile":"minecraft_public","text":"My username is SeñorLobo123","illustrative_expected_action":"ALLOW"}
+{"probe_id":"pilot-english-coordinates","channel_profile":"minecraft_public","text":"my base is at 100 64 230","illustrative_expected_action":"ALLOW"}
+{"probe_id":"pilot-english-unicode","channel_profile":"minecraft_public","text":"I got a café near the spawn","illustrative_expected_action":"ALLOW"}
+{"probe_id":"pilot-english-punctuation","channel_profile":"discord_general","text":"WHAT ARE WE DOING TONIGHT!!!","illustrative_expected_action":"ALLOW"}
+{"probe_id":"pilot-english-emoji","channel_profile":"minecraft_public","text":"nice job 👏 you won that fight","illustrative_expected_action":"ALLOW"}
+{"probe_id":"pilot-short-hello","channel_profile":"minecraft_public","text":"hello","illustrative_expected_action":"ALLOW"}
+{"probe_id":"pilot-short-gg","channel_profile":"minecraft_public","text":"gg wp","illustrative_expected_action":"ALLOW"}
+{"probe_id":"pilot-short-hola","channel_profile":"minecraft_public","text":"hola","illustrative_expected_action":"ALLOW"}
+{"probe_id":"pilot-short-bonjour","channel_profile":"minecraft_private","text":"bonjour","illustrative_expected_action":"ALLOW"}
+{"probe_id":"pilot-short-gracias","channel_profile":"discord_gaming","text":"gracias","illustrative_expected_action":"ALLOW"}
+{"probe_id":"pilot-mixed-english","channel_profile":"minecraft_public","text":"gracias for helping with my Minecraft base","illustrative_expected_action":"ALLOW"}
+{"probe_id":"pilot-mixed-english-2","channel_profile":"discord_gaming","text":"bonjour everyone let's start the game","illustrative_expected_action":"ALLOW"}
+{"probe_id":"pilot-english-slang","channel_profile":"minecraft_private","text":"bro you got comboed so hard lmao","illustrative_expected_action":"ALLOW"}
+{"probe_id":"pilot-english-mention","channel_profile":"discord_general","text":"@friend can you help with redstone today","illustrative_expected_action":"ALLOW"}
+{"probe_id":"pilot-spanish-long","channel_profile":"minecraft_public","text":"Estoy buscando diamantes en la mina ahora mismo","illustrative_expected_action":"BLOCK"}
+{"probe_id":"pilot-spanish-pm","channel_profile":"minecraft_private","text":"Necesitamos construir una casa cerca del río","illustrative_expected_action":"BLOCK"}
+{"probe_id":"pilot-spanish-discord","channel_profile":"discord_general","text":"Hola amigos vamos a jugar esta noche juntos","illustrative_expected_action":"BLOCK"}
+{"probe_id":"pilot-french-chat","channel_profile":"discord_gaming","text":"Nous allons construire une maison dans cette vallée","illustrative_expected_action":"BLOCK"}
+{"probe_id":"pilot-french-minecraft","channel_profile":"minecraft_public","text":"Je voudrais échanger mes objets avec vous demain","illustrative_expected_action":"BLOCK"}
+{"probe_id":"pilot-german-chat","channel_profile":"minecraft_public","text":"Wir bauen heute eine große Burg zusammen","illustrative_expected_action":"BLOCK"}
+{"probe_id":"pilot-portuguese-pm","channel_profile":"minecraft_private","text":"Vamos construir uma casa bonita perto da floresta","illustrative_expected_action":"BLOCK"}
+{"probe_id":"pilot-italian-discord","channel_profile":"discord_general","text":"Sto cercando qualcuno con cui giocare stasera","illustrative_expected_action":"BLOCK"}
+{"probe_id":"pilot-russian-message","channel_profile":"discord_gaming","text":"Мы собираемся строить большой дом вместе сегодня","illustrative_expected_action":"BLOCK"}
+{"probe_id":"pilot-chinese-message","channel_profile":"minecraft_public","text":"我们今天晚上一起去山洞里面寻找钻石","illustrative_expected_action":"BLOCK"}
+{"probe_id":"pilot-spanish-with-minecraft","channel_profile":"minecraft_public","text":"Quiero conseguir netherite para mi armadura antes de luchar","illustrative_expected_action":"BLOCK"}
+{"probe_id":"pilot-exempt-ticket","channel_profile":"discord_ticket_exempt","text":"Estamos buscando diamantes en la mina ahora","illustrative_expected_action":"ALLOW"}
+{"probe_id":"pilot-exempt-staff","channel_profile":"discord_staff_exempt","text":"Nous avons besoin de parler de ce problème","illustrative_expected_action":"ALLOW"}
+{"probe_id":"pilot-exempt-configured","channel_profile":"discord_configured_exempt","text":"Nous allons construire une maison demain","illustrative_expected_action":"ALLOW"}
