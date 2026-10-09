@@ -92,12 +92,12 @@ def test_private_packet_has_no_candidate_answers(tmp_path: Path) -> None:
     blind = json.loads(packet_path.read_text(encoding="utf-8"))
     mapping = json.loads(mapping_path.read_text(encoding="utf-8"))
     assert isinstance(blind, dict) and isinstance(mapping, dict)
-    assert "example_id" not in blind[0]
-    assert "label" not in blind[0] and "action" not in blind[0]
-    assert "reason_codes" not in blind[0] and "strike" not in blind[0]
-    assert "source_sha256" not in blind[0]
-    assert mapping[0]["training_eligible"] is False
-    assert mapping[0]["packet_id"] == blind[0]["packet_id"]
+    assert "example_id" not in blind
+    assert "label" not in blind and "action" not in blind
+    assert "reason_codes" not in blind and "strike" not in blind
+    assert "source_sha256" not in blind
+    assert mapping["training_eligible"] is False
+    assert mapping["packet_id"] == blind["packet_id"]
 
 
 def test_review_packet_paths_cannot_point_inside_checkout() -> None:
