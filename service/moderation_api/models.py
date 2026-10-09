@@ -5,7 +5,7 @@ from datetime import UTC, datetime
 from enum import StrEnum
 from typing import Annotated, Any
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, computed_field, field_validator, model_validator
 
 
 class Platform(StrEnum):
@@ -230,6 +230,19 @@ class ModerationResponse(ApiModel):
     fallback_state: str | None = None
     idempotent_replay: bool = False
 
+    @computed_field
+    @property
+    def player_notice(self) -> str | None:
+        """Safe presentation hint; clients send only on a confirmed BLOCK."""
+        from .player_notice import player_block_notice
+
+        return player_block_notice(
+            self.message_action.value,
+            self.semantic_label.value,
+            self.ingestion_status.value,
+            self.degraded,
+        )
+
 
 class CorrectionDecision(ApiModel):
     semantic_label: Label
@@ -321,6 +334,32 @@ class ReviewItem(ApiModel):
 
 class ReviewQueueResponse(ApiModel):
     items: list[ReviewItem]
+
+
+class DecisionHistoryItem(ApiModel):
+    """Privacy-minimized listing; original AI outcome remains unmodified."""
+
+    event_id: str
+    occurred_at: datetime
+    finalized_at: datetime
+    platform: Platform
+    channel_profile: ChannelProfile
+    ingestion_status: IngestionStatus
+    message_action: MessageAction
+    semantic_label: Label
+    review_priority: ReviewPriority
+    reason_codes: list[str]
+    local_model_version: str
+    policy_version: str
+    degraded: bool
+    corrected: bool
+
+
+class DecisionHistoryPage(ApiModel):
+    items: list[DecisionHistoryItem]
+    next_cursor: str | None = None
+
+
 
 
 class SupportContextDecision(ApiModel):
