@@ -72,5 +72,8 @@ jobs:
         run: python -m tools.dataset_integration --check
       - name: Tests
         run: pytest
+      - name: Stage 1 complete 9000-case audit (experimental draft only)
+        if: github.event_name == 'pull_request' && github.head_ref == 'review/data-v2-16-corpus-verification-stage1-20261008'
+        run: python -m tools.data_v2.corpus_verification_stage1
       - name: Build wheel
         run: python -m pip wheel . --no-deps --wheel-dir dist
