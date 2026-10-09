@@ -2,3 +2,4 @@
 # Preserve exact LF bytes even when a contributor has core.autocrlf=true.
 data/synthetic/G1[0-9]-*.jsonl text eol=lf
 data/synthetic/G2[0-7]-*.jsonl text eol=lf
+data/development/*.jsonl text eol=lf
