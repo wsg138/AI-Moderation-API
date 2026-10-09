@@ -8,8 +8,8 @@ from __future__ import annotations
 
 import re
 import unicodedata
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Iterable
 
 MODERATED = frozenset({
     "minecraft_public", "minecraft_private", "discord_general", "discord_gaming",
@@ -34,17 +34,21 @@ def _normalize(text: str) -> str:
     return unicodedata.normalize("NFC", text).casefold()
 
 
+def _validate_term(raw: object) -> str:
+    if not isinstance(raw, str):
+        raise ValueError("invalid term type")
+    if not 2 <= len(raw) <= 64 or raw.strip() != raw:
+        raise ValueError("invalid literal term length")
+    return _normalize(raw)
+
+
 def _checked_terms(values: Iterable[str]) -> tuple[str, ...]:
     if isinstance(values, str):
         raise ValueError("terms must be an iterable of literal strings")
     result = tuple(values)
     if not 1 <= len(result) <= MAX_TERMS:
         raise ValueError("unbounded or empty term list")
-    if any(not isinstance(term, str) for term in result):
-        raise ValueError("invalid term type")
-    if any(not 2 <= len(term) <= 64 or not term.strip() == term for term in result):
-        raise ValueError("invalid literal term length")
-    normalized = tuple(_normalize(term) for term in result)
+    normalized = tuple(_validate_term(term) for term in result)
     if len(normalized) != len(set(normalized)):
         raise ValueError("duplicate normalized term")
     return normalized
