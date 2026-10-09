@@ -8,7 +8,6 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
-
 MODERATED = frozenset({
     "minecraft_public", "minecraft_private", "discord_general", "discord_gaming"
 })
