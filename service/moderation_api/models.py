@@ -230,7 +230,7 @@ class ModerationResponse(ApiModel):
     fallback_state: str | None = None
     idempotent_replay: bool = False
 
-    @computed_field
+    @computed_field  # type: ignore[prop-decorator] - Pydantic v2 computed property
     @property
     def player_notice(self) -> str | None:
         """Safe presentation hint; clients send only on a confirmed BLOCK."""
