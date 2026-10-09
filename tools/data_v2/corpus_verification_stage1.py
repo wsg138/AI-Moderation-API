@@ -191,7 +191,6 @@ def stage1(
     repeat_families, repeat_targets = _selected_repeat_counts(selected, rows)
     return selected, indexed, {
         "source_commit": SOURCE_COMMIT,
-        "all_source_hashes_verified": True,
         "records_audited": len(rows),
         "source_batches": len(files),
         "duplicate_and_family_audit_groups": len(groups),
@@ -250,6 +249,9 @@ def main(argv: list[str] | None = None) -> int:
         selected, queue, summary = stage1(
             rows, find_groups(rows), {p.name[:3]: str(p) for p in files},
         )
+        # The CLI loaded all rows from source-pinned files. The generic stage1()
+        # helper cannot truthfully attest this for arbitrary caller-provided rows.
+        summary["all_source_hashes_verified"] = True
         _require((args.packet_out is None) == (args.crosswalk_out is None),
                  "review packets and coordinator map must both be requested")
         if args.packet_out is not None and args.crosswalk_out is not None:
