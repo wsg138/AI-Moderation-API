@@ -168,6 +168,10 @@ def make_reconciliation(
     _require(set(source) == set(by_id), "triage source IDs do not match")
     owner = _owner_index(owner_actions, set(by_id))
     output = [_row(by_id[i], source[i], owner.get(i)) for i in sorted(by_id)]
+    return output, _summary(output, len(owner))
+
+
+def _summary(output: list[dict[str, object]], reviewed: int) -> dict[str, object]:
     priority = Counter(str(r["priority"]) for r in output)
     tracks = Counter(t for r in output for t in r["policy_review_tracks"])
     compared = sum(
@@ -175,10 +179,10 @@ def make_reconciliation(
         and r["owner_action_if_reviewed"] != r["candidate_action_for_comparison_only"]
         for r in output
     )
-    return output, {
+    return {
         "source_scope": "pinned_G10_G27_public_synthetic",
         "records": len(output),
-        "owner_action_only_cases": len(owner),
+        "owner_action_only_cases": reviewed,
         "owner_candidate_disagreements": compared,
         "priority_counts": dict(sorted(priority.items())),
         "policy_track_counts": dict(sorted(tracks.items())),
