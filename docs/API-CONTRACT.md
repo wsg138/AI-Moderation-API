@@ -295,6 +295,14 @@ Migration v2:
 - backfills existing `PENDING` rows with recoverable ownership state without deleting or duplicating them;
 - leaves finalized moderation decisions unchanged.
 
+Migration v4:
+
+- adds a partial descending `(finalized_at, event_id)` index over FINAL
+  moderation events for stable `GET /v1/decisions` cursor paging as the
+  append-only moderation journal grows;
+- upgrades an existing v3 SQLite database transactionally without deleting
+  previous event data; the database health schema version is now 4.
+
 Migration runs in `BEGIN IMMEDIATE` and commits only after all additions/backfills/indexes succeed. Failure rolls the transaction back and readiness remains false. A database with a schema version newer than the running binary is rejected rather than modified.
 
 Rollback planning is binary-first: stop the new binary and restore a pre-migration database backup if an operator needs to return to the old W01 runtime. The migration is additive, but the old binary is not expected to understand Policy-v1 writes; production deployment remains separately gated.
