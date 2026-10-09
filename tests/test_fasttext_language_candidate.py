@@ -79,6 +79,21 @@ def test_large_or_malformed_input_cannot_block() -> None:
     )
 
 
+@pytest.mark.parametrize(("label", "first", "second"), [
+    ("es", -1.0, 0.001),
+    ("es", 1.5, 0.001),
+    ("es", 0.96, 0.99),
+    ("es", float("inf"), 0.01),
+])
+def test_invalid_detector_scores_must_abstain(
+    label: str, first: float, second: float,
+) -> None:
+    assert candidate.candidate_assessment(
+        FakeModel(label, first, second),
+        "Estoy buscando diamantes en la mina ahora mismo",
+    ) == "unreliably_assessed_or_ambiguous"
+
+
 def test_invalid_model_prediction_cannot_trigger_block() -> None:
     assert candidate.candidate_assessment(
         FakeModel("es", float("nan"), 0.01),
