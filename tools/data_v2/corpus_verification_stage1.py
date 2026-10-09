@@ -95,21 +95,38 @@ def _include(row: dict[str, Any], families: set[str], targets: set[str]) -> None
 
 def _add_if_new(
     row: dict[str, Any], selected: list[str],
-    families: set[str], targets: set[str],
+    families: set[str], targets: set[str], mode: str = "both",
 ) -> bool:
     identifier = str(row["example_id"])
-    if identifier in selected or not _unseen(row, families, targets):
+    family, target = _unique_key(row)
+    if identifier in selected:
+        return False
+    if mode == "both" and not _unseen(row, families, targets):
+        return False
+    if mode == "family" and family in families:
         return False
     selected.append(identifier)
-    _include(row, families, targets)
+    families.add(family)
+    targets.add(target)
     return True
+
+
+def _fill_batch(
+    ordered: list[dict[str, Any]], selected: list[str],
+    families: set[str], targets: set[str],
+) -> None:
+    for mode in ("both", "family", "any"):
+        for row in ordered:
+            if len(selected) >= WAVE_PER_BATCH:
+                return
+            _add_if_new(row, selected, families, targets, mode)
 
 
 def _select_batch(
     rows: list[dict[str, Any]], tiers: dict[str, str],
     families: set[str], targets: set[str],
 ) -> list[str]:
-    """Fixed priority quotas; fill scarce strata without family repetition."""
+    """Prefer distinct families/targets, but never leave a batch unrepresented."""
     ordered = sorted(rows, key=lambda row: _digest_id(str(row["example_id"])))
     selected: list[str] = []
     for tier, limit in TARGET_QUOTA.items():
@@ -121,11 +138,8 @@ def _select_batch(
                 chosen += 1
             if chosen == limit:
                 break
-    for row in ordered:
-        if len(selected) >= WAVE_PER_BATCH:
-            break
-        _add_if_new(row, selected, families, targets)
-    _require(len(selected) == WAVE_PER_BATCH, "could not fill distinct review wave")
+    _fill_batch(ordered, selected, families, targets)
+    _require(len(selected) == WAVE_PER_BATCH, "not enough source cases for review wave")
     return selected
 
 
@@ -161,6 +175,9 @@ def stage1(
     counters = Counter(tiers.values())
     chosen_counts = Counter(tiers[identifier] for identifier in selected)
     fields = Counter(field for names in contrasts.values() for field in names)
+    chosen_keys = [_unique_key(row) for row in rows if row["example_id"] in set(selected)]
+    family_counts = Counter(family for family, _ in chosen_keys)
+    target_counts = Counter(target for _, target in chosen_keys)
     return selected, indexed, {
         "source_commit": SOURCE_COMMIT,
         "all_source_hashes_verified": True,
@@ -172,6 +189,8 @@ def stage1(
         "priority_candidates": dict(sorted(counters.items())),
         "first_blind_review_wave": len(selected),
         "selected_priority_counts": dict(sorted(chosen_counts.items())),
+        "selected_declared_family_repetitions": sum(n - 1 for n in family_counts.values()),
+        "selected_normalized_target_repetitions": sum(n - 1 for n in target_counts.values()),
         "independent_reviews_completed": 0,
         "semantically_verified_records": 0,
         "training_eligible": False,
