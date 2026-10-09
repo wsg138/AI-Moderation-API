@@ -61,11 +61,11 @@ slur recall.
 
 ## Intended usage and quality checks
 
-Regenerate only for local comparison, never overwriting a prior candidate
-file, with:
+Inspect the committed candidates and verify their generated contents
+without overwriting the checked-in dataset, with:
 
 ```sh
-python -m tools.data_v2.private_banter_candidates --write
+python -m tools.data_v2.private_banter_candidates
 python -m unittest discover -s tests -p test_private_banter_candidates.py
 ```
 
