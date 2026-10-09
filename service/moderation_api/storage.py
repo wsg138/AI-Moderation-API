@@ -878,6 +878,7 @@ def _list_decisions(
                        LEFT JOIN accepted_corrections a ON a.event_id=e.event_id
                        WHERE e.status='FINAL'"""
         order_query = " ORDER BY e.finalized_at DESC,e.event_id DESC LIMIT ?"
+        params: tuple[object, ...]
         if anchor is None:
             query = base_query + order_query
             params = (limit + 1,)
