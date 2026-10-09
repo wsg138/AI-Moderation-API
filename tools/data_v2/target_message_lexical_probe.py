@@ -10,6 +10,7 @@ import re
 import unicodedata
 from collections.abc import Iterable
 from dataclasses import dataclass
+from itertools import islice
 
 MODERATED = frozenset({
     "minecraft_public", "minecraft_private", "discord_general", "discord_gaming",
@@ -45,7 +46,7 @@ def _validate_term(raw: object) -> str:
 def _checked_terms(values: Iterable[str]) -> tuple[str, ...]:
     if isinstance(values, str):
         raise ValueError("terms must be an iterable of literal strings")
-    result = tuple(values)
+    result = tuple(islice(values, MAX_TERMS + 1))
     if not 1 <= len(result) <= MAX_TERMS:
         raise ValueError("unbounded or empty term list")
     normalized = tuple(_validate_term(term) for term in result)
