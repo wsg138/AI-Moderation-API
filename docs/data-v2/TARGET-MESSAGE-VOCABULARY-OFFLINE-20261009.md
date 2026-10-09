@@ -73,3 +73,32 @@ python -m ruff check tools/data_v2/target_message_lexical_probe.py tests/test_ta
 Tests cover target only vs context-only, direct vs quoted expression,
 false substring matching, escaped punctuation, casefolding, scoped
 exemptions, no automatic punishment and configuration limits.
+
+## Owner-calibrated natural PM smoke (developer only)
+
+The owner additionally answered 12 **blinded fictional PM** cases, 9/12
+matching the old proposed actions. Three first-continuation candidate
+REVIEW decisions were corrected to owner **ALLOW**, with potential future
+blocking/escalation only if unwanted targeting continued.
+
+To retain the initial development evidence, the older v1.2 prompt was
+not overwritten. New version
+`policy/owner-offline-calibration-v1.3-owner12.txt` updates the first-stop
+interpretation to the owner-confirmed, less aggressive boundary. Both models
+were run at fixed temperature on 12 *new fictional, candidate-labeled* PM
+cases (distinct from the owner's 12 reviewed cases):
+
+| Local development-only match | Qwen3 8B | Qwen3 14B |
+| --- | ---: | ---: |
+| Candidate actions matched | 8/12 | 10/12 |
+
+8B missed three repeatedly unwanted message-block examples and a
+no-contact REVIEW; 14B BLOCKed one first mild continuation and ALLOWed
+one proposed no-contact REVIEW. These results are diagnostic, not
+independent owner gold or a before/after improvement estimate.
+
+The current target-only literal contract also passed a **private 18-case
+structural smoke** using lexical terms extracted from those same invented
+examples: 12/12 expected BLOCK proposals and 6/6 nonmatching ABSTAIN
+outcomes. **This is a tautological contract consistency check, not a
+claim of 18/18 independent classifier accuracy or real-word coverage.**
