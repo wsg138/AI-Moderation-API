@@ -5,8 +5,8 @@ utility cannot issue moderation sanctions or operate a deployed service.
 """
 from __future__ import annotations
 
-import re
 from dataclasses import dataclass
+import re
 
 
 MODERATED = frozenset({
