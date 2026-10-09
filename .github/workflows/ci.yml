@@ -74,3 +74,53 @@ jobs:
         run: pytest
       - name: Build wheel
         run: python -m pip wheel . --no-deps --wheel-dir dist
+
+  isolated-fasttext-model-pilot:
+    # Runs only for this experimental draft PR, never on main, releases or push.
+    if: github.event_name == 'pull_request' && github.head_ref == 'review/data-v2-14-fasttext-real-ci-20261008'
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install optional fastText package to ephemeral runner
+        run: python -m pip install --disable-pip-version-check --only-binary=:all: "fasttext-community==0.11.8"
+      - name: Fetch and verify public model (never commit weights)
+        shell: bash
+        run: |
+          python - <<'PY'
+          import hashlib
+          import os
+          from pathlib import Path
+          from urllib.request import Request, urlopen
+
+          sources = [
+              "https://dl.fbaipublicfiles.com/fasttext/supervised-models/lid.176.ftz",
+              "https://huggingface.co/julien-c/fasttext-language-id/resolve/0266da4549434de56667387618bc67dc6d2670ef/lid.176.ftz",
+          ]
+          expected = "8f3472cfe8738a7b6099e8e999c3cbfae0dcd15696aac7d7738a8039db603e83"
+          last_error = None
+          data = None
+          for url in sources:
+              try:
+                  with urlopen(Request(url, headers={"User-Agent": "Enthusia-LID-Offline-Test/1"}), timeout=20) as response:
+                      payload = response.read(950000)
+                  assert len(payload) == 938013, "Unexpected model bytes"
+                  assert hashlib.sha256(payload).hexdigest() == expected, "Model hash mismatch"
+                  data = payload
+                  break
+              except (OSError, AssertionError) as exc:
+                  last_error = type(exc).__name__
+          if data is None:
+              raise RuntimeError(f"No SHA-256 verified public model available: {last_error}")
+          (Path(os.environ["RUNNER_TEMP"]) / "lid.176.ftz").write_bytes(data)
+          print("Validated official fastText LID-176 model by size and SHA-256")
+          PY
+      - name: Exercise actual model only on public illustrative messages
+        shell: bash
+        run: |
+          python -m tools.data_v2.fasttext_language_candidate \
+            --model "$RUNNER_TEMP/lid.176.ftz" \
+            --samples data/policy-probes/fasttext-language-pilot-v1.jsonl
