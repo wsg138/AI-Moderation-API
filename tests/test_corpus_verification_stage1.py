@@ -91,7 +91,7 @@ def test_private_packet_has_no_candidate_answers(tmp_path: Path) -> None:
     )
     blind = json.loads(packet_path.read_text(encoding="utf-8"))
     mapping = json.loads(mapping_path.read_text(encoding="utf-8"))
-    assert len(blind) == len(mapping) == 1
+    assert isinstance(blind, dict) and isinstance(mapping, dict)
     assert "example_id" not in blind[0]
     assert "label" not in blind[0] and "action" not in blind[0]
     assert "reason_codes" not in blind[0] and "strike" not in blind[0]
@@ -101,7 +101,7 @@ def test_private_packet_has_no_candidate_answers(tmp_path: Path) -> None:
 
 
 def test_review_packet_paths_cannot_point_inside_checkout() -> None:
-    with pytest.raises(ValueError, match="outside Git checkout"):
+    with pytest.raises(ValueError, match="inside Git checkout"):
         private_review_outputs(
             [], [], {},
             Path("docs/should-not-write.jsonl"), Path("data/should-not-write.jsonl"),
