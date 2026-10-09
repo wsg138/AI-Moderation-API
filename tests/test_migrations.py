@@ -153,11 +153,11 @@ def test_v4_audit_pagination_index_upgrades_existing_v3_without_data_loss(
         original = connection.execute(
             "SELECT event_id,text,action FROM moderation_events"
         ).fetchone()
-        assert connection.execute("PRAGMA user_version").fetchone()[0] == 4
-    assert original == ("legacy", "review me", "REVIEW")
-    assert row is not None
-    assert "finalized_at DESC" in str(row[0])
-    assert "WHERE status='FINAL'" in str(row[0])
+        assert connection.execute("PRAGMA user_version").fetchone()[0] == 4  # nosec B101  # nosemgrep
+    assert original == ("legacy", "review me", "REVIEW")  # nosec B101  # nosemgrep
+    assert row is not None  # nosec B101  # nosemgrep
+    assert "finalized_at DESC" in str(row[0])  # nosec B101  # nosemgrep
+    assert "WHERE status='FINAL'" in str(row[0])  # nosec B101  # nosemgrep
 
 
 def test_failed_migration_rolls_back_without_recreating_database(tmp_path: Path) -> None:
