@@ -9,7 +9,8 @@ import pytest
 
 from tools.check_complexity import analyze
 from tools.data_v2.policy_conflict_quarantine import (
-    make_reconciliation, policy_tracks,
+    make_reconciliation,
+    policy_tracks,
 )
 from tools.data_v2.synthetic_family_audit import find_groups, load_candidates
 from tools.data_v2.triage_queue import build_queue, validate_source_order
