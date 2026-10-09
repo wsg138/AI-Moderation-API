@@ -2,7 +2,7 @@
   "schema_version": "enthusia.owner_language_message_action.v1",
   "rule_id": "english_primary_2026_10_08",
   "owner_approved_date": "2026-10-08",
-  "status": "owner_approved_message_action_only",
+  "status": "owner_approved_action_scope_and_language_only_no_penalty",
   "scope": "all_currently_moderated_minecraft_public_private_and_discord_public_gaming_surfaces",
   "applicable_channel_config": {
     "status": "owner_approved",
@@ -34,10 +34,7 @@
     "unreliably_assessed_or_ambiguous": "UNDECIDED"
   },
   "unapproved_fields": {
-    "semantic_harm_category": "do_not_infer",
-    "strike": "not_owner_decided",
-    "mute": "not_owner_decided",
-    "staff_escalation": "not_owner_decided"
+    "semantic_harm_category": "do_not_infer"
   },
   "runtime_enabled": false,
   "gold_training_eligible": false,
@@ -91,6 +88,16 @@
     "Owner's 'everywhere' answer applies to every surface already moderated in Policy v1, including Minecraft PMs and Discord gaming/general.",
     "Existing exempt Discord staff/ticket channels remain exempt because no explicit override of the established exemption was requested.",
     "Discord bot DMs are undefined in Policy v1 and not silently added.",
-    "No strikes/mutes/staff escalation are granted by this scope confirmation."
-  ]
+    "Owner confirmed 'just block it' (2026-10-08): language-only violation causes message block alone, with no strike, mute, staff alert, or repeat-violation escalation.",
+    "If the same content independently violates threats, harassment, hate speech or other safety policy, those separate violations are assessed under their established rules."
+  ],
+  "language_only_consequences": {
+    "message_action": "BLOCK",
+    "strike": "NONE",
+    "mute": "NONE",
+    "staff_escalation": "NONE",
+    "repeat_violation_escalation": "NONE",
+    "other_punishment": "NONE",
+    "interpretation": "Block the offending message only; no punitive action for a language-only violation, including repeated language-only violations."
+  }
 }
