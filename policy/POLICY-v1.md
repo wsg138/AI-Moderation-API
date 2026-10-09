@@ -62,8 +62,10 @@ added. Minecraft/Discord mirror events count only once.
 **BLOCK** a message that is **primarily non-English**. ALLOW occasional foreign
 words, short greetings (such as `hola` and `bonjour`), player names, recognized
 game terms, and messages otherwise primarily in English with minor
-code-switching. A single greeting is not a violation solely because it is
-not an English word. Do not interpret this as a ban on every foreign word.
+code-switching. A single familiar greeting is not a violation solely because it is not an English word.
+Owner clarification (2026-10-09): block substantive standalone foreign-language
+words, including insults, and non-English phrases even if short. Unclear
+single tokens require trustworthy language assessment, not keyword guessing.
 
 A short or mixed-language example that cannot be judged reliably must not
 be automatically blocked on a crude script/keyword test. Language-only
@@ -242,6 +244,16 @@ A phrase equivalent to "go die":
 
 A death wish that remains ambiguous can be blocked without a strike unless later context establishes real-world intent.
 
+### Repeated prohibited language in reports (owner clarification 2026-10-09)
+
+Block a moderated message that actually repeats a prohibited directed-abuse
+shorthand (including `kys`), even when the sender is reporting somebody else.
+Message deletion is separate from blame: do not strike, mute, or accuse the
+person reporting an incident solely for their quotation. Staff and ticket
+channels keep their existing exemptions. Other quoted threats in a good-faith
+report generally remain ALLOW, although an independently justified block can
+be reasonable; consider the surrounding context and the speaker's intent.
+
 ### First-person disclosure
 Credible first-person self-harm disclosure is a safety/support event, not a punishment event.
 
@@ -290,11 +302,27 @@ NSFW/sexual content is blocked in public chat.
 
 Ordinary non-explicit flirting between unknown-age players, such as a simple compliment or asking to date, is blocked in public chat with a warning to move the conversation to private messages.
 
-### Private messages
-Ordinary non-explicit flirting is allowed in PMs. PMs are still moderated for separately prohibited sexual content/solicitation and safety violations.
+### Private messages — owner clarification 2026-10-09
+Private chat is less strict than public chat. Ordinary romantic or adult-compatible
+intimate conversation may be ALLOW. An isolated ambiguous picture request is
+not sufficient evidence of grooming. Do not assume someone is a minor simply
+because their age is unknown; equally, do not assume mutual consent or adulthood.
+Follow relevant context as interactions escalate, particularly age clues,
+pressure after refusal, manipulation, secrecy, or signs of exploitation.
+With only a generic photo request and an unverified age clue, ALLOW can be
+reasonable; genuine escalation requires renewed classification. Avoid frequent
+false alerts on innocent private exchanges. Where serious risk remains unclear,
+recommend staff REVIEW without automatically hiding/punishing the sender.
 
 ### Sexual solicitation
-A solicitation for nude images is always BLOCK + strike regardless of age.
+The former blanket rule that all requests for intimate pictures must receive
+BLOCK + strike is superseded for ordinary private adult-compatible contexts.
+Explicit public content remains BLOCK. In PMs, assess pressure, consent cues,
+age evidence, and any meaningful exploitation risk. Credible coercion, sexual
+exploitation or reliably established minor involvement still requires protective
+moderation and staff attention. A model must not invent consent, verified age,
+strikes, or mute durations from a keyword. Unresolved edge cases receive
+staff REVIEW without automatic sanctions.
 
 ### Known/reliably evidenced minor
 When reliable context establishes the target is a minor:
