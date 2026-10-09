@@ -58,6 +58,20 @@ Select exactly **180 cases**, **10 from each of 18 source batches**:
   and channel profile, and an opaque HMAC packet ID. They do not see the
   candidate's batch name, original semantic label, action, strike,
   reasons, post-target chat or the coordinator crosswalk.
+- **First wave is now frozen:** the 180-case selection was distributed to
+  private reviewers and received owner action-only judgments. The exact ordered
+  selection SHA-256 is
+  `bec3d820706c4b8e42c9e17ce1e8455bb38811d30c25d293c27e12a4f1350407`
+  (hash of comma-joined case IDs), with 34 policy-risk, 72 high-impact and
+  74 routine cases. Changing these IDs would invalidate existing private
+  packets, crosswalks and reviews. Any improved selector must create an
+  explicitly **versioned new wave**, never silently regenerate wave 1.
+- **Tier quotas are targets, not guaranteed composition.** Some source batches
+  lack entire tiers; in G11, the six policy-risk records represent only two
+  distinct declared families, so a four-case strict unique-family policy
+  quota is impossible there. G23 also has a shortfall despite seven raw
+  policy candidates; constrained tier allocation remains a known future-wave
+  improvement. No quota shortfall converts a candidate into gold.
 - Owner and independent reviewers may not train or test the AI with
   unadjudicated cases. An independent answer must include all needed
   Policy-v1 dimensions and evidence provenance before any future
