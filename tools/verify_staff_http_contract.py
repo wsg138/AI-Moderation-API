@@ -10,11 +10,11 @@ Never connects to a deployed server, Discord, Minecraft or the OpenAI advisory A
 from __future__ import annotations
 
 import argparse
+import asyncio
 import gc
 import os
 import secrets
 import socket
-import subprocess  # nosec B404  # nosemgrep
 import sys
 import tempfile
 import threading
@@ -110,8 +110,8 @@ def verify_with_staff(staff_repo: Path, base_url: str, tokens: dict[str, str],
     staff_repo = staff_repo.resolve(strict=True)
     if not staff_repo.is_dir() or not (staff_repo / ".git").exists():
         raise RuntimeError("Staff source checkout is missing or not a Git working tree")
-    if not (staff_repo / "gradlew.bat").is_file() and not (staff_repo / "gradlew").is_file():
-        raise RuntimeError("Staff source repository path is missing Gradle wrapper")
+    if not (staff_repo / "gradle" / "wrapper" / "gradle-wrapper.jar").is_file():
+        raise RuntimeError("Staff checkout is missing its Gradle wrapper JAR")
     environment = os.environ.copy()
     environment.update({
         "ENTHUSIA_CONTRACT_BASE_URL": base_url,
@@ -119,22 +119,27 @@ def verify_with_staff(staff_repo: Path, base_url: str, tokens: dict[str, str],
         "ENTHUSIA_CONTRACT_READER_TOKEN": tokens["reader"],
         "ENTHUSIA_CONTRACT_BLOCK_ID": events["block"],
     })
-    # Only a verified, caller-selected local checkout is used. All executable arguments
-    # are literal Gradle wrapper/task names; no event IDs, tokens or paths enter argv.
-    if os.name == "nt":
-        subprocess.run(
-            ["cmd", "/c", "gradlew.bat", ":paper:test", "--tests",
-             "net.enthusia.staff.paper.aireview.AiReviewRealApiContractTest",
-             "--rerun-tasks", "--no-daemon", "--console=plain"],
-            cwd=staff_repo, env=environment, timeout=240, check=True,
-        )  # nosec B603  # nosemgrep
-    else:
-        subprocess.run(
-            ["./gradlew", ":paper:test", "--tests",
-             "net.enthusia.staff.paper.aireview.AiReviewRealApiContractTest",
-             "--rerun-tasks", "--no-daemon", "--console=plain"],
-            cwd=staff_repo, env=environment, timeout=240, check=True,
-        )  # nosec B603  # nosemgrep
+    # Call the trusted Gradle wrapper directly through Java, with no shell, fixed
+    # arguments and a verified local checkout. Secrets are passed only via env.
+    asyncio.run(run_gradle(staff_repo, environment))
+
+
+async def run_gradle(staff_repo: Path, environment: dict[str, str]) -> None:
+    process = await asyncio.create_subprocess_exec(
+        "java", "-cp", "gradle/wrapper/gradle-wrapper.jar",
+        "org.gradle.wrapper.GradleWrapperMain", ":paper:test", "--tests",
+        "net.enthusia.staff.paper.aireview.AiReviewRealApiContractTest",
+        "--rerun-tasks", "--no-daemon", "--console=plain",
+        cwd=str(staff_repo), env=environment,
+    )
+    try:
+        exit_code = await asyncio.wait_for(process.wait(), timeout=240)
+    except TimeoutError as exc:
+        process.kill()
+        await process.wait()
+        raise RuntimeError("Gradle contract verification timed out") from exc
+    if exit_code != 0:
+        raise RuntimeError(f"Gradle contract verification failed (exit {exit_code})")
 
 
 def main() -> None:
