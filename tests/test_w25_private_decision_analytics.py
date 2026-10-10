@@ -10,6 +10,7 @@ import pytest
 
 from workers.w12.dataset import ModerationExample
 from workers.w25.contract import HEAD_VALUES, PredictionBundle
+from workers.w25.candidate_diagnostics import diagnose
 from workers.w25.decision_analytics import (
     REPO,
     _secret,
@@ -71,6 +72,7 @@ def _capture(tmp_path, run: str, action: str = "ALLOW"):
         folder=tmp_path,
         run_id=run, candidate="fake-architecture", seed=42,
         model_sha=SHA_A, config_sha=SHA_B, policy="v1",
+        suite_name="development",
     )
 
 
@@ -317,3 +319,24 @@ def test_bogus_nan_and_infinite_model_scores_cannot_enter_ledger(tmp_path) -> No
                 model_sha=SHA_A, config_sha=SHA_B, policy="v1",
             )
     assert list(tmp_path.glob("*.jsonl")) == []
+
+def test_candidate_search_joins_real_private_ledger_format_not_just_fake_rows(tmp_path) -> None:
+    first = _capture(tmp_path, "candidate1")
+    second = _capture(tmp_path, "candidate2", action="BLOCK")
+    report = diagnose([first, second])
+    pair = report["pairwise_action_complementarity"]["candidate1_vs_candidate2"]
+    assert pair["left_unique_correct_actions"] == 2
+    assert pair["right_unique_correct_actions"] == 0
+    assert report["oracle_action_ceiling"]["hypothetical_oracle_correct_actions"] == 2
+    assert report["per_run"]["candidate2"]["total"]["status"] == "INSUFFICIENT_SUPPORT"
+    assert report["not_an_ensemble_accuracy_claim"]
+
+
+def test_candidate_search_disallows_even_named_non_development_ledger(tmp_path) -> None:
+    first = _capture(tmp_path, "a")
+    second = _capture(tmp_path, "b")
+    contents = [json.loads(line) for line in second.read_text().splitlines()]
+    contents[0]["suite_name"] = "time_based_real_chat"
+    second.write_text("\n".join(json.dumps(value) for value in contents) + "\n")
+    with pytest.raises(ValueError, match="development-only"):
+        diagnose([first, second])
