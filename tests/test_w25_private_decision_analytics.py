@@ -237,7 +237,9 @@ def test_required_shared_evaluator_archives_every_decision(tmp_path, monkeypatch
     _required_environment(monkeypatch, tmp_path)
     examples = [_example("1"), _example("2")]
     report = evaluate_candidate(examples, _bundle())
-    assert report["suite"]["n"] == 2
+    suite_info = report["suite"]
+    assert isinstance(suite_info, dict)
+    assert suite_info["n"] == 2
     path = tmp_path / "modelA-dev-42.jsonl"
     assert path.exists()
     assert len(path.read_text().splitlines()) == 3
