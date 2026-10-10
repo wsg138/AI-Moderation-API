@@ -89,7 +89,7 @@ def _archive(
     root: Path, prefix: str, examples, sources: dict[str, dict[str, Any]],
 ) -> dict[str, object]:
     private, key_path = _private_paths(root)
-    key = bytes.fromhex(_key(key_path))
+    key = _key(key_path).encode("utf-8")
     destination = private / prefix
     destination.mkdir(mode=0o700, exist_ok=False)
     paths: list[Path] = []
@@ -100,6 +100,9 @@ def _archive(
             candidate=name, seed=138, model_sha=evidence["model_sha"],
             config_sha=evidence["config_sha"], policy="v1", suite_name="development",
             artifact_kind=evidence["artifact_kind"],
+            preprocessing_variant=(
+                "raw+normalized" if name == "modernbert-normalized" else "raw"
+            ),
         )
         paths.append(path)
     comparison = diagnose(paths)
