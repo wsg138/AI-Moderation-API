@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+from pathlib import Path
 
 import sklearn
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -78,9 +79,11 @@ def training_recipe_digest(name: str, seed: int) -> str:
         "candidate": name, "seed": seed,
         "sklearn": sklearn.__version__,
         "training_source": "W11 train and W26 admitted train if authorized",
-        "word_sha": hashlib.sha256(word.__file__ and
-                                   open(word.__file__, "rb").read()).hexdigest(),
-        "char_sha": hashlib.sha256(lexical.__file__ and
-                                   open(lexical.__file__, "rb").read()).hexdigest(),
+        "word_sha": hashlib.sha256(
+            Path(word.__file__).read_bytes()
+        ).hexdigest(),
+        "char_sha": hashlib.sha256(
+            Path(lexical.__file__).read_bytes()
+        ).hexdigest(),
     }
     return hashlib.sha256(json.dumps(data, sort_keys=True).encode("utf-8")).hexdigest()
