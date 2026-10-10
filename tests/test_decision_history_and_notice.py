@@ -107,7 +107,7 @@ def test_all_decisions_are_reviewable_with_cursor(settings, rose_headers, staff_
     assert all(r["policy_version"] == "v1" for r in all_items)  # nosec B101  # nosemgrep
 
 
-def test_staff_can_filter_all_decisions_without_reusing_another_filters_cursor(
+def test_staff_filters_and_rejects_cursors_not_in_selected_filter(
     settings, rose_headers, staff_headers,
 ) -> None:
     app = create_app(settings=settings, classifier=ClassificationForAudit())
@@ -143,6 +143,12 @@ def test_staff_can_filter_all_decisions_without_reusing_another_filters_cursor(
             "/v1/decisions", headers=staff_headers,
             params={"filter": "blocked", "limit": 1, "cursor": blocked.json()["next_cursor"]}
         )
+        # Cursor identity is validated against the selected filter. "all"
+        # overlaps "blocked", so a matching event ID is a valid anchor in both.
+        shared_cursor = client.get(
+            "/v1/decisions", headers=staff_headers,
+            params={"filter": "all", "cursor": blocked.json()["items"][0]["event_id"]}
+        )
 
     assert allowed.status_code == 200  # nosec B101  # nosemgrep
     assert len(allowed.json()["items"]) == 2  # nosec B101  # nosemgrep
@@ -155,6 +161,7 @@ def test_staff_can_filter_all_decisions_without_reusing_another_filters_cursor(
     assert correction.json()["items"] == []  # nosec B101  # nosemgrep
     assert invalid.status_code == 422  # nosec B101  # nosemgrep
     assert wrong_cursor.status_code == 404  # nosec B101  # nosemgrep
+    assert shared_cursor.status_code == 200  # nosec B101  # nosemgrep
     assert next_blocked.status_code == 200  # nosec B101  # nosemgrep
     assert len(next_blocked.json()["items"]) == 1  # nosec B101  # nosemgrep
 
