@@ -21,6 +21,8 @@ from .models import (
     CorrectionRejectRequest,
     CorrectionRequest,
     CorrectionResponse,
+    DecisionHistoryFilter,
+    DecisionHistoryPage,
     EventDetails,
     HealthResponse,
     ModerationRequest,
@@ -215,6 +217,7 @@ def _register_reviews(
 ) -> None:
     _register_event_read(app, store, read_dependency)
     _register_review_queue(app, store, read_dependency)
+    _register_decision_history(app, store, read_dependency)
     _register_correction_write(app, store, write_dependency)
     _register_correction_reject(app, store, write_dependency)
 
@@ -242,6 +245,29 @@ def _register_review_queue(
         limit: Annotated[int, Query(ge=1, le=250)] = 100,
     ) -> ReviewQueueResponse:
         return ReviewQueueResponse(items=await store.list_review_items(limit))
+
+
+
+def _register_decision_history(
+    app: FastAPI,
+    store: ModerationStore,
+    dependency: AuthDependency,
+) -> None:
+    @app.get("/v1/decisions", response_model=DecisionHistoryPage)
+    async def decisions(
+        _: Annotated[Principal, Depends(dependency)],
+        limit: Annotated[int, Query(ge=1, le=250)] = 100,
+        cursor: Annotated[str | None, Query(min_length=1, max_length=64)] = None,
+        history_filter: Annotated[
+            DecisionHistoryFilter, Query(alias="filter")
+        ] = DecisionHistoryFilter.ALL,
+    ) -> DecisionHistoryPage:
+        try:
+            return await store.list_decisions(limit, cursor, history_filter)
+        except EventNotFound as exc:
+            raise HTTPException(
+                status.HTTP_404_NOT_FOUND, detail="decision cursor not found"
+            ) from exc
 
 
 def _register_correction_write(

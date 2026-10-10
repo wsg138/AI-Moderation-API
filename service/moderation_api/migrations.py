@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import sqlite3
 
-LATEST_SCHEMA_VERSION = 3
+LATEST_SCHEMA_VERSION = 4
 
 
 class MigrationError(RuntimeError):
@@ -185,6 +185,8 @@ def migrate(connection: sqlite3.Connection) -> int:
             _apply_v2(connection)
         if current < 3:
             _apply_v3(connection)
+        if current < 4:
+            _apply_v4(connection)
         connection.execute(f"PRAGMA user_version = {LATEST_SCHEMA_VERSION}")
         connection.commit()
     except Exception as exc:
@@ -238,6 +240,20 @@ def _apply_v3(connection: sqlite3.Connection) -> None:
         """CREATE INDEX IF NOT EXISTS idx_events_sender_identity_time
            ON moderation_events(sender_identity_id, occurred_at DESC)
            WHERE sender_identity_id IS NOT NULL"""
+    )
+
+
+def _apply_v4(connection: sqlite3.Connection) -> None:
+    """Normalize legacy FINAL timestamps before indexing paginated history."""
+    connection.execute(
+        """UPDATE moderation_events
+           SET finalized_at=COALESCE(occurred_at,created_at)
+           WHERE status='FINAL' AND finalized_at IS NULL"""
+    )
+    connection.execute(
+        """CREATE INDEX IF NOT EXISTS idx_events_finalized_page
+           ON moderation_events(finalized_at DESC, event_id DESC)
+           WHERE status='FINAL'"""
     )
 
 

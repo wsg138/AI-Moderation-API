@@ -37,6 +37,35 @@ training/                 Training/export/evaluation pipeline
 integrations/             Client contracts/examples
 ```
 
+## Cross-component contract verification (draft only)
+
+The isolated contract harness starts the **real Python FastAPI process**, creates an ephemeral
+SQLite database, generates fresh synthetic client credentials, and inserts four
+synthetic moderation events (including a deliberate classifier failure recorded as
+fail-open). The opt-in EnthusiaStaff Java HTTP-client test then communicates with
+the real service over `127.0.0.1`. It verifies all-decisions pagination and filters,
+invalid bearer rejection, unknown cursor handling, least-privilege review access,
+admin override denial, two-person correction approval and rejection, duplicate-vote
+handling, preservation of the original classification after correction, and a
+fail-open decision shown as unverified by Staff. There is **no external API traffic,
+player data, Discord connection, Minecraft server, or live deployment**.
+Automatic punishments are not involved.
+
+With the API and the matching draft EnthusiaStaff GUI repository checked out locally,
+run from this API repository (Python dependencies and the Staff Gradle toolchain required):
+
+```bash
+python tools/verify_staff_http_contract.py --staff-repo ../EnthusiaStaff-Ai-AllDecisions-GUI
+```
+
+Use the actual relative filesystem path of the Staff checkout as `--staff-repo`.
+The script runs the Java `AiReviewRealApiContractTest` with temporary **localhost-only**
+environment credentials and shuts the test server down before deleting its temporary
+database. The Java test deliberately **skips** when invoked by an ordinary Gradle build
+without those isolated harness variables. A successful exit means the real service and
+typed Java client agreed for the tested synthetic scenarios; it is **not** in-game GUI,
+staging-server, load, model-quality, or production acceptance.
+
 ## Data rule
 
 This repository is currently **public**. Never commit API keys, Discord tokens, SFTP credentials, raw production chat logs, account identifiers, private staff data, or unreviewed production evidence.

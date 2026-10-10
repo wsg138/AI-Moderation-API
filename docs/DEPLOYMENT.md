@@ -90,15 +90,29 @@ Never solve a rollback by deleting or replacing `moderation.sqlite3`.
 
 ## Resource envelope
 
-The host has 2 GB total RAM and the Ticket Bot normally uses roughly 300 MB. The Ticket Bot remains the priority process.
+**Owner-reported allocation (2026-10-09):** the Ticket Bot Pterodactyl
+server now has **3 GB RAM and 800% configured CPU allocation**. The owner
+reports that the SMP does not share this allocated Ticket Bot CPU split.
+These are owner-provided allocation settings, **not measured AI consumption,
+guaranteed CPU pinning or an observed host benchmark**. Ticket Bot reliability
+remains the priority. The earlier estimate of roughly 300 MB Ticket Bot RAM
+usage was planning context, not a newly measured production value.
 
 W12 v2 currently measures the selected FP32 TF-IDF/ONNX bundle at roughly 1 MB of model/vectorizer artifacts and around 1 MB attributable RSS on GitHub's CPU evidence host. Final W20 unseen acceptance is still required before production use. Use these operating rules:
 
-- no GPU dependency;
-- keep the AI worker count at the current bounded defaults unless measured load requires a change;
+- no GPU dependency for the currently prepared small ONNX inference candidate;
+- set `AI_MOD_REQUEST_WORKERS=1` for the starting single inference worker
+  and keep `AI_MOD_REQUEST_QUEUE_SIZE` as a bounded aggregate admission limit;
+  an 800% Pterodactyl CPU allocation does not justify eight inference workers;
+- if a later DeBERTa-based model is approved, independently benchmark memory,
+  95th/99th-percentile classification latency and CPU bursts before selecting
+  its allocation. Do not use the lightweight ~1 MB ONNX artifact measurement
+  as a DeBERTa RAM forecast;
+- retain `AI_MOD_REQUEST_WORKERS=1` initially unless measured load
+  demonstrates an increase is safe for the colocated Ticket Bot;
 - do not raise queue sizes merely to hide sustained overload;
 - keep several hundred MB of free/container headroom for Ticket Bot bursts and Python/model variance;
-- do not enable a model whose measured steady-state memory plus Ticket Bot usage leaves the container close to its 2 GB limit.
+- do not enable a model whose measured steady-state memory plus Ticket Bot usage leaves the container close to its 3 GB allocation.
 
 Watch the Pterodactyl memory graph, OOM/restart events, AI queue depth from `/health/ready`, and repeated supervisor liveness failures. If pressure appears, disable/revert the AI service before reducing Ticket Bot headroom.
 

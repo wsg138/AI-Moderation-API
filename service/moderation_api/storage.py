@@ -25,6 +25,9 @@ from .models import (
     CorrectionResponse,
     CorrectionStatus,
     CorrectionVote,
+    DecisionHistoryFilter,
+    DecisionHistoryItem,
+    DecisionHistoryPage,
     EventDetails,
     IncidentKind,
     IncidentSignal,
@@ -138,6 +141,12 @@ class ModerationStore:
 
     async def list_review_items(self, limit: int) -> list[ReviewItem]:
         return await asyncio.to_thread(_list_review_items, self._path, limit)
+
+    async def list_decisions(
+        self, limit: int, cursor: str | None = None,
+        history_filter: DecisionHistoryFilter = DecisionHistoryFilter.ALL,
+    ) -> DecisionHistoryPage:
+        return await asyncio.to_thread(_list_decisions, self._path, limit, cursor, history_filter)
 
     async def list_support_context(
         self,
@@ -840,6 +849,119 @@ def _list_review_items(path: Path, limit: int) -> list[ReviewItem]:
             (limit,),
         ).fetchall()
     return [_review_item(row) for row in rows]
+
+
+
+def _history_filter_params(history_filter: DecisionHistoryFilter) -> tuple[str, ...]:
+    # Bound scalar values; never interpolate caller-derived SQL identifiers.
+    return (history_filter.value,) * 6
+
+
+def _history_anchor(
+    connection: sqlite3.Connection, cursor: str, history_filter: DecisionHistoryFilter,
+) -> sqlite3.Row:
+    row = connection.execute(
+        """SELECT e.finalized_at,e.event_id,d.message_action,
+                  d.review_priority,d.ingestion_status,
+                  (a.event_id IS NOT NULL) AS corrected
+           FROM moderation_events e
+           JOIN decision_evidence d ON d.event_id=e.event_id
+           LEFT JOIN accepted_corrections a ON a.event_id=e.event_id
+           WHERE e.event_id=? AND e.status='FINAL'""",
+        (cursor,),
+    ).fetchone()
+    if row is None or not _history_filter_matches(row, history_filter):
+        raise EventNotFound(cursor)
+    return cast(sqlite3.Row, row)
+
+
+def _history_filter_matches(
+    row: sqlite3.Row, history_filter: DecisionHistoryFilter,
+) -> bool:
+    match history_filter:
+        case DecisionHistoryFilter.ALL:
+            return True
+        case DecisionHistoryFilter.ALLOWED:
+            return (
+                str(row["message_action"]) == "ALLOW"
+                and str(row["ingestion_status"]) == "INGESTED"
+            )
+        case DecisionHistoryFilter.BLOCKED:
+            return str(row["message_action"]) == "BLOCK"
+        case DecisionHistoryFilter.REVIEW:
+            return str(row["review_priority"]) != "NONE"
+        case DecisionHistoryFilter.FAIL_OPEN:
+            return str(row["ingestion_status"]) == "FAIL_OPEN"
+        case DecisionHistoryFilter.CORRECTED:
+            return bool(row["corrected"])
+    return False
+
+
+def _history_rows(
+    connection: sqlite3.Connection, limit: int,
+    history_filter: DecisionHistoryFilter, anchor: sqlite3.Row | None,
+) -> list[sqlite3.Row]:
+    cutoff = anchor["finalized_at"] if anchor is not None else None
+    after_id = anchor["event_id"] if anchor is not None else None
+    return connection.execute(
+        """SELECT e.event_id,e.occurred_at,e.finalized_at,
+                  e.platform,e.channel_profile,e.degraded,
+                  d.ingestion_status,d.message_action,d.semantic_label,
+                  d.review_priority,d.reason_codes_json,
+                  d.local_model_version,d.policy_version,
+                  (a.event_id IS NOT NULL) AS corrected
+           FROM moderation_events e
+           JOIN decision_evidence d ON d.event_id=e.event_id
+           LEFT JOIN accepted_corrections a ON a.event_id=e.event_id
+           WHERE e.status='FINAL'
+             AND (
+               ?='all'
+               OR (?='allowed' AND d.message_action='ALLOW' AND d.ingestion_status='INGESTED')
+               OR (?='blocked' AND d.message_action='BLOCK')
+               OR (?='review' AND d.review_priority!='NONE')
+               OR (?='fail_open' AND d.ingestion_status='FAIL_OPEN')
+               OR (?='corrected' AND a.event_id IS NOT NULL)
+             )
+             AND (? IS NULL OR (e.finalized_at,e.event_id) < (?,?))
+           ORDER BY e.finalized_at DESC,e.event_id DESC
+           LIMIT ?""",
+        (*_history_filter_params(history_filter), cutoff, cutoff, after_id, limit + 1),
+    ).fetchall()
+
+
+def _list_decisions(
+    path: Path, limit: int, cursor: str | None, history_filter: DecisionHistoryFilter,
+) -> DecisionHistoryPage:
+    """Paginate durable decisions; filter values stay bound in fixed SQL."""
+    if not 1 <= limit <= 250:
+        raise ValueError("invalid page size")
+    with _connect(path) as connection:
+        anchor = _history_anchor(connection, cursor, history_filter) if cursor else None
+        rows = _history_rows(connection, limit, history_filter, anchor)
+    records = rows[:limit]
+    return DecisionHistoryPage(
+        items=[_decision_history_item(row) for row in records],
+        next_cursor=str(records[-1]["event_id"]) if len(rows) > limit else None,
+    )
+
+
+def _decision_history_item(row: sqlite3.Row) -> DecisionHistoryItem:
+    return DecisionHistoryItem(
+        event_id=str(row["event_id"]),
+        occurred_at=datetime.fromisoformat(row["occurred_at"]),
+        finalized_at=datetime.fromisoformat(row["finalized_at"]),
+        platform=Platform(row["platform"]),
+        channel_profile=_profile_from_row(row),
+        ingestion_status=IngestionStatus(row["ingestion_status"]),
+        message_action=MessageAction(row["message_action"]),
+        semantic_label=Label(row["semantic_label"]),
+        review_priority=ReviewPriority(row["review_priority"]),
+        reason_codes=json.loads(row["reason_codes_json"]),
+        local_model_version=str(row["local_model_version"]),
+        policy_version=str(row["policy_version"]),
+        degraded=bool(row["degraded"]),
+        corrected=bool(row["corrected"]),
+    )
 
 
 def _create_correction(
