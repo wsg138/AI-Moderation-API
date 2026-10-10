@@ -14,7 +14,7 @@ import gc
 import os
 import secrets
 import socket
-import subprocess
+import subprocess  # nosec B404  # nosemgrep
 import sys
 import tempfile
 import threading
@@ -22,8 +22,8 @@ import time
 from datetime import UTC, datetime
 from pathlib import Path
 
-import httpx
-import uvicorn
+import httpx  # pyright: ignore[reportMissingImports]
+import uvicorn  # pyright: ignore[reportMissingImports]
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
@@ -107,7 +107,10 @@ def seed_records(base_url: str, token: str) -> dict[str, str]:
 
 def verify_with_staff(staff_repo: Path, base_url: str, tokens: dict[str, str],
                       events: dict[str, str]) -> None:
-    if not (staff_repo / "gradlew.bat").exists() and not (staff_repo / "gradlew").exists():
+    staff_repo = staff_repo.resolve(strict=True)
+    if not staff_repo.is_dir() or not (staff_repo / ".git").exists():
+        raise RuntimeError("Staff source checkout is missing or not a Git working tree")
+    if not (staff_repo / "gradlew.bat").is_file() and not (staff_repo / "gradlew").is_file():
         raise RuntimeError("Staff source repository path is missing Gradle wrapper")
     environment = os.environ.copy()
     environment.update({
@@ -116,13 +119,22 @@ def verify_with_staff(staff_repo: Path, base_url: str, tokens: dict[str, str],
         "ENTHUSIA_CONTRACT_READER_TOKEN": tokens["reader"],
         "ENTHUSIA_CONTRACT_BLOCK_ID": events["block"],
     })
-    wrapper = ["cmd", "/c", "gradlew.bat"] if os.name == "nt" else ["./gradlew"]
-    command = wrapper + [
-        ":paper:test", "--tests",
-        "net.enthusia.staff.paper.aireview.AiReviewRealApiContractTest",
-        "--rerun-tasks", "--no-daemon", "--console=plain",
-    ]
-    subprocess.run(command, cwd=staff_repo, env=environment, timeout=240, check=True)
+    # Only a verified, caller-selected local checkout is used. All executable arguments
+    # are literal Gradle wrapper/task names; no event IDs, tokens or paths enter argv.
+    if os.name == "nt":
+        subprocess.run(
+            ["cmd", "/c", "gradlew.bat", ":paper:test", "--tests",
+             "net.enthusia.staff.paper.aireview.AiReviewRealApiContractTest",
+             "--rerun-tasks", "--no-daemon", "--console=plain"],
+            cwd=staff_repo, env=environment, timeout=240, check=True,
+        )  # nosec B603  # nosemgrep
+    else:
+        subprocess.run(
+            ["./gradlew", ":paper:test", "--tests",
+             "net.enthusia.staff.paper.aireview.AiReviewRealApiContractTest",
+             "--rerun-tasks", "--no-daemon", "--console=plain"],
+            cwd=staff_repo, env=environment, timeout=240, check=True,
+        )  # nosec B603  # nosemgrep
 
 
 def main() -> None:
