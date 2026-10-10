@@ -27,6 +27,7 @@ from .models import (
     CorrectionVote,
     DecisionHistoryItem,
     DecisionHistoryPage,
+    DecisionHistoryFilter,
     EventDetails,
     IncidentKind,
     IncidentSignal,
@@ -143,8 +144,9 @@ class ModerationStore:
 
     async def list_decisions(
         self, limit: int, cursor: str | None = None,
+        filter: DecisionHistoryFilter = DecisionHistoryFilter.ALL,
     ) -> DecisionHistoryPage:
-        return await asyncio.to_thread(_list_decisions, self._path, limit, cursor)
+        return await asyncio.to_thread(_list_decisions, self._path, limit, cursor, filter)
 
     async def list_support_context(
         self,
@@ -850,23 +852,36 @@ def _list_review_items(path: Path, limit: int) -> list[ReviewItem]:
 
 
 
+_HISTORY_PREDICATES: dict[DecisionHistoryFilter, str] = {
+    DecisionHistoryFilter.ALL: "",
+    DecisionHistoryFilter.ALLOWED: " AND d.message_action='ALLOW' AND d.ingestion_status='INGESTED'",
+    DecisionHistoryFilter.BLOCKED: " AND d.message_action='BLOCK'",
+    DecisionHistoryFilter.REVIEW: " AND d.review_priority!='NONE'",
+    DecisionHistoryFilter.FAIL_OPEN: " AND d.ingestion_status='FAIL_OPEN'",
+    DecisionHistoryFilter.CORRECTED: " AND a.event_id IS NOT NULL",
+}
+
+
 def _list_decisions(
-    path: Path, limit: int, cursor: str | None,
+    path: Path, limit: int, cursor: str | None, filter: DecisionHistoryFilter,
 ) -> DecisionHistoryPage:
     """Paginate every finalized, non-exempt event, including ordinary ALLOW."""
     if not 1 <= limit <= 250:
         raise ValueError("invalid page size")
+    predicate = _HISTORY_PREDICATES[filter]
     with _connect(path) as connection:
         anchor = None
         if cursor is not None:
-            anchor = connection.execute(
-                """SELECT finalized_at,event_id FROM moderation_events
-                   WHERE event_id=? AND status='FINAL'""",
-                (cursor,),
-            ).fetchone()
+            anchor_query = (
+                "SELECT e.finalized_at,e.event_id FROM moderation_events e "
+                "JOIN decision_evidence d ON d.event_id=e.event_id "
+                "LEFT JOIN accepted_corrections a ON a.event_id=e.event_id "
+                "WHERE e.event_id=? AND e.status='FINAL'" + predicate
+            )
+            anchor = connection.execute(anchor_query, (cursor,)).fetchone()
             if anchor is None:
                 raise EventNotFound(cursor)
-        # SQL is fixed source text; only cursor values are ever bound.
+        # SQL is fixed source text selected from a closed enum mapping.
         base_query = """SELECT e.event_id,e.occurred_at,e.finalized_at,
                               e.platform,e.channel_profile,e.degraded,
                               d.ingestion_status,d.message_action,d.semantic_label,
@@ -880,11 +895,12 @@ def _list_decisions(
         order_query = " ORDER BY e.finalized_at DESC,e.event_id DESC LIMIT ?"
         params: tuple[object, ...]
         if anchor is None:
-            query = base_query + order_query
+            query = base_query + predicate + order_query
             params = (limit + 1,)
         else:
             # An indexed tuple range avoids rescanning preceding pages.
-            query = base_query + " AND (e.finalized_at,e.event_id) < (?, ?)" + order_query
+            query = (base_query + predicate
+                     + " AND (e.finalized_at,e.event_id) < (?, ?)" + order_query)
             params = (anchor["finalized_at"], anchor["event_id"], limit + 1)
         rows = connection.execute(query, params).fetchall()
     has_more = len(rows) > limit
