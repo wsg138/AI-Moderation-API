@@ -10,6 +10,7 @@ Never connects to a deployed server, Discord, Minecraft or the OpenAI advisory A
 from __future__ import annotations
 
 import argparse
+import gc
 import os
 import secrets
 import socket
@@ -36,6 +37,7 @@ from moderation_api.models import (  # noqa: E402
     MessageAction,
     ReviewPriority,
 )
+
 from tests.helpers import result  # noqa: E402
 
 
@@ -154,6 +156,10 @@ def main() -> None:
         finally:
             server.should_exit = True
             thread.join(timeout=10)
+            if thread.is_alive():
+                raise RuntimeError("isolated API did not shut down")
+            gc.collect()  # sqlite3 context managers commit but do not explicitly close.
+            time.sleep(0.2)
 
 
 if __name__ == "__main__":
