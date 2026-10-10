@@ -68,11 +68,7 @@ def _one_model(
     }
 
 
-def run(
-    private_dir: Path, *, seed: int = 42, include_admitted: bool = False,
-) -> dict[str, object]:
-    """Write exact evidence for two fitted architectures, then report comparisons."""
-    output = _private_root(private_dir)
+def _load_approved_partitions(include_admitted: bool):
     if include_admitted and any(
         source.role in TRAINING_ROLES
         and any(marker in source.path.upper() for marker in ("W20", "W27"))
@@ -82,10 +78,19 @@ def run(
     train, development = load_development_data(include_admitted=include_admitted)
     if not train or not development:
         raise ValueError("Train and development partitions must both exist")
-    scope = "w25-admitted" if include_admitted else "w11"
     train_ids = {item.example_id for item in train}
     if train_ids & {item.example_id for item in development}:
-        raise ValueError("W11 train and development example IDs overlap")
+        raise ValueError("Train and development example IDs overlap")
+    return train, development
+
+
+def run(
+    private_dir: Path, *, seed: int = 42, include_admitted: bool = False,
+) -> dict[str, object]:
+    """Write exact evidence for two fitted architectures, then report comparisons."""
+    output = _private_root(private_dir)
+    train, development = _load_approved_partitions(include_admitted)
+    scope = "w25-admitted" if include_admitted else "w11"
     ephemeral_secret = secrets.token_bytes(32)
     word, word_info = _one_model(
         train, development, output, ephemeral_secret,
