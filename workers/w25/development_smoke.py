@@ -13,7 +13,11 @@ from pathlib import Path
 
 from workers.w12.baseline import train_baseline
 from workers.w25.candidate_diagnostics import diagnose
-from workers.w25.data import load_development_data, verify_all_admissions
+from workers.w25.data import (
+    load_development_data,
+    load_source_partition,
+    verify_all_admissions,
+)
 from workers.w25.decision_analytics import CAPTURE_ENV, audit_coverage
 from workers.w25.evaluation import evaluate_candidate
 from workers.w25.open_baselines import (
@@ -81,8 +85,13 @@ def _write_json_once(path: Path, payload: dict[str, object]) -> None:
 
 def _development_examples(admitted: bool, limit: int):
     if admitted:
-        verify_all_admissions()  # W27 verified but never selected as training.
-    train, dev = load_development_data(include_admitted=admitted)
+        verify_all_admissions()  # W27 verified but never selected for inference.
+    train, w11_dev = load_development_data(include_admitted=admitted)
+    dev = (
+        load_source_partition("W26_real_chat_curated_training_PRIVATE_v2.jsonl",
+                              "development")
+        if admitted else w11_dev
+    )
     examples = dev[:limit]
     if not examples or len({item.example_id for item in examples}) != len(examples):
         raise ValueError("Nonempty unique development examples required")
@@ -114,8 +123,8 @@ def _run(
     checked = audit_coverage(output, [path.stem for path in paths])
     return {
         "source": (
-            "W11 plus admitted W26 train/development"
-            if admitted else "W11 train/development"
+            "W11+W26 admitted train / W26 development"
+            if admitted else "W11 train / W11 development"
         ),
         "case_count": len(examples),
         "run_ids": [path.stem for path in paths],
