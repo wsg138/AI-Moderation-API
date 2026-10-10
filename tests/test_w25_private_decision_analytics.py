@@ -107,6 +107,14 @@ def test_separate_candidate_ledgers_support_cross_model_disagreements(tmp_path) 
     assert pair["action"]["disagreements"] == 2
     assert pair["label"]["disagreements"] == 0
     assert report["per_run"]["modelB"]["supervised_head_errors"]["action"] == 2
+    assert report["per_run"]["modelB"]["action_confusion"]["ALLOW -> BLOCK"] == 2
+    assert report["per_run"]["modelB"]["by_domain"]["benign_chat"]["wrong"] == 2
+    assert report["per_run"]["modelB"]["by_difficulty"]["hard"]["n"] == 2
+    assert report["per_run"]["modelB"]["by_gold_reason_code"]["benign_pvp"]["wrong"] == 2
+    assert report["per_run"]["modelB"]["confident_action_errors"]["total"] == 2
+    assert len(report["per_run"]["modelB"]["confident_action_errors"][
+        "first_25_case_keys"
+    ]) == 2
     assert report["not_an_accuracy_or_deployment_certificate"]
 
 
