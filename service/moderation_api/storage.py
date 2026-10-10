@@ -878,7 +878,7 @@ def _history_anchor(
     ).fetchone()
     if row is None:
         raise EventNotFound(cursor)
-    return row
+    return cast(sqlite3.Row, row)
 
 
 def _history_rows(
