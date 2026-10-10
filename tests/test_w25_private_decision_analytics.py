@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 import os
 import stat
+from dataclasses import replace
 
 import pytest
 
@@ -109,6 +110,24 @@ def test_separate_candidate_ledgers_support_cross_model_disagreements(tmp_path) 
     assert report["not_an_accuracy_or_deployment_certificate"]
 
 
+def test_comparison_rejects_changed_chat_context_with_same_ids_and_gold(tmp_path) -> None:
+    original = _capture(tmp_path, "same-ids-original")
+    modified = capture(
+        [replace(_example("1"), serialized="different input text"),
+         _example("2")],
+        _bundle(), secret=b"fake-secret-do-not-use-in-prod-1234567890",
+        folder=tmp_path, run_id="same-ids-modified",
+        candidate="modelB", seed=42, model_sha=SHA_A,
+        config_sha=SHA_B, policy="v1",
+    )
+    left = json.loads(original.read_text().splitlines()[0])
+    right = json.loads(modified.read_text().splitlines()[0])
+    assert left["suite_fingerprint"] == right["suite_fingerprint"]
+    assert left["input_hmac_fingerprint"] != right["input_hmac_fingerprint"]
+    with pytest.raises(ValueError, match="input/context changed"):
+        compare([original, modified])
+
+
 def test_existing_run_cannot_be_rewritten_or_silently_overwritten(tmp_path) -> None:
     path = _capture(tmp_path, "immutable")
     old = path.read_bytes()
@@ -124,6 +143,9 @@ def test_no_raw_ids_even_when_two_models_share_pseudonym_key(tmp_path) -> None:
     b_rows = b.read_text(encoding="utf-8").splitlines()
     assert json.loads(a_rows[1])["case_key"] == json.loads(b_rows[1])["case_key"]
     assert json.loads(a_rows[1])["family_key"] == json.loads(b_rows[1])["family_key"]
+    assert json.loads(a_rows[0])["input_hmac_fingerprint"] == json.loads(b_rows[0])[
+        "input_hmac_fingerprint"
+    ]
 
 
 def test_differing_suite_or_mismatched_truth_is_rejected(tmp_path) -> None:
