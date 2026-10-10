@@ -107,6 +107,58 @@ def test_all_decisions_are_reviewable_with_cursor(settings, rose_headers, staff_
     assert all(r["policy_version"] == "v1" for r in all_items)  # nosec B101  # nosemgrep
 
 
+def test_staff_can_filter_all_decisions_without_reusing_another_filters_cursor(
+    settings, rose_headers, staff_headers,
+) -> None:
+    app = create_app(settings=settings, classifier=ClassificationForAudit())
+    with TestClient(app) as client:
+        for n, word in enumerate(("ordinary", "harassment", "broken", "quoted", "ordinary"), 1):
+            response = client.post(
+                "/v1/moderate", headers=rose_headers, json=payload(f"filter-{n}", word, n)
+            )
+            assert response.status_code == 200  # nosec B101  # nosemgrep
+
+        allowed = client.get(
+            "/v1/decisions", headers=staff_headers, params={"filter": "allowed"}
+        )
+        blocked = client.get(
+            "/v1/decisions", headers=staff_headers,
+            params={"filter": "blocked", "limit": 1}
+        )
+        fail_open = client.get(
+            "/v1/decisions", headers=staff_headers, params={"filter": "fail_open"}
+        )
+        invalid = client.get(
+            "/v1/decisions", headers=staff_headers, params={"filter": "unknown"}
+        )
+        correction = client.get(
+            "/v1/decisions", headers=staff_headers, params={"filter": "corrected"}
+        )
+
+        wrong_cursor = client.get(
+            "/v1/decisions", headers=staff_headers,
+            params={"filter": "allowed", "cursor": blocked.json()["items"][0]["event_id"]}
+        )
+        next_blocked = client.get(
+            "/v1/decisions", headers=staff_headers,
+            params={"filter": "blocked", "limit": 1, "cursor": blocked.json()["next_cursor"]}
+        )
+
+    assert allowed.status_code == 200  # nosec B101  # nosemgrep
+    assert len(allowed.json()["items"]) == 2  # nosec B101  # nosemgrep
+    assert all(r["message_action"] == "ALLOW" for r in allowed.json()["items"])  # nosec B101  # nosemgrep
+    assert blocked.status_code == 200  # nosec B101  # nosemgrep
+    assert blocked.json()["next_cursor"] is not None  # nosec B101  # nosemgrep
+    assert fail_open.status_code == 200  # nosec B101  # nosemgrep
+    assert len(fail_open.json()["items"]) == 1  # nosec B101  # nosemgrep
+    assert fail_open.json()["items"][0]["degraded"] is True  # nosec B101  # nosemgrep
+    assert correction.json()["items"] == []  # nosec B101  # nosemgrep
+    assert invalid.status_code == 422  # nosec B101  # nosemgrep
+    assert wrong_cursor.status_code == 404  # nosec B101  # nosemgrep
+    assert next_blocked.status_code == 200  # nosec B101  # nosemgrep
+    assert len(next_blocked.json()["items"]) == 1  # nosec B101  # nosemgrep
+
+
 def test_exempt_no_ingestion_or_notice(settings, rose_headers, staff_headers) -> None:
     app = create_app(settings=settings, classifier=ClassificationForAudit())
     body = payload(
