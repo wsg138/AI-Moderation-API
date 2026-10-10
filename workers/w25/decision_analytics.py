@@ -83,6 +83,19 @@ def _prediction(bundle: PredictionBundle, index: int) -> dict[str, object]:
     return result
 
 
+def _risk_tags(gold: dict[str, object], predicted: dict[str, object]) -> list[str]:
+    tags: list[str] = []
+    if gold["action"] == "ALLOW" and predicted["action"] == "BLOCK":
+        tags.append("wrongful_blocks")
+    if gold["action"] == "BLOCK" and predicted["action"] != "BLOCK":
+        tags.append("missed_blocks")
+    if not gold["strike"] and predicted["strike"]:
+        tags.append("false_strikes")
+    if gold["containment"] != "MUTE" and predicted["containment"] == "MUTE":
+        tags.append("false_mutes")
+    return tags
+
+
 def _case_record(
     example: ModerationExample, bundle: PredictionBundle, index: int, secret: bytes,
 ) -> dict[str, object]:
@@ -101,6 +114,7 @@ def _case_record(
         "uncertainty": bundle.uncertainty[index],
         "confidence": max(bundle.probabilities["action"][index]),
         "head_errors": incorrect,
+        "risk_tags": _risk_tags(truth, predicted),
         "all_supervised_heads_correct": not incorrect,
         "channel_profile": example.channel_profile,
         "platform_hint": example.platform_hint,
@@ -249,26 +263,11 @@ def _pairwise_comparison(
 
 
 def _error_breakdown(rows: dict[str, dict[str, Any]]) -> dict[str, object]:
+    totals = Counter(tag for row in rows.values() for tag in row["risk_tags"])
     return {
-        "wrongful_blocks": sum(
-            row["gold"]["action"] == "ALLOW" and row["predicted"]["action"] == "BLOCK"
-            for row in rows.values()
-        ),
-        "missed_blocks": sum(
-            row["gold"]["action"] == "BLOCK" and row["predicted"]["action"] != "BLOCK"
-            for row in rows.values()
-        ),
-        "false_strikes": sum(
-            not row["gold"]["strike"] and row["predicted"]["strike"]
-            for row in rows.values()
-        ),
-        "false_mutes": sum(
-            row["gold"]["containment"] != "MUTE"
-            and row["predicted"]["containment"] == "MUTE"
-            for row in rows.values()
-        ),
+        name: totals[name]
+        for name in ("wrongful_blocks", "missed_blocks", "false_strikes", "false_mutes")
     }
-
 
 def _channel_breakdown(rows: dict[str, dict[str, Any]]) -> dict[str, object]:
     counts: dict[str, Counter[str]] = {}
