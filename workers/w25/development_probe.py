@@ -68,12 +68,16 @@ def _one_model(
     }
 
 
-def _load_approved_partitions(include_admitted: bool):
-    if include_admitted and any(
+def _reserved_training_source_present() -> bool:
+    return any(
         source.role in TRAINING_ROLES
         and any(marker in source.path.upper() for marker in ("W20", "W27"))
         for source in load_admissions()
-    ):
+    )
+
+
+def _load_approved_partitions(include_admitted: bool):
+    if include_admitted and _reserved_training_source_present():
         raise ValueError("Reserved acceptance source cannot be admitted for training")
     train, development = load_development_data(include_admitted=include_admitted)
     if not train or not development:
