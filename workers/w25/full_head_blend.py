@@ -17,18 +17,21 @@ CRITICAL = (
 )
 
 
+def _distribution(values: object, head: str, count: int) -> list[float]:
+    if not isinstance(values, list) or len(values) != count:
+        raise ValueError("Invalid probability width for " + head)
+    if any(not isinstance(v, (int, float)) or not math.isfinite(v)
+           or not 0 <= v <= 1 for v in values):
+        raise ValueError("Nonfinite model probability in " + head)
+    return values
+
+
 def _mean_choice(
     left: dict[str, Any], right: dict[str, Any],
     head: str, classes: list[str],
 ) -> object:
-    a = left["probabilities"][head]
-    b = right["probabilities"][head]
-    if not isinstance(a, list) or not isinstance(b, list) or len(a) != len(classes):
-        raise ValueError("Invalid probability width for " + head)
-    if len(b) != len(classes):
-        raise ValueError("Invalid comparison probability width for " + head)
-    if any(not math.isfinite(x) or not 0 <= x <= 1 for x in a + b):
-        raise ValueError("Nonfinite model probability in " + head)
+    a = _distribution(left["probabilities"][head], head, len(classes))
+    b = _distribution(right["probabilities"][head], head, len(classes))
     averages = [(x + y) / 2 for x, y in zip(a, b, strict=True)]
     choice = classes[max(range(len(classes)), key=averages.__getitem__)]
     return choice == "true" if head == "strike" else choice
