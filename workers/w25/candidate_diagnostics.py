@@ -22,44 +22,54 @@ SLICES = ("channel_profile", "domain", "difficulty")
 MIN_SLICE_SUPPORT = 20
 
 
-def validate_registry(payload: dict[str, Any]) -> dict[str, Any]:
-    if payload.get("schema_version") != 1:
-        raise ValueError("Unknown candidate registry version")
-    baseline = set(payload["baseline_families"])
-    proposed = payload["experimental_candidates"]
-    combos = payload["experimental_combinations"]
+def _validate_candidates(baseline: set[str], proposed: list[dict[str, Any]]) -> set[str]:
     ids = [item["id"] for item in proposed]
     if len(ids) != len(set(ids)) or set(ids) & baseline:
         raise ValueError("Candidate IDs must be unique across all families")
     if any(item["status"] != "proposal" for item in proposed):
         raise ValueError("Exploratory candidates cannot be pre-approved")
+    return set(ids)
+
+
+def _validate_combinations(combos: list[dict[str, Any]], allowed: set[str]) -> None:
     if len({item["id"] for item in combos}) != len(combos):
         raise ValueError("Duplicate experimental combination IDs")
-    allowed = baseline | set(ids)
     if any(set(item["members"]) - allowed for item in combos):
         raise ValueError("Combination includes unknown model family")
+
+
+def validate_registry(payload: dict[str, Any]) -> dict[str, Any]:
+    if payload.get("schema_version") != 1:
+        raise ValueError("Unknown candidate registry version")
+    baseline = set(payload["baseline_families"])
+    proposed = _validate_candidates(baseline, payload["experimental_candidates"])
+    _validate_combinations(payload["experimental_combinations"], baseline | proposed)
     if payload["requirements"].get("locked_acceptance_never_used_for_selection") is not True:
         raise ValueError("Acceptance must remain untouched")
     return payload
-
 
 def load_registry(path: Path = REGISTRY) -> dict[str, Any]:
     return validate_registry(json.loads(path.read_text(encoding="utf-8")))
 
 
-def _load_development(paths: list[Path]) -> tuple[list[dict[str, Any]], list[dict[str, dict[str, Any]]]]:
+def _require_development_headers(headers: list[dict[str, Any]]) -> None:
+    if any(header.get("suite_name") != "development" for header in headers):
+        raise ValueError("Candidate search is restricted to development-only ledgers")
+    if len({header.get("policy_version") for header in headers}) != 1:
+        raise ValueError("Cannot compare models evaluated under different policies")
+
+
+def _load_development(
+    paths: list[Path],
+) -> tuple[list[dict[str, Any]], list[dict[str, dict[str, Any]]]]:
     if len(paths) < 2:
         raise ValueError("At least two model-run ledgers are required")
     loaded = [_read_ledger(path) for path in paths]
     headers = [part[0] for part in loaded]
     records = [part[1] for part in loaded]
     _validate_compatible_ledgers(headers, records)
-    if any(header.get("suite_name") != "development" for header in headers):
-        raise ValueError("Candidate search is restricted to development-only ledgers")
-    if len({header.get("policy_version") for header in headers}) != 1:
-        raise ValueError("Cannot compare models evaluated under different policies")
+    _require_development_headers(headers)
     return headers, records
-
 
 def _slice(rows: dict[str, dict[str, Any]], field: str, support: int) -> dict[str, Any]:
     buckets: dict[str, list[dict[str, Any]]] = {}
