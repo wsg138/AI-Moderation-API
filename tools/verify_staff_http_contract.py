@@ -120,6 +120,7 @@ def verify_with_staff(staff_repo: Path, base_url: str, tokens: dict[str, str],
         "ENTHUSIA_CONTRACT_STAFF_TOKEN": tokens["staff"],
         "ENTHUSIA_CONTRACT_READER_TOKEN": tokens["reader"],
         "ENTHUSIA_CONTRACT_BLOCK_ID": events["block"],
+        "ENTHUSIA_CONTRACT_REVIEW_ID": events["review"],
         "ENTHUSIA_CONTRACT_FAIL_OPEN_ID": events["unavailable"],
     })
     # Call the trusted Gradle wrapper directly through Java, with no shell, fixed
