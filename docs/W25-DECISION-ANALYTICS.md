@@ -43,6 +43,13 @@ comparisons separately.
 - Each captured ledger uses an output directory that must already exist and
   resolve **outside the Git worktree**. Create it on an authorized private
   workstation with user-specific permissions and encrypted volume/storage.
+- Each v2 ledger manifest also carries an **HMAC fingerprint of the
+  actual ordered model inputs** (serialized chat context, source channel and
+  family metadata), not just case IDs and truth labels. Comparison **refuses**
+  two runs with the same case IDs and gold labels when their input text or
+  context differs. The keyed digest protects short chat strings against
+  simple offline dictionary matching; this is not a replacement for controlled
+  key access.
 - The per-project `ENTHUSIA_ANALYTICS_HMAC_KEY` needs at least 32 characters,
   must be supplied as a secret in the local process environment, and must
   not be logged or committed. The same key is needed to join the *same* case
