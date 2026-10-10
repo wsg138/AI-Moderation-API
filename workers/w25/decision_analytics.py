@@ -248,6 +248,38 @@ def _pairwise_comparison(
     return pairs
 
 
+def _error_breakdown(rows: dict[str, dict[str, Any]]) -> dict[str, object]:
+    return {
+        "wrongful_blocks": sum(
+            row["gold"]["action"] == "ALLOW" and row["predicted"]["action"] == "BLOCK"
+            for row in rows.values()
+        ),
+        "missed_blocks": sum(
+            row["gold"]["action"] == "BLOCK" and row["predicted"]["action"] != "BLOCK"
+            for row in rows.values()
+        ),
+        "false_strikes": sum(
+            not row["gold"]["strike"] and row["predicted"]["strike"]
+            for row in rows.values()
+        ),
+        "false_mutes": sum(
+            row["gold"]["containment"] != "MUTE"
+            and row["predicted"]["containment"] == "MUTE"
+            for row in rows.values()
+        ),
+    }
+
+
+def _channel_breakdown(rows: dict[str, dict[str, Any]]) -> dict[str, object]:
+    counts: dict[str, Counter[str]] = {}
+    for row in rows.values():
+        channel = str(row["channel_profile"])
+        counts.setdefault(channel, Counter())[
+            "correct" if row["all_supervised_heads_correct"] else "wrong"
+        ] += 1
+    return {name: dict(data) for name, data in sorted(counts.items())}
+
+
 def _run_summary(
     headers: list[dict[str, Any]], records: list[dict[str, dict[str, Any]]],
 ) -> dict[str, object]:
@@ -257,6 +289,8 @@ def _run_summary(
             "supervised_head_errors": dict(Counter(
                 head for row in values.values() for head in row["head_errors"]
             )),
+            "harmful_errors": _error_breakdown(values),
+            "channel_issues": _channel_breakdown(values),
         }
         for item, values in zip(headers, records, strict=True)
     }
@@ -279,6 +313,30 @@ def compare(paths: list[Path]) -> dict[str, object]:
         "pairwise": _pairwise_comparison(headers, records),
     }
 
+def audit_coverage(folder: Path, expected_run_ids: list[str]) -> dict[str, object]:
+    root = _private_root(folder)
+    if not expected_run_ids or len(set(expected_run_ids)) != len(expected_run_ids):
+        raise ValueError("Specify distinct expected run IDs")
+    expected = {_validated_token(run_id) for run_id in expected_run_ids}
+    existing = {path.stem for path in root.glob("*.jsonl")}
+    invalid: list[str] = []
+    for run_id in sorted(existing & expected):
+        try:
+            _read_ledger(root / (run_id + ".jsonl"))
+        except (OSError, KeyError, ValueError, TypeError):
+            invalid.append(run_id)
+    return {
+        "schema_version": "w25-ledger-coverage/1",
+        "complete": existing == expected and not invalid,
+        "expected_count": len(expected),
+        "present_count": len(existing & expected),
+        "missing_runs": sorted(expected - existing),
+        "unexpected_runs": sorted(existing - expected),
+        "invalid_runs": invalid,
+        "not_a_deployment_authorization": True,
+    }
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Private W25 per-decision model analytics")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -292,9 +350,16 @@ def main() -> None:
     take.add_argument("--secret-env", default="ENTHUSIA_ANALYTICS_HMAC_KEY")
     diff = sub.add_parser("compare")
     diff.add_argument("ledgers", type=Path, nargs="+")
+    audit = sub.add_parser("audit")
+    audit.add_argument("--private-dir", type=Path, required=True)
+    audit.add_argument("--expected-run", action="append", required=True)
     args = parser.parse_args()
     if args.command == "compare":
         print(json.dumps(compare(args.ledgers), indent=2, sort_keys=True))
+        return
+    if args.command == "audit":
+        print(json.dumps(audit_coverage(args.private_dir, args.expected_run),
+                         indent=2, sort_keys=True))
         return
     suite = _validated_token(args.suite)
     if any(word in suite.lower() for word in BANNED_SUITES):
