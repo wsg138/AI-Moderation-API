@@ -130,11 +130,14 @@ def main() -> None:
     outcome = run(args.private_dir, seed=args.seed,
                   include_admitted=args.include_admitted)
     # Never print pseudonymous case drill-down or model input in the console.
+    run_infos = outcome["runs"]
+    if not isinstance(run_infos, list):
+        raise ValueError("Run evidence must contain a list of completed runs")
     print(json.dumps({
         "train_count": outcome["train_count"],
         "development_count": outcome["development_count"],
-        "runs": outcome["runs"],
-        "ledger_count": len(outcome["runs"]),
+        "runs": run_infos,
+        "ledger_count": len(run_infos),
         "comparison_report": (
             ("w25-admitted" if args.include_admitted else "w11")
             + "-word-v-char-s" + str(args.seed) + "-comparison.json"
