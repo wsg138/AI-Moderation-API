@@ -882,13 +882,13 @@ def _history_filter_matches(
         case DecisionHistoryFilter.ALL:
             return True
         case DecisionHistoryFilter.ALLOWED:
-            return row["message_action"] == "ALLOW" and row["ingestion_status"] == "INGESTED"
+            return str(row["message_action"]) == "ALLOW" and str(row["ingestion_status"]) == "INGESTED"
         case DecisionHistoryFilter.BLOCKED:
-            return row["message_action"] == "BLOCK"
+            return str(row["message_action"]) == "BLOCK"
         case DecisionHistoryFilter.REVIEW:
-            return row["review_priority"] != "NONE"
+            return str(row["review_priority"]) != "NONE"
         case DecisionHistoryFilter.FAIL_OPEN:
-            return row["ingestion_status"] == "FAIL_OPEN"
+            return str(row["ingestion_status"]) == "FAIL_OPEN"
         case DecisionHistoryFilter.CORRECTED:
             return bool(row["corrected"])
     return False
