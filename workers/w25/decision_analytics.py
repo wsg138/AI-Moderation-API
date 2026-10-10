@@ -169,7 +169,7 @@ def _input_fingerprint(examples: list[ModerationExample], secret: bytes) -> str:
 def _manifest(
     examples: list[ModerationExample], candidate: str, run_id: str,
     seed: int, model_sha: str, config_sha: str, policy: str,
-    suite_name: str, secret: bytes,
+    suite_name: str, secret: bytes, artifact_kind: str,
 ) -> dict[str, object]:
     return {
         "record_type": "manifest",
@@ -180,6 +180,7 @@ def _manifest(
         "seed": seed,
         "policy_version": _validated_token(policy),
         "model_artifact_sha256": _validated_sha(model_sha),
+        "model_artifact_kind": _validated_token(artifact_kind),
         "configuration_sha256": _validated_sha(config_sha),
         "suite_fingerprint": suite_fingerprint(examples),
         "input_hmac_fingerprint": _input_fingerprint(examples, secret),
@@ -213,6 +214,7 @@ def capture(
     *, secret: bytes, folder: Path, run_id: str, candidate: str,
     seed: int, model_sha: str, config_sha: str, policy: str,
     suite_name: str = "unspecified",
+    artifact_kind: str = "weight_fingerprint_or_artifact",
 ) -> Path:
     bundle.validate()
     if len(examples) != len(bundle.uncertainty) or not examples:
@@ -221,7 +223,7 @@ def capture(
         raise ValueError("Duplicate example IDs in comparison suite")
     root = _private_root(folder)
     manifest = _manifest(examples, candidate, run_id, seed, model_sha,
-                         config_sha, policy, suite_name, secret)
+                         config_sha, policy, suite_name, secret, artifact_kind)
     lines = [manifest] + [
         _case_record(example, bundle, index, secret)
         for index, example in enumerate(examples)
