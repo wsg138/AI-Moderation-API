@@ -36,8 +36,8 @@ def test_disjoint_errors_create_only_hypothetical_oracle_potential() -> None:
     left = {"a": _row("ALLOW", "BLOCK"), "b": _row("ALLOW", "ALLOW")}
     right = {"a": _row("ALLOW", "ALLOW"), "b": _row("ALLOW", "BLOCK")}
     counts = _pair_report(left, right)
-    assert counts["left_only_right_action"] == 1
-    assert counts["right_only_right_action"] == 1
+    assert counts["left_unique_correct_actions"] == 1
+    assert counts["right_unique_correct_actions"] == 1
     assert counts["both_wrong_action"] == 0
     assert counts["action_disagreements"] == 2
 
