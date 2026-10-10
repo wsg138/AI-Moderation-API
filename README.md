@@ -40,11 +40,11 @@ integrations/             Client contracts/examples
 ## Cross-component contract verification (draft only)
 
 The isolated contract harness starts the **real Python FastAPI process**, creates an ephemeral
-SQLite database, generates fresh synthetic client credentials, inserts three synthetic
-moderation events, and executes the opt-in EnthusiaStaff Java HTTP-client test over
+SQLite database, generates fresh synthetic client credentials, inserts four synthetic
+moderation events (including a deliberate classifier failure recorded as fail-open), and executes the opt-in EnthusiaStaff Java HTTP-client test over
 `127.0.0.1`. It verifies staff permissions, all-decisions pagination, history filters,
-two distinct reviewer approvals, duplicate-vote handling, and preservation of the original
-classification after correction. There is **no external API traffic, player data, Discord
+two distinct reviewer approvals, duplicate-vote handling, preservation of the original
+classification after correction, and fail-open shown as unverified by Staff. There is **no external API traffic, player data, Discord
 connection, Minecraft server, or live deployment**. Automatic punishments are not involved.
 
 With the API and the matching draft EnthusiaStaff GUI repository checked out locally,
