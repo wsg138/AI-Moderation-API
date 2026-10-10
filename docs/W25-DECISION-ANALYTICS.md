@@ -26,7 +26,7 @@ One immutable run JSONL file includes:
 | Scores | **Every class probability** for every head, predicted action confidence, uncertainty, and matching/nonmatching heads |
 | Failure categories | Wrongful BLOCK of an ALLOW, missed BLOCK, false strike, false mute recommendation; source channel profile, domain, difficulty and curated reason-code labels for private error slicing |
 | Known missing fields | Prediction-time p50/p95 per case, raw logits, deterministic policy/lexical trace, generated explanation, learned mute duration; explicitly `null`, **never invented** |
-| Comparison | Per-head disagreement counts, pseudonymous case keys for private drill-down, both-model misses, false-action/sanction counts and channel-level errors for each run |
+| Comparison | Per-head disagreement counts, pseudonymous case keys for private drill-down, both-model misses, false-action/sanction counts, action confusion, channel/domain/difficulty/source-reason slices and high-confidence wrong-action cases |
 | Completeness | Expected vs observed run IDs; missing, unexpected or invalid ledger names; no silent success when evidence is absent |
 
 The W25 classifier has **six** learned heads. The accepted gold datasets also
@@ -35,6 +35,12 @@ Therefore the ledger does **not** claim whole seven-field correctness. It
 records the gold duration and a null predicted duration. The existing
 independently adjudicated Policy-v1 offline evaluator handles full seven-field
 comparisons separately.
+
+These groupings show **where a model failed**, not automatically **why** it
+failed. Source reason codes, domain and difficulty are review metadata rather
+than causal explanations. Incorrect original labels can mislead the analysis;
+a human evidence review must verify causes such as missing context, policy
+ambiguity, incomplete training data, model miscalibration or runtime errors.
 
 ### Private storage is mandatory
 
