@@ -16,7 +16,7 @@ from sklearn.linear_model import LogisticRegression
 from workers.w12.baseline import BaselineModel, _targets
 from workers.w12.dataset import ModerationExample
 from workers.w25.baselines import _expand_w12_probabilities
-from workers.w25.contract import PredictionBundle, HEAD_NAMES
+from workers.w25.contract import HEAD_NAMES, PredictionBundle
 
 
 def train_character_baseline(
