@@ -336,6 +336,15 @@ class ReviewQueueResponse(ApiModel):
     items: list[ReviewItem]
 
 
+class DecisionHistoryFilter(StrEnum):
+    ALL = "all"
+    ALLOWED = "allowed"
+    BLOCKED = "blocked"
+    REVIEW = "review"
+    FAIL_OPEN = "fail_open"
+    CORRECTED = "corrected"
+
+
 class DecisionHistoryItem(ApiModel):
     """Privacy-minimized listing; original AI outcome remains unmodified."""
 
