@@ -41,6 +41,12 @@ def evaluate_candidate(
         prevalences=PREVALENCE_LEVELS,
     )
     report["risk_coverage"] = _risk_coverage(examples, bundle)
+    # A training operator can require a private, immutable per-case ledger for
+    # every result produced by this common evaluator. Missing/failed capture
+    # must fail the run, never silently emit an unaudited success report.
+    from workers.w25.decision_analytics import capture_if_required
+
+    capture_if_required(examples, bundle)
     return report
 
 
