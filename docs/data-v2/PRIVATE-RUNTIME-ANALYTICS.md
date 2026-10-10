@@ -26,7 +26,12 @@ Dates are UTC, start-inclusive and end-exclusive. It emits JSON aggregates
 only, grouped by model+policy, channel, UTC day and semantic label. Fields:
 canonical finalized count, BLOCK/REVIEW count, degraded and FAIL_OPEN cases,
 strike/mute *recommendations*, accepted corrections, and p50/p95/p99
-end-to-end recorded latency. Per-group outputs with fewer than **10 events**
+end-to-end recorded latency. For accepted corrections, it also counts **which
+structured decision fields changed** (message action, semantic label, review
+priority, strike, containment, mute duration, support flow), without exposing
+original or corrected message text or reviewer identities. These counts are
+staff disagreement categories, not unbiased estimates of error prevalence.
+Per-group outputs with fewer than **10 events**
 are suppressed. Inputs are capped at 500,000 finalized events per window to
 avoid unbounded reports; split larger private time windows.
 
