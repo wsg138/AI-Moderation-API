@@ -36,6 +36,26 @@ def _quantile(values: list[int], fraction: float) -> int | None:
     return ordered[min(len(ordered) - 1, int((len(ordered) - 1) * fraction))]
 
 
+CORRECTABLE_FIELDS = (
+    "message_action", "semantic_label", "review_priority",
+    "strike_recommendation", "containment",
+    "containment_duration_seconds", "support_flow",
+)
+
+
+def _correction_changes(row: sqlite3.Row) -> list[str]:
+    raw = row["corrected_json"]
+    if raw is None:
+        return [] if not row["corrected"] else ["missing_correction_payload"]
+    corrected = json.loads(raw)
+    if not isinstance(corrected, dict):
+        raise ValueError("Accepted correction is not a valid object")
+    return [
+        field for field in CORRECTABLE_FIELDS
+        if field not in corrected or corrected[field] != row[field]
+    ]
+
+
 def _row_result(row: sqlite3.Row) -> dict[str, object]:
     return {
         "day": _public_tag(row["day"]),
@@ -50,6 +70,7 @@ def _row_result(row: sqlite3.Row) -> dict[str, object]:
         "strike_proposed": row["strike_recommendation"] == "STRIKE",
         "mute_proposed": row["containment"] == "MUTE",
         "corrected": bool(row["corrected"]),
+        "correction_changes": _correction_changes(row),
         "latency_ms": row["latency_ms"],
     }
 
@@ -66,6 +87,8 @@ def _update_count(counts: Counter[str], item: dict[str, object]) -> None:
         ("accepted_corrections", item["corrected"]),
     ):
         counts[field] += int(bool(trigger))
+    for field in item["correction_changes"]:
+        counts["correction_changed_" + str(field)] += 1
 
 
 def _safe_counts(counts: Counter[str], *, min_group: int) -> dict[str, int] | None:
@@ -131,11 +154,14 @@ def _read_rows(path: Path, start: str, end: str) -> dict[str, object]:
                       d.message_action, d.semantic_label,
                       d.ingestion_status, d.review_priority,
                       d.strike_recommendation, d.containment,
+                      d.containment_duration_seconds, d.support_flow,
                       d.latency_ms,
-                      (ac.event_id IS NOT NULL) AS corrected
+                      (ac.event_id IS NOT NULL) AS corrected,
+                      cp.corrected_json
                FROM moderation_events AS e
                JOIN decision_evidence AS d ON e.event_id=d.event_id
                LEFT JOIN accepted_corrections AS ac ON e.event_id=ac.event_id
+               LEFT JOIN correction_proposals AS cp ON cp.proposal_id=ac.proposal_id
                WHERE e.status='FINAL'
                  AND e.finalized_at >= ?
                  AND e.finalized_at < ?
