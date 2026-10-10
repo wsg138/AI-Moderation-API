@@ -83,17 +83,26 @@ def _prediction(bundle: PredictionBundle, index: int) -> dict[str, object]:
     return result
 
 
-def _risk_tags(gold: dict[str, object], predicted: dict[str, object]) -> list[str]:
+def _visibility_tags(gold: dict[str, object], predicted: dict[str, object]) -> list[str]:
     tags: list[str] = []
     if gold["action"] == "ALLOW" and predicted["action"] == "BLOCK":
         tags.append("wrongful_blocks")
     if gold["action"] == "BLOCK" and predicted["action"] != "BLOCK":
         tags.append("missed_blocks")
+    return tags
+
+
+def _sanction_tags(gold: dict[str, object], predicted: dict[str, object]) -> list[str]:
+    tags: list[str] = []
     if not gold["strike"] and predicted["strike"]:
         tags.append("false_strikes")
     if gold["containment"] != "MUTE" and predicted["containment"] == "MUTE":
         tags.append("false_mutes")
     return tags
+
+
+def _risk_tags(gold: dict[str, object], predicted: dict[str, object]) -> list[str]:
+    return _visibility_tags(gold, predicted) + _sanction_tags(gold, predicted)
 
 
 def _case_record(
