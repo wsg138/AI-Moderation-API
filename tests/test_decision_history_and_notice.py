@@ -7,6 +7,7 @@ from moderation_api.models import (
     ClassificationInput,
     Label,
     MessageAction,
+    ReviewPriority,
 )
 
 from .helpers import payload, result
@@ -28,6 +29,12 @@ class ClassificationForAudit:
                 action=MessageAction.BLOCK,
                 label=Label.SLUR_USE,
                 reasons=("quoted_prohibited_word",),
+            )
+        if current == "review":
+            return result(
+                label=Label.AMBIGUOUS_REVIEW,
+                review=ReviewPriority.NORMAL,
+                reasons=("needs_staff_review",),
             )
         return result(label=Label.SAFE, reasons=("safe",))
 
@@ -215,3 +222,30 @@ def test_decision_list_access_and_invalid_cursor(
     assert non_staff.status_code == 403  # nosec B101  # nosemgrep
     assert missing_cursor.status_code == 404  # nosec B101  # nosemgrep
     assert invalid_limit.status_code == 422  # nosec B101  # nosemgrep
+
+
+
+def test_review_priority_filter_includes_allowed_review_not_ordinary_allow(
+    settings, rose_headers, staff_headers,
+) -> None:
+    app = create_app(settings=settings, classifier=ClassificationForAudit())
+    with TestClient(app) as client:
+        for message_id, word in (("review-filter-1", "ordinary"), ("review-filter-2", "review")):
+            response = client.post(
+                "/v1/moderate", headers=rose_headers, json=payload(message_id, word)
+            )
+            assert response.status_code == 200  # nosec B101  # nosemgrep
+
+        review_page = client.get(
+            "/v1/decisions", headers=staff_headers, params={"filter": "review"}
+        )
+        allowed_page = client.get(
+            "/v1/decisions", headers=staff_headers, params={"filter": "allowed"}
+        )
+
+    assert review_page.status_code == 200  # nosec B101  # nosemgrep
+    assert len(review_page.json()["items"]) == 1  # nosec B101  # nosemgrep
+    reviewed = review_page.json()["items"][0]
+    assert reviewed["message_action"] == "ALLOW"  # nosec B101  # nosemgrep
+    assert reviewed["review_priority"] == "NORMAL"  # nosec B101  # nosemgrep
+    assert len(allowed_page.json()["items"]) == 2  # nosec B101  # nosemgrep
