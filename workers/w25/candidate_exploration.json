@@ -1,0 +1,127 @@
+{
+  "schema_version": 1,
+  "purpose": "W25 development candidate discovery only; not a deployment or acceptance registry",
+  "baseline_families": [
+    "w12-word-tfidf",
+    "w12-bert-mini",
+    "modernbert-base",
+    "deberta-v3-xsmall-or-small",
+    "canine-s",
+    "lexical-fusion",
+    "calibrated-cascade"
+  ],
+  "experimental_candidates": [
+    {
+      "id": "deberta-v3-base",
+      "kind": "encoder",
+      "source": "microsoft/deberta-v3-base",
+      "license": "MIT",
+      "study": "Greater capacity than xsmall/small for complex directed abuse",
+      "known_cost": "higher",
+      "status": "proposal"
+    },
+    {
+      "id": "xlm-roberta-base",
+      "kind": "multilingual_encoder",
+      "source": "FacebookAI/xlm-roberta-base",
+      "license": "MIT",
+      "study": "Cross-language/code-switching moderation",
+      "known_cost": "higher",
+      "status": "proposal"
+    },
+    {
+      "id": "modernbert-large",
+      "kind": "long_context_encoder",
+      "source": "answerdotai/ModernBERT-large",
+      "license": "Apache-2.0",
+      "study": "Long conversational context, marginal gains over base",
+      "known_cost": "high",
+      "status": "proposal"
+    },
+    {
+      "id": "byt5-small",
+      "kind": "byte_seq2seq",
+      "source": "google/byt5-small",
+      "license": "Apache-2.0",
+      "study": "Byte-noise/Unicode and obfuscation; requires new task adapter",
+      "known_cost": "high",
+      "status": "proposal"
+    },
+    {
+      "id": "toxic-bert",
+      "kind": "toxicity_reference",
+      "source": "unitary/toxic-bert",
+      "license": "Apache-2.0",
+      "study": "Cheap independent toxicity signal; labels incompatible with Policy-v1 without validated mapping",
+      "known_cost": "medium",
+      "status": "proposal"
+    },
+    {
+      "id": "char-tfidf-linear",
+      "kind": "local_classical",
+      "source": null,
+      "license": "local-code",
+      "study": "Character n-gram lexical and anti-obfuscation baseline",
+      "known_cost": "low",
+      "status": "proposal"
+    },
+    {
+      "id": "multilingual-e5-small-retrieval",
+      "kind": "embedding_retrieval",
+      "source": "intfloat/multilingual-e5-small",
+      "license": "MIT",
+      "study": "Retriever of approved in-policy exemplars; must train-index only and no holdout leakage",
+      "known_cost": "medium",
+      "status": "proposal"
+    }
+  ],
+  "experimental_combinations": [
+    {
+      "id": "lexical-plus-context",
+      "kind": "hybrid",
+      "members": [
+        "char-tfidf-linear",
+        "modernbert-base"
+      ],
+      "hypothesis": "Char model catches evasion while contextual model disambiguates harmless game phrases"
+    },
+    {
+      "id": "crosslingual-with-mediator",
+      "kind": "ensemble",
+      "members": [
+        "xlm-roberta-base",
+        "deberta-v3-base",
+        "char-tfidf-linear"
+      ],
+      "hypothesis": "Independent models plus policy mediator resolve disagreement in multilingual/threat cases"
+    },
+    {
+      "id": "targeted-review-cascade",
+      "kind": "abstaining_cascade",
+      "members": [
+        "deberta-v3-xsmall-or-small",
+        "modernbert-base",
+        "canine-s"
+      ],
+      "hypothesis": "Fast model triages, specialized verifiers handle uncertain cases, no automatic sanction"
+    },
+    {
+      "id": "retrieval-assisted-verifier",
+      "kind": "retrieval_with_policy",
+      "members": [
+        "multilingual-e5-small-retrieval",
+        "modernbert-base"
+      ],
+      "hypothesis": "Curated examples aid rare boundary cases without retraining and are never treated as truth by themselves"
+    }
+  ],
+  "requirements": {
+    "no_training_or_download_by_registry": true,
+    "licensing_and_revision_pin_before_install": true,
+    "approved_development_splits_only": true,
+    "locked_acceptance_never_used_for_selection": true,
+    "same_source_hmac_and_policy_version_for_comparisons": true,
+    "record_latency_memory_cost_as_well_as_errors": true,
+    "none_are_proven_better": true
+  }
+}
