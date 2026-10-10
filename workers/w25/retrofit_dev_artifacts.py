@@ -33,7 +33,11 @@ class Source:
 SOURCES = (
     Source("w25-wordchar", "W25_A100_Offload_5vdymryahpn1hf/word-char-tfidf/seed-138/raw"),
     Source("modernbert-raw", "W25_A100_Offload_5vdymryahpn1hf/modernbert-base/seed-138/raw"),
-    Source("modernbert-normalized", "W25_A100_Offload_5vdymryahpn1hf/modernbert-base/seed-138/raw-normalized", "raw+normalized"),
+    Source(
+        "modernbert-normalized",
+        "W25_A100_Offload_5vdymryahpn1hf/modernbert-base/seed-138/raw-normalized",
+        "raw+normalized",
+    ),
     Source("deberta-xsmall", "W25_A100_Offload_5vdymryahpn1hf/deberta-v3-xsmall/seed-138/raw"),
     Source("deberta-small", "W25_A100_Offload_5vdymryahpn1hf/deberta-v3-small/seed-138/raw"),
     Source("canine-s", "W25_A100_Offload_5vdymryahpn1hf/canine-s/seed-138/raw"),
