@@ -2,12 +2,13 @@
 from __future__ import annotations
 
 import json
+from typing import Any, cast
 
 from workers.w25.development_probe import run
 
 
 def test_w11_word_vs_character_probe_saves_complete_private_evidence(tmp_path) -> None:
-    result = run(tmp_path, seed=17)
+    result = cast(dict[str, Any], run(tmp_path, seed=17))
     assert result["source"].startswith("W11 train/validation only")
     assert result["train_count"] > 100
     assert result["development_count"] > 100
