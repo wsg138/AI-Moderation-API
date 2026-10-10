@@ -79,24 +79,29 @@ def _false_block_upper_bound(false_blocks: int, benign_count: int) -> float | No
     return round(1000 * wilson_upper(false_blocks, benign_count), 3)
 
 
+def _error_counts(gold: list[str], predicted: list[str]) -> tuple[int, int, int, int]:
+    safe = [p for g, p in zip(gold, predicted, strict=True) if g == "ALLOW"]
+    harmful = [p for g, p in zip(gold, predicted, strict=True) if g == "BLOCK"]
+    false_blocks = sum(p == "BLOCK" for p in safe)
+    misses = sum(p != "BLOCK" for p in harmful)
+    return len(safe), len(harmful), false_blocks, misses
+
+
 def _summary(gold: list[str], predicted: list[str]) -> dict[str, Any]:
     correct = sum(a == b for a, b in zip(gold, predicted, strict=True))
-    safe = [b for a, b in zip(gold, predicted, strict=True) if a == "ALLOW"]
-    harmful = [b for a, b in zip(gold, predicted, strict=True) if a == "BLOCK"]
-    false_blocks = sum(b == "BLOCK" for b in safe)
-    misses = sum(b != "BLOCK" for b in harmful)
+    benign_count, block_count, false_blocks, misses = _error_counts(gold, predicted)
     return {
         "n": len(gold),
         "action_correct": correct,
         "action_accuracy": round(correct / len(gold), 6),
         "action_accuracy_wilson_lower95": wilson_lower(correct, len(gold)),
-        "gold_allow_support": len(safe),
-        "gold_block_support": len(harmful),
+        "gold_allow_support": benign_count,
+        "gold_block_support": block_count,
         "wrongful_blocks": false_blocks,
         "missed_blocks": misses,
         "sent_to_review": predicted.count("REVIEW"),
         "false_block_upper95_per_1000_benign": _false_block_upper_bound(
-            false_blocks, len(safe)
+            false_blocks, benign_count
         ),
         "confusion": dict(sorted(Counter(
             a + " -> " + b for a, b in zip(gold, predicted, strict=True)
