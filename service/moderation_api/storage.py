@@ -861,24 +861,37 @@ def _history_anchor(
     connection: sqlite3.Connection, cursor: str, history_filter: DecisionHistoryFilter,
 ) -> sqlite3.Row:
     row = connection.execute(
-        """SELECT e.finalized_at,e.event_id
+        """SELECT e.finalized_at,e.event_id,d.message_action,
+                  d.review_priority,d.ingestion_status,
+                  (a.event_id IS NOT NULL) AS corrected
            FROM moderation_events e
            JOIN decision_evidence d ON d.event_id=e.event_id
            LEFT JOIN accepted_corrections a ON a.event_id=e.event_id
-           WHERE e.event_id=? AND e.status='FINAL'
-           AND (
-             ?='all'
-             OR (?='allowed' AND d.message_action='ALLOW' AND d.ingestion_status='INGESTED')
-             OR (?='blocked' AND d.message_action='BLOCK')
-             OR (?='review' AND d.review_priority!='NONE')
-             OR (?='fail_open' AND d.ingestion_status='FAIL_OPEN')
-             OR (?='corrected' AND a.event_id IS NOT NULL)
-           )""",
-        (cursor, *_history_filter_params(history_filter)),
+           WHERE e.event_id=? AND e.status='FINAL'""",
+        (cursor,),
     ).fetchone()
-    if row is None:
+    if row is None or not _history_filter_matches(row, history_filter):
         raise EventNotFound(cursor)
     return cast(sqlite3.Row, row)
+
+
+def _history_filter_matches(
+    row: sqlite3.Row, history_filter: DecisionHistoryFilter,
+) -> bool:
+    match history_filter:
+        case DecisionHistoryFilter.ALL:
+            return True
+        case DecisionHistoryFilter.ALLOWED:
+            return row["message_action"] == "ALLOW" and row["ingestion_status"] == "INGESTED"
+        case DecisionHistoryFilter.BLOCKED:
+            return row["message_action"] == "BLOCK"
+        case DecisionHistoryFilter.REVIEW:
+            return row["review_priority"] != "NONE"
+        case DecisionHistoryFilter.FAIL_OPEN:
+            return row["ingestion_status"] == "FAIL_OPEN"
+        case DecisionHistoryFilter.CORRECTED:
+            return bool(row["corrected"])
+    return False
 
 
 def _history_rows(
