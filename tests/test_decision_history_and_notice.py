@@ -1,9 +1,12 @@
 """Block notices and the authenticated ALL-decisions audit, never live enforcement."""
 from __future__ import annotations
 
-from fastapi.testclient import TestClient
-from moderation_api.app import create_app
-from moderation_api.models import (
+# Codacy's isolated Pyright runner does not resolve editable/test dependencies.
+# These imports are exercised by the full installed-package CI test suite.
+
+from fastapi.testclient import TestClient  # pyright: ignore[reportMissingImports]
+from moderation_api.app import create_app  # pyright: ignore[reportMissingImports]
+from moderation_api.models import (  # pyright: ignore[reportMissingImports]
     ClassificationInput,
     Label,
     MessageAction,
