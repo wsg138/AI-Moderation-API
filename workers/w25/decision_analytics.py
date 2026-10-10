@@ -26,6 +26,20 @@ REPO = Path(__file__).resolve().parents[2]
 TOKEN = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,63}\Z")
 DIGEST = re.compile(r"[a-f0-9]{64}\Z")
 BANNED_SUITES = ("w20", "w27", "acceptance", "owner_golden")
+AUTO_SUITES = frozenset({
+    "development", "balanced_policy", "real_distribution",
+    "adversarial_evasion", "context", "time_based_real_chat",
+})
+CAPTURE_ENV = {
+    "private_dir": "ENTHUSIA_ANALYTICS_PRIVATE_DIR",
+    "run_id": "ENTHUSIA_ANALYTICS_RUN_ID",
+    "candidate": "ENTHUSIA_ANALYTICS_CANDIDATE",
+    "seed": "ENTHUSIA_ANALYTICS_SEED",
+    "model_sha": "ENTHUSIA_ANALYTICS_MODEL_SHA256",
+    "config_sha": "ENTHUSIA_ANALYTICS_CONFIG_SHA256",
+    "policy": "ENTHUSIA_ANALYTICS_POLICY",
+    "suite": "ENTHUSIA_ANALYTICS_SUITE",
+}
 
 
 def _validated_token(value: str) -> str:
@@ -141,13 +155,14 @@ def _case_record(
 
 def _manifest(
     examples: list[ModerationExample], candidate: str, run_id: str,
-    seed: int, model_sha: str, config_sha: str, policy: str,
+    seed: int, model_sha: str, config_sha: str, policy: str, suite_name: str,
 ) -> dict[str, object]:
     return {
         "record_type": "manifest",
         "schema_version": SCHEMA,
         "run_id": _validated_token(run_id),
         "candidate": _validated_token(candidate),
+        "suite_name": _validated_token(suite_name),
         "seed": seed,
         "policy_version": _validated_token(policy),
         "model_artifact_sha256": _validated_sha(model_sha),
@@ -182,6 +197,7 @@ def capture(
     examples: list[ModerationExample], bundle: PredictionBundle,
     *, secret: bytes, folder: Path, run_id: str, candidate: str,
     seed: int, model_sha: str, config_sha: str, policy: str,
+    suite_name: str = "unspecified",
 ) -> Path:
     bundle.validate()
     if len(examples) != len(bundle.uncertainty) or not examples:
@@ -189,7 +205,8 @@ def capture(
     if len({item.example_id for item in examples}) != len(examples):
         raise ValueError("Duplicate example IDs in comparison suite")
     root = _private_root(folder)
-    manifest = _manifest(examples, candidate, run_id, seed, model_sha, config_sha, policy)
+    manifest = _manifest(examples, candidate, run_id, seed, model_sha,
+                         config_sha, policy, suite_name)
     lines = [manifest] + [
         _case_record(example, bundle, index, secret)
         for index, example in enumerate(examples)
@@ -197,6 +214,31 @@ def capture(
     destination = root / (_validated_token(run_id) + ".jsonl")
     _write_once(destination, lines)
     return destination
+
+
+def capture_if_required(
+    examples: list[ModerationExample], bundle: PredictionBundle,
+) -> Path | None:
+    """Archive every shared-evaluator result when the authorized run opts in."""
+    mode = os.environ.get("ENTHUSIA_ANALYTICS_MODE", "")
+    if mode == "":
+        return None
+    if mode != "required":
+        raise ValueError("Only ENTHUSIA_ANALYTICS_MODE=required is supported")
+    values = {name: os.environ.get(key) for name, key in CAPTURE_ENV.items()}
+    if any(value is None or not value for value in values.values()):
+        raise ValueError("Required analytics run configuration is incomplete")
+    suite = str(values["suite"])
+    if suite not in AUTO_SUITES:
+        raise ValueError("Not a declared development/W25 evaluation suite")
+    return capture(
+        examples, bundle, secret=_secret("ENTHUSIA_ANALYTICS_HMAC_KEY"),
+        folder=Path(str(values["private_dir"])),
+        run_id=str(values["run_id"]), candidate=str(values["candidate"]),
+        seed=int(str(values["seed"])), model_sha=str(values["model_sha"]),
+        config_sha=str(values["config_sha"]), policy=str(values["policy"]),
+        suite_name=suite,
+    )
 
 
 def _validate_ledger_rows(rows: list[dict[str, Any]]) -> None:
@@ -377,7 +419,7 @@ def main() -> None:
         secret=_secret(args.secret_env), folder=args.private_dir,
         run_id=args.run_id, candidate=args.candidate, seed=args.seed,
         model_sha=args.model_sha256, config_sha=args.config_sha256,
-        policy=args.policy,
+        policy=args.policy, suite_name=suite,
     )
     print(json.dumps({"saved_private_ledger": output.name, "status": "capture_complete"}))
 
