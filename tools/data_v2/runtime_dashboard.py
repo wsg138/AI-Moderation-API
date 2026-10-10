@@ -131,7 +131,7 @@ def _private_output(path: Path) -> Path:
     if not path.is_absolute():
         raise ValueError("Absolute private dashboard output path required")
     destination = path.resolve()
-    if REPO == destination or REPO in destination.parents:
+    if destination == REPO or REPO in destination.parents:
         raise ValueError("Dashboard output must remain outside Git")
     if not destination.parent.is_dir():
         raise ValueError("Pre-create the restricted private dashboard directory")
