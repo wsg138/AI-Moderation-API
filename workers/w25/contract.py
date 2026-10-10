@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass
+from math import isfinite
 
 from workers.w12.dataset import (
     ACTIONS,
@@ -72,8 +73,8 @@ def _validate_heads(
 def _validate_probability_row(head: str, row: list[float], class_count: int) -> None:
     if len(row) != class_count:
         raise ValueError(f"{head} probability width mismatch")
-    if any(value < 0.0 or value > 1.0 for value in row):
-        raise ValueError(f"{head} probability outside [0, 1]")
+    if any(not isfinite(value) or not 0.0 <= value <= 1.0 for value in row):
+        raise ValueError(f"{head} probability is nonfinite or outside [0, 1]")
     if abs(sum(row) - 1.0) > 1e-4:
         raise ValueError(f"{head} probabilities do not sum to one")
 
