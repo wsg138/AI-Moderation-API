@@ -47,18 +47,7 @@ def _inspect(path: Path, expected: str) -> dict[str, object]:
     }
 
 
-def repair_confirmed_crlf() -> list[str]:
-    """Repair only known repo files whose LF bytes exactly match the manifest."""
-    manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
-    record = next(
-        item for item in manifest["sources"]
-        if item["path"] == "data/candidates/W21-adversarial-evasion.jsonl"
-    )
-    targets = (
-        (SOURCE, record["sha256"]),
-        (ROOT / record["partition_manifest"], record["partition_manifest_sha256"]),
-    )
-    # Verify *both* before touching either file; never fix unknown content.
+def _planned_repairs(targets: tuple[tuple[Path, str], ...]) -> list[tuple[Path, bytes]]:
     repairs: list[tuple[Path, bytes]] = []
     for path, expected in targets:
         raw = path.read_bytes()
@@ -68,19 +57,36 @@ def repair_confirmed_crlf() -> list[str]:
         if raw == normalized or hashlib.sha256(normalized).hexdigest() != expected:
             raise ValueError("Unknown byte difference; no files changed")
         repairs.append((path, normalized))
-    changed = []
+    return repairs
+
+
+def _replace_atomically(path: Path, normalized: bytes) -> None:
+    temporary: str | None = None
+    try:
+        with tempfile.NamedTemporaryFile(dir=path.parent, delete=False) as handle:
+            temporary = handle.name
+            handle.write(normalized)
+        os.replace(temporary, path)
+    finally:
+        if temporary is not None:
+            Path(temporary).unlink(missing_ok=True)
+
+
+def repair_confirmed_crlf() -> list[str]:
+    """Only canonicalize files whose LF digest matches the frozen manifest."""
+    manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
+    record = next(
+        item for item in manifest["sources"]
+        if item["path"] == "data/candidates/W21-adversarial-evasion.jsonl"
+    )
+    targets = (
+        (SOURCE, record["sha256"]),
+        (ROOT / record["partition_manifest"], record["partition_manifest_sha256"]),
+    )
+    repairs = _planned_repairs(targets)
     for path, normalized in repairs:
-        temp_name: str | None = None
-        try:
-            with tempfile.NamedTemporaryFile(dir=path.parent, delete=False) as handle:
-                temp_name = handle.name
-                handle.write(normalized)
-            os.replace(temp_name, path)
-            changed.append(str(path.relative_to(ROOT)))
-        finally:
-            if temp_name is not None:
-                Path(temp_name).unlink(missing_ok=True)
-    return changed
+        _replace_atomically(path, normalized)
+    return [str(path.relative_to(ROOT)) for path, _ in repairs]
 
 
 if __name__ == "__main__":
