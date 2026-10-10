@@ -347,6 +347,44 @@ def _channel_breakdown(rows: dict[str, dict[str, Any]]) -> dict[str, object]:
     return {name: dict(data) for name, data in sorted(counts.items())}
 
 
+def _action_confusion(rows: dict[str, dict[str, Any]]) -> dict[str, int]:
+    matrix = Counter(
+        str(row["gold"]["action"]) + " -> " + str(row["predicted"]["action"])
+        for row in rows.values()
+    )
+    return dict(sorted(matrix.items()))
+
+
+def _failure_slices(rows: dict[str, dict[str, Any]], dimension: str) -> dict[str, object]:
+    tally: dict[str, Counter[str]] = {}
+    for row in rows.values():
+        key = str(row[dimension])
+        counts = tally.setdefault(key, Counter())
+        counts["n"] += 1
+        counts["wrong"] += int(not row["all_supervised_heads_correct"])
+        counts.update(row["risk_tags"])
+    return {key: dict(value) for key, value in sorted(tally.items())}
+
+
+def _reason_code_failures(rows: dict[str, dict[str, Any]]) -> dict[str, object]:
+    tally: dict[str, Counter[str]] = {}
+    for row in rows.values():
+        for code in set(row["gold_reason_codes"]):
+            counts = tally.setdefault(str(code), Counter())
+            counts["n"] += 1
+            counts["wrong"] += int(not row["all_supervised_heads_correct"])
+    return {key: dict(value) for key, value in sorted(tally.items())}
+
+
+def _confident_action_errors(rows: dict[str, dict[str, Any]]) -> dict[str, object]:
+    mistakes = [
+        row["case_key"] for row in rows.values()
+        if row["gold"]["action"] != row["predicted"]["action"]
+        and row["confidence"] >= 0.90
+    ]
+    return {"total": len(mistakes), "first_25_case_keys": mistakes[:25]}
+
+
 def _run_summary(
     headers: list[dict[str, Any]], records: list[dict[str, dict[str, Any]]],
 ) -> dict[str, object]:
@@ -357,7 +395,12 @@ def _run_summary(
                 head for row in values.values() for head in row["head_errors"]
             )),
             "harmful_errors": _error_breakdown(values),
+            "action_confusion": _action_confusion(values),
             "channel_issues": _channel_breakdown(values),
+            "by_domain": _failure_slices(values, "domain"),
+            "by_difficulty": _failure_slices(values, "difficulty"),
+            "by_gold_reason_code": _reason_code_failures(values),
+            "confident_action_errors": _confident_action_errors(values),
         }
         for item, values in zip(headers, records, strict=True)
     }
