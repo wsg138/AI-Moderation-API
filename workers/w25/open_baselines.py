@@ -9,9 +9,9 @@ import hashlib
 import json
 from pathlib import Path
 
-import sklearn
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.linear_model import LogisticRegression
+import sklearn  # pyright: ignore[reportMissingImports]
+from sklearn.feature_extraction.text import TfidfVectorizer  # pyright: ignore[reportMissingImports]
+from sklearn.linear_model import LogisticRegression  # pyright: ignore[reportMissingImports]
 
 from workers.w12.baseline import BaselineModel, _targets
 from workers.w12.dataset import ModerationExample
