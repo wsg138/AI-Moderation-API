@@ -31,6 +31,12 @@ def _fixture(path: Path) -> None:
             CREATE TABLE accepted_corrections(event_id TEXT PRIMARY KEY);
             """
         )
+    with sqlite3.connect(path) as db:
+        _seed_rows(db)
+
+
+def _seed_rows(db: sqlite3.Connection) -> None:
+    with db:
         for index in range(12):
             ident = "PRIVATE-SYNTHETIC-MESSAGE-" + str(index)
             db.execute(
