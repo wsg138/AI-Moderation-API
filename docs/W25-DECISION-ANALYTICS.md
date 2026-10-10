@@ -88,6 +88,41 @@ registry-approved ready suite**; direct W20/W27/owner acceptance access is
 intentionally rejected. Case count must match bundle cardinality exactly, no
 duplicate IDs allowed. Reusing the run ID does not overwrite a previous ledger.
 
+### Mandatory archive mode for every shared evaluator call
+
+For a controlled W25 development/test process, the operator can set
+`ENTHUSIA_ANALYTICS_MODE=required`, plus the following **separate
+process-local values** before invoking a W25 runner command:
+
+- `ENTHUSIA_ANALYTICS_PRIVATE_DIR`: existing, access-controlled absolute
+  directory outside Git
+- `ENTHUSIA_ANALYTICS_HMAC_KEY`: long privately supplied HMAC secret
+- `ENTHUSIA_ANALYTICS_RUN_ID`: unique **for this evaluation** (reuse fails)
+- `ENTHUSIA_ANALYTICS_CANDIDATE`, `ENTHUSIA_ANALYTICS_SEED`
+- `ENTHUSIA_ANALYTICS_MODEL_SHA256`,
+  `ENTHUSIA_ANALYTICS_CONFIG_SHA256`
+- `ENTHUSIA_ANALYTICS_POLICY` and
+  `ENTHUSIA_ANALYTICS_SUITE`
+
+The suite must be exactly `development` or one of the five W25 suite
+names in the implementation allowlist. It will **reject W20/W27 acceptance
+names**. The source and evaluation-fingerprint remain independently
+reviewable; a manually entered suite name alone does not establish consent
+or prove that a dataset is eligible.
+
+With this mode enabled, every
+`workers.w25.evaluation.evaluate_candidate(examples, bundle)` call
+**writes the private ledger before returning its aggregate result**.
+Incomplete metadata, inaccessible private storage, duplicate run IDs or
+other capture failures cause the evaluation to fail instead of reporting
+an analytics-free success. When the mode variable is absent, normal
+evaluation remains unchanged and does **not** claim to have archived a run.
+
+This covers shared W25 evaluation calls; it does **not** automatically
+capture every lower-level training step, model forward pass, disconnected
+upstream chat message or future live inference. Separate instrumentation,
+private controls and loss accounting are still required there.
+
 For comparisons of already saved PRIVATE ledgers:
 
 ```bash
@@ -141,9 +176,10 @@ disagreement**, not proven correctness when source labels are unverified.
 ## Hard limits
 
 This PR does **not** claim real-world +99% accuracy or authorize use of
-private sealed suites. Ledger capture is an **explicit offline command**
-performed after existing W25 saved runs: it is not yet an automatic hook on
-every runtime invocation. The audit can prove completeness only against a
+private sealed suites. Ledger capture supports both an **explicit offline command** for already
+saved W25 bundles and a fail-closed **required-capture mode** at the shared
+W25 evaluator. It is not yet an automatic hook on every model forward pass
+or live production invocation. The audit can prove completeness only against a
 declared expected-run list; a future independent experiment manifest should
 define required candidates/suites automatically. Successful CI validates
 code behavior on invented data, not training quality, actual production chat
