@@ -9,6 +9,7 @@ from workers.w25.contract import HEAD_VALUES
 from workers.w25.full_head_blend import (
     _block_rates,
     _critical,
+    _guard_allow_punitive_heads,
     _mean_choice,
     _six_head_stats,
     analyze_full,
@@ -53,6 +54,17 @@ def test_allow_and_strike_or_mute_contradiction_is_reported() -> None:
     assert result["false_mute_recommendations"] == 1
     assert result["allow_with_punitive_head"] == 1
     assert result["six_head_exact"] == 0
+
+
+def test_allow_guard_clears_only_current_message_punitive_heads() -> None:
+    row = _row()
+    raw = dict(row["gold"], strike=True, containment="MUTE")
+    guarded = _guard_allow_punitive_heads(raw)
+    assert guarded["strike"] is False
+    assert guarded["containment"] == "NONE"
+    assert guarded["action"] == "ALLOW"
+    assert raw["strike"] is True
+    assert _six_head_stats([row], [guarded])["allow_with_punitive_head"] == 0
 
 
 def test_probability_average_validates_finite_scores_and_head_type() -> None:
