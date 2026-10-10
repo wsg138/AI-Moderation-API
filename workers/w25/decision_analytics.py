@@ -214,6 +214,15 @@ def _compare_head(
     }
 
 
+def _assert_matching_truth(
+    first: dict[str, dict[str, Any]], other: dict[str, dict[str, Any]],
+) -> None:
+    if set(other) != set(first):
+        raise ValueError("Pseudonym keys differ; use the same private HMAC key")
+    if any(other[key]["gold"] != first[key]["gold"] for key in first):
+        raise ValueError("Gold decisions differ between candidate ledgers")
+
+
 def _validate_compatible_ledgers(
     headers: list[dict[str, Any]], records: list[dict[str, dict[str, Any]]],
 ) -> None:
@@ -221,12 +230,8 @@ def _validate_compatible_ledgers(
         raise ValueError("Duplicate run IDs")
     if len({item["suite_fingerprint"] for item in headers}) != 1:
         raise ValueError("Cannot compare distinct evaluation suites")
-    first = records[0]
     for other in records[1:]:
-        if set(other) != set(first):
-            raise ValueError("Pseudonym keys differ; use the same private HMAC key")
-        if any(other[key]["gold"] != first[key]["gold"] for key in first):
-            raise ValueError("Gold decisions differ between candidate ledgers")
+        _assert_matching_truth(records[0], other)
 
 
 def _pairwise_comparison(
