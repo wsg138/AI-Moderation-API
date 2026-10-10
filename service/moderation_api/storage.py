@@ -852,64 +852,80 @@ def _list_review_items(path: Path, limit: int) -> list[ReviewItem]:
 
 
 
-_HISTORY_PREDICATES: dict[DecisionHistoryFilter, str] = {
-    DecisionHistoryFilter.ALL: "",
-    DecisionHistoryFilter.ALLOWED: (
-        " AND d.message_action='ALLOW' AND d.ingestion_status='INGESTED'"
-    ),
-    DecisionHistoryFilter.BLOCKED: " AND d.message_action='BLOCK'",
-    DecisionHistoryFilter.REVIEW: " AND d.review_priority!='NONE'",
-    DecisionHistoryFilter.FAIL_OPEN: " AND d.ingestion_status='FAIL_OPEN'",
-    DecisionHistoryFilter.CORRECTED: " AND a.event_id IS NOT NULL",
-}
+def _history_filter_params(history_filter: DecisionHistoryFilter) -> tuple[str, ...]:
+    # Bound scalar values; never interpolate caller-derived SQL identifiers.
+    return (history_filter.value,) * 6
+
+
+def _history_anchor(
+    connection: sqlite3.Connection, cursor: str, history_filter: DecisionHistoryFilter,
+) -> sqlite3.Row:
+    row = connection.execute(
+        """SELECT e.finalized_at,e.event_id
+           FROM moderation_events e
+           JOIN decision_evidence d ON d.event_id=e.event_id
+           LEFT JOIN accepted_corrections a ON a.event_id=e.event_id
+           WHERE e.event_id=? AND e.status='FINAL'
+           AND (
+             ?='all'
+             OR (?='allowed' AND d.message_action='ALLOW' AND d.ingestion_status='INGESTED')
+             OR (?='blocked' AND d.message_action='BLOCK')
+             OR (?='review' AND d.review_priority!='NONE')
+             OR (?='fail_open' AND d.ingestion_status='FAIL_OPEN')
+             OR (?='corrected' AND a.event_id IS NOT NULL)
+           )""",
+        (cursor, *_history_filter_params(history_filter)),
+    ).fetchone()
+    if row is None:
+        raise EventNotFound(cursor)
+    return row
+
+
+def _history_rows(
+    connection: sqlite3.Connection, limit: int,
+    history_filter: DecisionHistoryFilter, anchor: sqlite3.Row | None,
+) -> list[sqlite3.Row]:
+    cutoff = anchor["finalized_at"] if anchor is not None else None
+    after_id = anchor["event_id"] if anchor is not None else None
+    return connection.execute(
+        """SELECT e.event_id,e.occurred_at,e.finalized_at,
+                  e.platform,e.channel_profile,e.degraded,
+                  d.ingestion_status,d.message_action,d.semantic_label,
+                  d.review_priority,d.reason_codes_json,
+                  d.local_model_version,d.policy_version,
+                  (a.event_id IS NOT NULL) AS corrected
+           FROM moderation_events e
+           JOIN decision_evidence d ON d.event_id=e.event_id
+           LEFT JOIN accepted_corrections a ON a.event_id=e.event_id
+           WHERE e.status='FINAL'
+             AND (
+               ?='all'
+               OR (?='allowed' AND d.message_action='ALLOW' AND d.ingestion_status='INGESTED')
+               OR (?='blocked' AND d.message_action='BLOCK')
+               OR (?='review' AND d.review_priority!='NONE')
+               OR (?='fail_open' AND d.ingestion_status='FAIL_OPEN')
+               OR (?='corrected' AND a.event_id IS NOT NULL)
+             )
+             AND (? IS NULL OR (e.finalized_at,e.event_id) < (?,?))
+           ORDER BY e.finalized_at DESC,e.event_id DESC
+           LIMIT ?""",
+        (*_history_filter_params(history_filter), cutoff, cutoff, after_id, limit + 1),
+    ).fetchall()
 
 
 def _list_decisions(
-    path: Path, limit: int, cursor: str | None, filter: DecisionHistoryFilter,
+    path: Path, limit: int, cursor: str | None, history_filter: DecisionHistoryFilter,
 ) -> DecisionHistoryPage:
-    """Paginate every finalized, non-exempt event, including ordinary ALLOW."""
+    """Paginate durable decisions; filter values stay bound in fixed SQL."""
     if not 1 <= limit <= 250:
         raise ValueError("invalid page size")
-    predicate = _HISTORY_PREDICATES[filter]
     with _connect(path) as connection:
-        anchor = None
-        if cursor is not None:
-            anchor_query = (
-                "SELECT e.finalized_at,e.event_id FROM moderation_events e "
-                "JOIN decision_evidence d ON d.event_id=e.event_id "
-                "LEFT JOIN accepted_corrections a ON a.event_id=e.event_id "
-                "WHERE e.event_id=? AND e.status='FINAL'" + predicate
-            )
-            anchor = connection.execute(anchor_query, (cursor,)).fetchone()
-            if anchor is None:
-                raise EventNotFound(cursor)
-        # SQL is fixed source text selected from a closed enum mapping.
-        base_query = """SELECT e.event_id,e.occurred_at,e.finalized_at,
-                              e.platform,e.channel_profile,e.degraded,
-                              d.ingestion_status,d.message_action,d.semantic_label,
-                              d.review_priority,d.reason_codes_json,
-                              d.local_model_version,d.policy_version,
-                              (a.event_id IS NOT NULL) AS corrected
-                       FROM moderation_events e
-                       JOIN decision_evidence d ON d.event_id=e.event_id
-                       LEFT JOIN accepted_corrections a ON a.event_id=e.event_id
-                       WHERE e.status='FINAL'"""
-        order_query = " ORDER BY e.finalized_at DESC,e.event_id DESC LIMIT ?"
-        params: tuple[object, ...]
-        if anchor is None:
-            query = base_query + predicate + order_query
-            params = (limit + 1,)
-        else:
-            # An indexed tuple range avoids rescanning preceding pages.
-            query = (base_query + predicate
-                     + " AND (e.finalized_at,e.event_id) < (?, ?)" + order_query)
-            params = (anchor["finalized_at"], anchor["event_id"], limit + 1)
-        rows = connection.execute(query, params).fetchall()
-    has_more = len(rows) > limit
+        anchor = _history_anchor(connection, cursor, history_filter) if cursor else None
+        rows = _history_rows(connection, limit, history_filter, anchor)
     records = rows[:limit]
     return DecisionHistoryPage(
         items=[_decision_history_item(row) for row in records],
-        next_cursor=str(records[-1]["event_id"]) if has_more else None,
+        next_cursor=str(records[-1]["event_id"]) if len(rows) > limit else None,
     )
 
 
