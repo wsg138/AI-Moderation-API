@@ -19,22 +19,28 @@ def report() -> dict[str, object]:
         item for item in manifest["sources"]
         if item["path"] == "data/candidates/W21-adversarial-evasion.jsonl"
     )
-    raw = SOURCE.read_bytes()
-    normalize = raw.replace(b"\r\n", b"\n")
-    raw_sha = hashlib.sha256(raw).hexdigest()
-    normalized_sha = hashlib.sha256(normalize).hexdigest()
-    expected = record["sha256"]
     return {
-        "source": record["path"],
-        "manifest_matches_raw": raw_sha == expected,
-        "manifest_matches_crlf_normalized": normalized_sha == expected,
-        "contains_crlf": b"\r\n" in raw,
-        "sha256_expected": expected,
-        "sha256_raw": raw_sha,
-        "sha256_crlf_normalized": normalized_sha,
-        "line_count": raw.count(b"\n"),
+        "source": _inspect(SOURCE, record["sha256"]),
+        "split": _inspect(
+            ROOT / record["partition_manifest"], record["partition_manifest_sha256"]
+        ),
         "modifies_files": False,
         "raw_content_exposed": False,
+    }
+
+
+def _inspect(path: Path, expected: str) -> dict[str, object]:
+    raw = path.read_bytes()
+    normalized = raw.replace(b"\r\n", b"\n")
+    return {
+        "manifest_matches_raw": hashlib.sha256(raw).hexdigest() == expected,
+        "manifest_matches_crlf_normalized": (
+            hashlib.sha256(normalized).hexdigest() == expected
+        ),
+        "contains_crlf": b"\r\n" in raw,
+        "sha256_expected": expected,
+        "sha256_raw": hashlib.sha256(raw).hexdigest(),
+        "sha256_crlf_normalized": hashlib.sha256(normalized).hexdigest(),
     }
 
 
