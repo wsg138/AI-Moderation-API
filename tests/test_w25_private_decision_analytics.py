@@ -9,8 +9,8 @@ from dataclasses import replace
 import pytest
 
 from workers.w12.dataset import ModerationExample
-from workers.w25.contract import HEAD_VALUES, PredictionBundle
 from workers.w25.candidate_diagnostics import diagnose
+from workers.w25.contract import HEAD_VALUES, PredictionBundle
 from workers.w25.decision_analytics import (
     REPO,
     _secret,
