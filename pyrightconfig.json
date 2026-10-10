@@ -1,0 +1,5 @@
+{
+  "include": ["service", "tests"],
+  "extraPaths": ["service"],
+  "pythonVersion": "3.12"
+}
