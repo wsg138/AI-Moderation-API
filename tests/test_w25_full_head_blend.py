@@ -36,7 +36,7 @@ def _row(label: str = "SAFE", action: str = "ALLOW"):
 
 def test_synthetic_full_heads_agree_and_critical_recall_is_label_scoped() -> None:
     rows = [_row()] * 21 + [_row("REAL_WORLD_THREAT", "BLOCK")] * 5
-    decisions = [item["gold"] for item in rows]
+    decisions: list[dict[str, object]] = [dict(item["gold"]) for item in rows]
     full = _six_head_stats(rows, decisions)
     assert full["six_head_exact"] == 26
     assert full["false_strike_recommendations"] == 0
@@ -48,7 +48,7 @@ def test_synthetic_full_heads_agree_and_critical_recall_is_label_scoped() -> Non
 
 def test_allow_and_strike_or_mute_contradiction_is_reported() -> None:
     row = _row()
-    decision = dict(row["gold"], strike=True, containment="MUTE")
+    decision: dict[str, object] = dict(row["gold"], strike=True, containment="MUTE")
     result = _six_head_stats([row], [decision])
     assert result["false_strike_recommendations"] == 1
     assert result["false_mute_recommendations"] == 1
@@ -58,7 +58,7 @@ def test_allow_and_strike_or_mute_contradiction_is_reported() -> None:
 
 def test_allow_guard_clears_only_current_message_punitive_heads() -> None:
     row = _row()
-    raw = dict(row["gold"], strike=True, containment="MUTE")
+    raw: dict[str, object] = dict(row["gold"], strike=True, containment="MUTE")
     guarded = _guard_allow_punitive_heads(raw)
     assert guarded["strike"] is False
     assert guarded["containment"] == "NONE"
