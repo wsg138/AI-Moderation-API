@@ -1,0 +1,4 @@
+# W25's public, hash-pinned admissions must be byte-identical on every OS.
+# Windows core.autocrlf=true must not rewrite these LF files during checkout.
+data/candidates/W21-adversarial-evasion.jsonl -text
+data/integration/W25-W21-adversarial-split.json -text
