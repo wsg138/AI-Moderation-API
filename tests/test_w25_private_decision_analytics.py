@@ -245,7 +245,9 @@ def test_required_shared_evaluator_archives_every_decision(tmp_path, monkeypatch
         evaluate_candidate(examples, _bundle())
 
 
-def test_required_mode_fails_incomplete_config_and_rejects_acceptance(tmp_path, monkeypatch) -> None:
+def test_required_mode_fails_incomplete_config_and_rejects_acceptance(
+    tmp_path, monkeypatch,
+) -> None:
     monkeypatch.setenv("ENTHUSIA_ANALYTICS_MODE", "required")
     with pytest.raises(ValueError, match="incomplete"):
         capture_if_required([_example("1"), _example("2")], _bundle())
