@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 
 from tools.data_v2.runtime_analytics import report
+from tools.data_v2.runtime_dashboard import render, write_dashboard
 
 
 def _fixture(path: Path) -> None:
@@ -162,3 +163,45 @@ def test_raw_records_remain_unmodified_after_aggregate_query(tmp_path) -> None:
     before = path.read_bytes()
     _ = report(path, "2026-10-10", "2026-10-11")
     assert path.read_bytes() == before
+
+def test_offline_dashboard_is_private_aggregate_only(tmp_path) -> None:
+    database = tmp_path / "fake.sqlite"
+    _fixture(database)
+    values = report(database, "2026-10-10", "2026-10-11")
+    dashboard = render(values)
+    assert "<script" not in dashboard
+    assert "Enthusia moderation analytics" in dashboard
+    assert "model-v1/policy-v1" in dashboard
+    assert "mint" not in dashboard
+    assert "PRIVATE MESSAGE TEXT" not in dashboard
+    assert "SENSITIVE_ID" not in dashboard
+    assert "PRIVATE-SYNTHETIC-MESSAGE" not in dashboard
+    assert "not independently adjudicated model accuracy" in dashboard
+    output = tmp_path / "dashboard.html"
+    write_dashboard(output, values)
+    assert output.read_text(encoding="utf-8") == dashboard
+    with pytest.raises(ValueError, match="already exists"):
+        write_dashboard(output, values)
+
+
+def test_dashboard_escapes_untrusted_group_titles(tmp_path) -> None:
+    database = tmp_path / "fake.sqlite"
+    _fixture(database)
+    values = report(database, "2026-10-10", "2026-10-11")
+    values["per_model_policy"] = {"<img src=x onerror=alert(1)>": {"finalized": 12}}
+    dashboard = render(values)
+    assert "<img src=x" not in dashboard
+    assert "&lt;img src=x onerror=alert(1)&gt;" in dashboard
+
+
+def test_dashboard_refuses_files_inside_repository(tmp_path) -> None:
+    from tools.data_v2.runtime_dashboard import REPO
+
+    with pytest.raises(ValueError, match="outside Git"):
+        write_dashboard(REPO / "public-dashboard.html", {
+            "schema_version": "private-runtime-aggregates/1"
+        })
+    with pytest.raises(ValueError, match="Absolute private"):
+        write_dashboard(Path("dashboard.html"), {})
+
+
