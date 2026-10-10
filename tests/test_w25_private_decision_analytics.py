@@ -295,3 +295,17 @@ def test_incomplete_or_corrupted_ledgers_are_rejected(tmp_path) -> None:
     second.write_text("\n".join(rows[:2]) + "\n", encoding="utf-8")
     with pytest.raises(ValueError, match="count mismatch"):
         compare([first, second])
+
+def test_bogus_nan_and_infinite_model_scores_cannot_enter_ledger(tmp_path) -> None:
+    for invalid in (float("nan"), float("inf"), float("-inf")):
+        scores = _bundle()
+        scores.probabilities["action"][0][0] = invalid
+        with pytest.raises(ValueError, match="nonfinite"):
+            capture(
+                [_example("1"), _example("2")], scores,
+                secret=b"fake-secret-do-not-use-in-prod-1234567890",
+                folder=tmp_path, run_id="invalid-float",
+                candidate="test-model", seed=1,
+                model_sha=SHA_A, config_sha=SHA_B, policy="v1",
+            )
+    assert list(tmp_path.glob("*.jsonl")) == []
