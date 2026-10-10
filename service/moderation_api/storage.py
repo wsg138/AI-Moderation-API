@@ -25,9 +25,9 @@ from .models import (
     CorrectionResponse,
     CorrectionStatus,
     CorrectionVote,
+    DecisionHistoryFilter,
     DecisionHistoryItem,
     DecisionHistoryPage,
-    DecisionHistoryFilter,
     EventDetails,
     IncidentKind,
     IncidentSignal,
@@ -854,7 +854,9 @@ def _list_review_items(path: Path, limit: int) -> list[ReviewItem]:
 
 _HISTORY_PREDICATES: dict[DecisionHistoryFilter, str] = {
     DecisionHistoryFilter.ALL: "",
-    DecisionHistoryFilter.ALLOWED: " AND d.message_action='ALLOW' AND d.ingestion_status='INGESTED'",
+    DecisionHistoryFilter.ALLOWED: (
+        " AND d.message_action='ALLOW' AND d.ingestion_status='INGESTED'"
+    ),
     DecisionHistoryFilter.BLOCKED: " AND d.message_action='BLOCK'",
     DecisionHistoryFilter.REVIEW: " AND d.review_priority!='NONE'",
     DecisionHistoryFilter.FAIL_OPEN: " AND d.ingestion_status='FAIL_OPEN'",
