@@ -15,6 +15,7 @@ def main() -> None:
     service = root / "service"
     if not (service / "moderation_api").is_dir():
         raise ValueError("Expected the repository-local moderation API source")
+    sys.path.insert(0, str(root))
     sys.path.insert(0, str(service))
     from workers.w25.development_probe import main as probe_main
 
