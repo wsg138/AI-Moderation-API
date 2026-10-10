@@ -153,9 +153,23 @@ def _case_record(
     }
 
 
+def _input_fingerprint(examples: list[ModerationExample], secret: bytes) -> str:
+    """HMAC over the complete ordered model inputs, not just case IDs/labels."""
+    digest = hmac.new(secret, digestmod=hashlib.sha256)
+    for item in examples:
+        payload = [
+            item.example_id, item.serialized, item.channel_profile,
+            item.platform_hint, item.domain, item.difficulty, item.family_id,
+        ]
+        digest.update(json.dumps(payload, ensure_ascii=False).encode("utf-8"))
+        digest.update(b"\n")
+    return digest.hexdigest()
+
+
 def _manifest(
     examples: list[ModerationExample], candidate: str, run_id: str,
-    seed: int, model_sha: str, config_sha: str, policy: str, suite_name: str,
+    seed: int, model_sha: str, config_sha: str, policy: str,
+    suite_name: str, secret: bytes,
 ) -> dict[str, object]:
     return {
         "record_type": "manifest",
@@ -168,6 +182,7 @@ def _manifest(
         "model_artifact_sha256": _validated_sha(model_sha),
         "configuration_sha256": _validated_sha(config_sha),
         "suite_fingerprint": suite_fingerprint(examples),
+        "input_hmac_fingerprint": _input_fingerprint(examples, secret),
         "count": len(examples),
         "probability_head_value_order": HEAD_VALUES,
         "privacy": "private_only_hmac_case_and_family_keys_no_chat_text",
@@ -206,7 +221,7 @@ def capture(
         raise ValueError("Duplicate example IDs in comparison suite")
     root = _private_root(folder)
     manifest = _manifest(examples, candidate, run_id, seed, model_sha,
-                         config_sha, policy, suite_name)
+                         config_sha, policy, suite_name, secret)
     lines = [manifest] + [
         _case_record(example, bundle, index, secret)
         for index, example in enumerate(examples)
@@ -295,6 +310,8 @@ def _validate_compatible_ledgers(
         raise ValueError("Duplicate run IDs")
     if len({item["suite_fingerprint"] for item in headers}) != 1:
         raise ValueError("Cannot compare distinct evaluation suites")
+    if len({item["input_hmac_fingerprint"] for item in headers}) != 1:
+        raise ValueError("Model input/context changed between comparison runs")
     for other in records[1:]:
         _assert_matching_truth(records[0], other)
 
