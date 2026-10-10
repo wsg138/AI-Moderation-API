@@ -48,6 +48,8 @@ class SyntheticClassifier:
                 return result(action=MessageAction.BLOCK, label=Label.LOW_LEVEL_HARASSMENT)
             case "review":
                 return result(label=Label.AMBIGUOUS_REVIEW, review=ReviewPriority.NORMAL)
+            case "unavailable":
+                raise RuntimeError("synthetic classifier unavailable")
             case _:
                 return result(label=Label.SAFE)
 
@@ -88,7 +90,7 @@ def seed_records(base_url: str, token: str) -> dict[str, str]:
     headers = {"X-Client-Id": "contract-publisher", "Authorization": f"Bearer {token}"}
     events: dict[str, str] = {}
     with httpx.Client(timeout=3.0) as client:
-        for label in ("ordinary", "review", "block"):
+        for label in ("ordinary", "review", "block", "unavailable"):
             response = client.post(base_url + "/v1/moderate", headers=headers, json={
                 "platform": "minecraft",
                 "channel_profile": "minecraft_public",
@@ -118,6 +120,7 @@ def verify_with_staff(staff_repo: Path, base_url: str, tokens: dict[str, str],
         "ENTHUSIA_CONTRACT_STAFF_TOKEN": tokens["staff"],
         "ENTHUSIA_CONTRACT_READER_TOKEN": tokens["reader"],
         "ENTHUSIA_CONTRACT_BLOCK_ID": events["block"],
+        "ENTHUSIA_CONTRACT_FAIL_OPEN_ID": events["unavailable"],
     })
     # Call the trusted Gradle wrapper directly through Java, with no shell, fixed
     # arguments and a verified local checkout. Secrets are passed only via env.
