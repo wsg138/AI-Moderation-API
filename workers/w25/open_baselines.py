@@ -59,7 +59,9 @@ def bundle_from_fitted(
 def fitted_weights_digest(model: BaselineModel) -> str:
     """Digest fitted TF-IDF and all six linear weights, with fixed ordering."""
     digest = hashlib.sha256()
-    vocabulary = sorted(model.vectorizer.vocabulary_.items())
+    vocabulary = sorted(
+        (token, int(index)) for token, index in model.vectorizer.vocabulary_.items()
+    )
     digest.update(json.dumps(vocabulary, separators=(",", ":")).encode("utf-8"))
     digest.update(model.vectorizer.idf_.tobytes())
     for head in HEAD_NAMES:
