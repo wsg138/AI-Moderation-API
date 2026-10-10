@@ -114,11 +114,21 @@ def _block_rates(
     }
 
 
+def _guard_allow_punitive_heads(decision: dict[str, object]) -> dict[str, object]:
+    """A permitted message must not independently propose strike/mute."""
+    safe = dict(decision)
+    if safe["action"] == "ALLOW":
+        safe["strike"] = False
+        safe["containment"] = "NONE"
+    return safe
+
+
 def analyze_full(first: Path, second: Path) -> dict[str, Any]:
     header, left, right = _load_pair(first, second)
     order = header["probability_head_value_order"]
     rows = list(left.values())
     mixed = [_blend(left[key], right[key], order) for key in left]
+    guarded = [_guard_allow_punitive_heads(item) for item in mixed]
     return {
         "schema_version": "w25-development-full-head-blend/1",
         "n": len(rows),
@@ -126,6 +136,7 @@ def analyze_full(first: Path, second: Path) -> dict[str, Any]:
         "model_runs": [header["run_id"], "second_saved_development_run"],
         "block": _block_rates(rows, mixed),
         "full_heads": _six_head_stats(rows, mixed),
+        "guarded_full_heads": _six_head_stats(rows, guarded),
         "critical_action_recall": _critical(rows, mixed),
         "neither_trained_nor_policy_verified": True,
         "not_a_deployment_or_99pct_acceptance_result": True,
@@ -148,6 +159,8 @@ def main() -> None:
         "false_strikes": outcome["full_heads"]["false_strike_recommendations"],
         "false_mutes": outcome["full_heads"]["false_mute_recommendations"],
         "contradictions": outcome["full_heads"]["allow_with_punitive_head"],
+        "guarded_contradictions": outcome["guarded_full_heads"]["allow_with_punitive_head"],
+        "guarded_six_head_exact": outcome["guarded_full_heads"]["six_head_exact"],
     }, indent=2, sort_keys=True))
 
 
