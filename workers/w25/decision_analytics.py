@@ -12,12 +12,14 @@ import json
 import os
 import re
 from collections import Counter
+from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
 from workers.w12.dataset import ModerationExample
 from workers.w25.artifacts import load_bundle
 from workers.w25.contract import HEAD_NAMES, HEAD_VALUES, PredictionBundle
+from workers.w25.data import serialize_variant
 from workers.w25.evaluation import suite_fingerprint
 from workers.w25.suites import load_frozen_suite
 
@@ -166,10 +168,25 @@ def _input_fingerprint(examples: list[ModerationExample], secret: bytes) -> str:
     return digest.hexdigest()
 
 
+def _effective_input_fingerprint(
+    examples: list[ModerationExample], secret: bytes, variant: str,
+) -> str:
+    if variant == "raw":
+        return _input_fingerprint(examples, secret)
+    if variant != "raw+normalized":
+        raise ValueError("Unsupported recorded input preprocessing variant")
+    effective = [
+        replace(item, serialized=serialize_variant(item.serialized, variant))
+        for item in examples
+    ]
+    return _input_fingerprint(effective, secret)
+
+
 def _manifest(
     examples: list[ModerationExample], candidate: str, run_id: str,
     seed: int, model_sha: str, config_sha: str, policy: str,
     suite_name: str, secret: bytes, artifact_kind: str,
+    preprocessing_variant: str,
 ) -> dict[str, object]:
     return {
         "record_type": "manifest",
@@ -184,6 +201,10 @@ def _manifest(
         "configuration_sha256": _validated_sha(config_sha),
         "suite_fingerprint": suite_fingerprint(examples),
         "input_hmac_fingerprint": _input_fingerprint(examples, secret),
+        "preprocessing_variant": preprocessing_variant,
+        "effective_input_hmac_fingerprint": _effective_input_fingerprint(
+            examples, secret, preprocessing_variant
+        ),
         "count": len(examples),
         "probability_head_value_order": HEAD_VALUES,
         "privacy": "private_only_hmac_case_and_family_keys_no_chat_text",
@@ -215,6 +236,7 @@ def capture(
     seed: int, model_sha: str, config_sha: str, policy: str,
     suite_name: str = "unspecified",
     artifact_kind: str = "weight_fingerprint_or_artifact",
+    preprocessing_variant: str = "raw",
 ) -> Path:
     bundle.validate()
     if len(examples) != len(bundle.uncertainty) or not examples:
@@ -223,7 +245,8 @@ def capture(
         raise ValueError("Duplicate example IDs in comparison suite")
     root = _private_root(folder)
     manifest = _manifest(examples, candidate, run_id, seed, model_sha,
-                         config_sha, policy, suite_name, secret, artifact_kind)
+                         config_sha, policy, suite_name, secret, artifact_kind,
+                         preprocessing_variant)
     lines = [manifest] + [
         _case_record(example, bundle, index, secret)
         for index, example in enumerate(examples)
