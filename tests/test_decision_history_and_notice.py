@@ -143,12 +143,6 @@ def test_staff_filters_and_rejects_cursors_not_in_selected_filter(
             "/v1/decisions", headers=staff_headers,
             params={"filter": "blocked", "limit": 1, "cursor": blocked.json()["next_cursor"]}
         )
-        # Cursor identity is validated against the selected filter. "all"
-        # overlaps "blocked", so a matching event ID is a valid anchor in both.
-        shared_cursor = client.get(
-            "/v1/decisions", headers=staff_headers,
-            params={"filter": "all", "cursor": blocked.json()["items"][0]["event_id"]}
-        )
 
     assert allowed.status_code == 200  # nosec B101  # nosemgrep
     assert len(allowed.json()["items"]) == 2  # nosec B101  # nosemgrep
@@ -161,9 +155,32 @@ def test_staff_filters_and_rejects_cursors_not_in_selected_filter(
     assert correction.json()["items"] == []  # nosec B101  # nosemgrep
     assert invalid.status_code == 422  # nosec B101  # nosemgrep
     assert wrong_cursor.status_code == 404  # nosec B101  # nosemgrep
-    assert shared_cursor.status_code == 200  # nosec B101  # nosemgrep
     assert next_blocked.status_code == 200  # nosec B101  # nosemgrep
     assert len(next_blocked.json()["items"]) == 1  # nosec B101  # nosemgrep
+
+
+def test_matching_event_cursor_can_be_shared_by_overlapping_filters(
+    settings, rose_headers, staff_headers,
+) -> None:
+    app = create_app(settings=settings, classifier=ClassificationForAudit())
+    with TestClient(app) as client:
+        response = client.post(
+            "/v1/moderate", headers=rose_headers,
+            json=payload("cursor-overlap-1", "harassment"),
+        )
+        assert response.status_code == 200  # nosec B101  # nosemgrep
+        blocked = client.get(
+            "/v1/decisions", headers=staff_headers, params={"filter": "blocked"}
+        )
+        assert blocked.status_code == 200  # nosec B101  # nosemgrep
+        cursor = blocked.json()["items"][0]["event_id"]
+        overlapping = client.get(
+            "/v1/decisions", headers=staff_headers,
+            params={"filter": "all", "cursor": cursor},
+        )
+
+    # Cursors are event IDs; membership is checked, not the originating filter.
+    assert overlapping.status_code == 200  # nosec B101  # nosemgrep
 
 
 def test_exempt_no_ingestion_or_notice(settings, rose_headers, staff_headers) -> None:
