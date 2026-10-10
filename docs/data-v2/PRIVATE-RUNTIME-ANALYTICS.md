@@ -22,6 +22,31 @@ python -m tools.data_v2.runtime_analytics \
   --until-day 2026-10-11
 ```
 
+### Offline HTML dashboard
+
+A private, standalone HTML report can also be generated **without hosting a
+web server**. It uses the same read-only SQL aggregation and displays totals,
+model+policy comparisons, channel summaries, UTC trends, label groups and
+recorded latency. It deliberately does **not** calculate real false-positive
+accuracy from biased staff corrections.
+
+```bash
+python -m tools.data_v2.runtime_dashboard \
+  --database /private/enthusia/moderation.sqlite \
+  --from-day 2026-10-01 \
+  --until-day 2026-10-11 \
+  --output /private/enthusia/reports/moderation-2026-10.html
+```
+
+The output must be an **absolute filename** under an existing private,
+access-controlled directory **outside Git**. The file is created only when
+it does not already exist (mode `0600` on POSIX; verify directory and
+file ACLs separately on Windows). The dashboard has no JavaScript and embeds
+no original messages, names, event IDs, prompts or case records. Do not
+publish it to a public website, CI artifact, Discord channel or GitHub.
+Source metadata is escaped before rendering, and small reporting groups
+inherit the threshold applied by the read-only analyzer.
+
 Dates are UTC, start-inclusive and end-exclusive. It emits JSON aggregates
 only, grouped by model+policy, channel, UTC day and semantic label. Fields:
 canonical finalized count, BLOCK/REVIEW count, degraded and FAIL_OPEN cases,
