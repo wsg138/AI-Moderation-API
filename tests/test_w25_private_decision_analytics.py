@@ -9,7 +9,7 @@ import pytest
 
 from workers.w12.dataset import ModerationExample
 from workers.w25.contract import HEAD_VALUES, PredictionBundle
-from workers.w25.decision_analytics import REPO, _secret, capture, compare
+from workers.w25.decision_analytics import REPO, _secret, audit_coverage, capture, compare
 
 SHA_A = "a" * 64
 SHA_B = "b" * 64
@@ -178,6 +178,33 @@ def test_hmac_key_is_mandatory_and_never_in_manifest(tmp_path, monkeypatch) -> N
     assert "s" * 40 not in path.read_text(encoding="utf-8")
     with pytest.raises(ValueError, match="explicit ENTHUSIA"):
         _secret("AWS_SECRET_ACCESS_KEY")
+
+
+def test_coverage_audit_detects_missing_unexpected_and_corrupted_runs(tmp_path) -> None:
+    _capture(tmp_path, "expected1")
+    missing = audit_coverage(tmp_path, ["expected1", "expected2"])
+    assert not missing["complete"]
+    assert missing["missing_runs"] == ["expected2"]
+    second = _capture(tmp_path, "expected2")
+    assert audit_coverage(tmp_path, ["expected1", "expected2"])["complete"]
+    _capture(tmp_path, "unexpected")
+    extras = audit_coverage(tmp_path, ["expected1", "expected2"])
+    assert not extras["complete"]
+    assert extras["unexpected_runs"] == ["unexpected"]
+    second.write_text('{"bad":"ledger"}\n', encoding="utf-8")
+    invalid = audit_coverage(tmp_path, ["expected1", "expected2", "unexpected"])
+    assert invalid["invalid_runs"] == ["expected2"]
+    assert not invalid["complete"]
+
+
+def test_comparison_reports_harm_counts_and_channel_error_rates(tmp_path) -> None:
+    good = _capture(tmp_path, "baseline")
+    worse = _capture(tmp_path, "worse", action="BLOCK")
+    report = compare([good, worse])
+    assert report["per_run"]["worse"]["harmful_errors"]["wrongful_blocks"] == 2
+    assert report["per_run"]["worse"]["harmful_errors"]["false_strikes"] == 0
+    assert report["per_run"]["worse"]["channel_issues"]["minecraft_public"]["wrong"] == 2
+    assert report["per_run"]["baseline"]["harmful_errors"]["wrongful_blocks"] == 0
 
 
 def test_incomplete_or_corrupted_ledgers_are_rejected(tmp_path) -> None:
