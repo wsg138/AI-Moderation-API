@@ -56,6 +56,8 @@ def _load_development(paths: list[Path]) -> tuple[list[dict[str, Any]], list[dic
     _validate_compatible_ledgers(headers, records)
     if any(header.get("suite_name") != "development" for header in headers):
         raise ValueError("Candidate search is restricted to development-only ledgers")
+    if len({header.get("policy_version") for header in headers}) != 1:
+        raise ValueError("Cannot compare models evaluated under different policies")
     return headers, records
 
 
@@ -97,8 +99,8 @@ def _pair_report(
         a, b = left[key], right[key]
         good_a = a["predicted"]["action"] == a["gold"]["action"]
         good_b = b["predicted"]["action"] == b["gold"]["action"]
-        counts["left_only_right_action"] += int(good_a and not good_b)
-        counts["right_only_right_action"] += int(good_b and not good_a)
+        counts["left_unique_correct_actions"] += int(good_a and not good_b)
+        counts["right_unique_correct_actions"] += int(good_b and not good_a)
         counts["both_wrong_action"] += int(not good_a and not good_b)
         counts["both_right_action"] += int(good_a and good_b)
         counts["action_disagreements"] += int(
