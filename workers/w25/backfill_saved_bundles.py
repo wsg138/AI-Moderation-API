@@ -116,6 +116,7 @@ def _archive(
             preprocessing_variant=(
                 "raw+normalized" if name == "modernbert-normalized" else "raw"
             ),
+            decision_stage="final_selective",
         )
         paths.append(path)
     comparison = diagnose(paths)
