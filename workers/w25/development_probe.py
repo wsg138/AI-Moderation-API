@@ -80,7 +80,7 @@ def run(private_dir: Path, *, seed: int = 42) -> dict[str, object]:
         "char-tfidf", seed, train_character_baseline, bundle_from_fitted,
     )
     diagnosis = diagnose([word, char])
-    return {
+    result = {
         "source": "W11 train/validation only; development comparison, not acceptance",
         "train_count": len(train), "development_count": len(development),
         "runs": [word_info, char_info],
@@ -89,6 +89,10 @@ def run(private_dir: Path, *, seed: int = 42) -> dict[str, object]:
         "future_cross_session_joins_require_owner_managed_persistent_key": True,
         "not_proof_of_99pct_production_accuracy": True,
     }
+    filename = "w11-word-v-char-s" + str(seed) + "-comparison.json"
+    with (output / filename).open("x", encoding="utf-8") as file:
+        json.dump(result, file, indent=2, sort_keys=True, allow_nan=False)
+    return result
 
 
 def main() -> None:
@@ -103,6 +107,7 @@ def main() -> None:
         "development_count": outcome["development_count"],
         "runs": outcome["runs"],
         "ledger_count": len(outcome["runs"]),
+        "comparison_report": "w11-word-v-char-s" + str(args.seed) + "-comparison.json",
         "status": "W11 development probe completed (not acceptance)",
     }, indent=2))
 
