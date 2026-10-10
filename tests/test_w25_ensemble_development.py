@@ -9,7 +9,7 @@ import pytest
 from workers.w12.dataset import ModerationExample
 from workers.w25.contract import HEAD_VALUES, PredictionBundle
 from workers.w25.decision_analytics import capture
-from workers.w25.ensemble_development import analyze, _write_once
+from workers.w25.ensemble_development import _write_once, analyze
 
 KEY = b"synthetic-dev-ensemble-test-not-for-production"
 SHA_A = "a" * 64
