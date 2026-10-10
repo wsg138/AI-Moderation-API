@@ -228,8 +228,12 @@ outcomes. The optional `filter` parameter is a strict enum: `all` (default),
 `review` (review-priority not NONE), `fail_open`, or `corrected` (has an
 accepted staff correction). All filtering occurs in the central database,
 **before pagination**; client-side filtering a page would miss entries. Filter
-changes require restarting on page one, and cursor IDs from a different
-filter are rejected (404) rather than interpreted as valid offsets.
+changes require restarting on page one. A cursor must identify a persisted
+FINAL event that matches the requested filter; unknown, nonfinal, or
+nonmatching cursor IDs return 404. Because filters can overlap, an event that
+matches multiple filters (for example `all` and `blocked`) may be reused as a
+cursor across those filters. Cursors are event IDs, not cryptographically
+filter-bound tokens; the staff GUI must clear its cursor stack on filter changes.
 An `allowed` classification is an AI decision, **not evidence that it was correct**.
 
 It provides at most 250 entries per page in descending
