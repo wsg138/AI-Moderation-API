@@ -7,6 +7,15 @@ from typing import Any, cast
 from workers.w25.development_probe import run
 
 
+def test_reserved_w27_remains_outside_all_admitted_training_roles() -> None:
+    from workers.w25.data import TRAINING_ROLES, load_admissions
+
+    selected = [source.path for source in load_admissions() if source.role in TRAINING_ROLES]
+    assert selected
+    assert all("W27" not in path.upper() and "W20" not in path.upper()
+               for path in selected)
+
+
 def test_w11_word_vs_character_probe_saves_complete_private_evidence(tmp_path) -> None:
     result = cast(dict[str, Any], run(tmp_path, seed=17))
     assert result["source"].startswith("W11 train/validation only")
