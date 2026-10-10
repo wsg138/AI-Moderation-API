@@ -21,7 +21,7 @@ from workers.w25.contract import HEAD_NAMES, HEAD_VALUES, PredictionBundle
 from workers.w25.evaluation import suite_fingerprint
 from workers.w25.suites import load_frozen_suite
 
-SCHEMA = "w25-private-decision-ledger/1"
+SCHEMA = "w25-private-decision-ledger/2"
 REPO = Path(__file__).resolve().parents[2]
 TOKEN = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,63}\Z")
 DIGEST = re.compile(r"[a-f0-9]{64}\Z")
