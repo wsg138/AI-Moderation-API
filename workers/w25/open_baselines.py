@@ -73,14 +73,14 @@ def fitted_weights_digest(model: BaselineModel) -> str:
     return digest.hexdigest()
 
 
-def training_recipe_digest(name: str, seed: int) -> str:
+def training_recipe_digest(name: str, seed: int, *, source: str = "w11_only") -> str:
     from workers.w12 import baseline as word
     from workers.w25 import open_baselines as lexical
 
     data = {
         "candidate": name, "seed": seed,
         "sklearn": sklearn.__version__,
-        "training_source": "W11 train and W26 admitted train if authorized",
+        "training_source": source,
         "word_sha": hashlib.sha256(
             Path(word.__file__).read_bytes()
         ).hexdigest(),
