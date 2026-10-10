@@ -258,7 +258,9 @@ def _register_decision_history(
         _: Annotated[Principal, Depends(dependency)],
         limit: Annotated[int, Query(ge=1, le=250)] = 100,
         cursor: Annotated[str | None, Query(min_length=1, max_length=64)] = None,
-        history_filter: Annotated[DecisionHistoryFilter, Query(alias="filter")] = DecisionHistoryFilter.ALL,
+        history_filter: Annotated[
+            DecisionHistoryFilter, Query(alias="filter")
+        ] = DecisionHistoryFilter.ALL,
     ) -> DecisionHistoryPage:
         try:
             return await store.list_decisions(limit, cursor, history_filter)
