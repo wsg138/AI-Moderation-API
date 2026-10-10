@@ -304,7 +304,7 @@ def _run_summary(
     }
 
 
-def compare(paths: list[Path]) -> dict[str, object]:
+def compare(paths: list[Path]) -> dict[str, Any]:
     if len(paths) < 2:
         raise ValueError("Compare at least two independent model ledgers")
     loaded = [_read_ledger(path) for path in paths]
