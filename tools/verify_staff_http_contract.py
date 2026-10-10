@@ -25,6 +25,7 @@ import httpx
 import uvicorn
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "service"))
 
 from moderation_api.app import create_app  # noqa: E402
