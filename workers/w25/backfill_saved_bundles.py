@@ -8,6 +8,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+from collections import Counter
 from pathlib import Path
 from typing import Any
 
@@ -54,12 +55,14 @@ def _configuration_hash(directory: Path, key: str | None, folder: str) -> str:
 
 def _block_counts(examples, bundle) -> dict[str, int]:
     block = HEAD_VALUES["action"].index("BLOCK")
-    truth = [row.action == "BLOCK" for row in examples]
-    predicted = [index == block for index in bundle.predictions["action"]]
+    pairs = Counter(
+        (item.action == "BLOCK", predicted == block)
+        for item, predicted in zip(examples, bundle.predictions["action"], strict=True)
+    )
     return {
-        "tp": sum(gold and observed for gold, observed in zip(truth, predicted, strict=True)),
-        "fn": sum(gold and not observed for gold, observed in zip(truth, predicted, strict=True)),
-        "fp": sum(not gold and observed for gold, observed in zip(truth, predicted, strict=True)),
+        "tp": pairs[(True, True)],
+        "fn": pairs[(True, False)],
+        "fp": pairs[(False, True)],
     }
 
 
