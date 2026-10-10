@@ -49,3 +49,14 @@ def test_sparse_slices_refuse_accuracy_claims() -> None:
     assert _slice_result([_row("ALLOW", "BLOCK")] * 20, 20)["risk_errors"] == {
         "wrongful_blocks": 20
     }
+
+
+def test_small_model_slice_does_not_claim_low_false_block_rate() -> None:
+    from workers.w25.candidate_diagnostics import _slice_result
+
+    rows = [_row("ALLOW", "ALLOW")] * 19 + [_row("ALLOW", "BLOCK")]
+    report = _slice_result(rows, 20)
+    assert report["action_matches"] == 19
+    assert report["gold_allow_support"] == 20
+    assert 0 < report["action_accuracy_wilson_lower95"] < 0.95
+    assert report["false_block_fpr_wilson_upper95_per_1000"] is None
