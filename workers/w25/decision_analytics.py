@@ -176,23 +176,25 @@ def capture(
     return destination
 
 
-def _read_ledger(path: Path) -> tuple[dict[str, Any], dict[str, dict[str, Any]]]:
-    if path.stat().st_size > 200_000_000:
-        raise ValueError("Ledger too large")
-    rows = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()]
+def _validate_ledger_rows(rows: list[dict[str, Any]]) -> None:
     if not rows or rows[0].get("schema_version") != SCHEMA:
         raise ValueError("Unsupported ledger schema")
-    header = rows[0]
-    records = rows[1:]
-    if header["count"] != len(records):
+    if rows[0]["count"] != len(rows) - 1:
         raise ValueError("Ledger count mismatch")
+    records = rows[1:]
     if any(item.get("record_type") != "decision" for item in records):
         raise ValueError("Unexpected ledger record type")
     keys = [item["case_key"] for item in records]
     if len(keys) != len(set(keys)):
         raise ValueError("Duplicate pseudonymous cases")
-    return header, dict(zip(keys, records, strict=True))
 
+
+def _read_ledger(path: Path) -> tuple[dict[str, Any], dict[str, dict[str, Any]]]:
+    if path.stat().st_size > 200_000_000:
+        raise ValueError("Ledger too large")
+    rows = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()]
+    _validate_ledger_rows(rows)
+    return rows[0], {item["case_key"]: item for item in rows[1:]}
 
 def _compare_head(
     left: dict[str, dict[str, Any]], right: dict[str, dict[str, Any]], head: str,
@@ -212,48 +214,65 @@ def _compare_head(
     }
 
 
+def _validate_compatible_ledgers(
+    headers: list[dict[str, Any]], records: list[dict[str, dict[str, Any]]],
+) -> None:
+    if len({item["run_id"] for item in headers}) != len(headers):
+        raise ValueError("Duplicate run IDs")
+    if len({item["suite_fingerprint"] for item in headers}) != 1:
+        raise ValueError("Cannot compare distinct evaluation suites")
+    first = records[0]
+    for other in records[1:]:
+        if set(other) != set(first):
+            raise ValueError("Pseudonym keys differ; use the same private HMAC key")
+        if any(other[key]["gold"] != first[key]["gold"] for key in first):
+            raise ValueError("Gold decisions differ between candidate ledgers")
+
+
+def _pairwise_comparison(
+    headers: list[dict[str, Any]], records: list[dict[str, dict[str, Any]]],
+) -> dict[str, object]:
+    pairs: dict[str, object] = {}
+    for index, left in enumerate(records):
+        for right_index in range(index + 1, len(records)):
+            label = headers[index]["run_id"] + "_vs_" + headers[right_index]["run_id"]
+            pairs[label] = {
+                head: _compare_head(left, records[right_index], head)
+                for head in HEAD_NAMES
+            }
+    return pairs
+
+
+def _run_summary(
+    headers: list[dict[str, Any]], records: list[dict[str, dict[str, Any]]],
+) -> dict[str, object]:
+    return {
+        item["run_id"]: {
+            "candidate": item["candidate"],
+            "supervised_head_errors": dict(Counter(
+                head for row in values.values() for head in row["head_errors"]
+            )),
+        }
+        for item, values in zip(headers, records, strict=True)
+    }
+
+
 def compare(paths: list[Path]) -> dict[str, object]:
     if len(paths) < 2:
         raise ValueError("Compare at least two independent model ledgers")
     loaded = [_read_ledger(path) for path in paths]
     headers = [pair[0] for pair in loaded]
     records = [pair[1] for pair in loaded]
-    if len({h["run_id"] for h in headers}) != len(headers):
-        raise ValueError("Duplicate run IDs")
-    if len({h["suite_fingerprint"] for h in headers}) != 1:
-        raise ValueError("Cannot compare distinct evaluation suites")
-    first = records[0]
-    if any(set(other) != set(first) for other in records[1:]):
-        raise ValueError("Pseudonym keys differ; use the same private HMAC key")
-    if any(other[key]["gold"] != first[key]["gold"]
-           for other in records[1:] for key in first):
-        raise ValueError("Gold decisions differ between candidate ledgers")
-    pairs: dict[str, object] = {}
-    for index in range(len(records)):
-        for other in range(index + 1, len(records)):
-            name = headers[index]["run_id"] + "_vs_" + headers[other]["run_id"]
-            pairs[name] = {
-                head: _compare_head(records[index], records[other], head)
-                for head in HEAD_NAMES
-            }
+    _validate_compatible_ledgers(headers, records)
     return {
         "schema_version": "w25-private-comparison/1",
         "no_raw_message_content": True,
         "not_an_accuracy_or_deployment_certificate": True,
         "suite_fingerprint": headers[0]["suite_fingerprint"],
-        "compared_cases": len(first),
-        "per_run": {
-            h["run_id"]: {
-                "candidate": h["candidate"],
-                "supervised_head_errors": dict(Counter(
-                    head for row in values.values() for head in row["head_errors"]
-                )),
-            }
-            for h, values in loaded
-        },
-        "pairwise": pairs,
+        "compared_cases": len(records[0]),
+        "per_run": _run_summary(headers, records),
+        "pairwise": _pairwise_comparison(headers, records),
     }
-
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Private W25 per-decision model analytics")
