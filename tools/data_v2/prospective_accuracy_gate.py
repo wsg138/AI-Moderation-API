@@ -52,32 +52,43 @@ def _bound(
     )
 
 
-def _manifest_blockers(
-    meta: dict[str, Any], natural_n: int, challenge_n: int,
-) -> list[str]:
-    reasons: list[str] = []
-    if meta.get("schema_version") != SCHEMA:
-        reasons.append("invalid_attestation_schema")
+def _digest_blockers(meta: dict[str, Any]) -> list[str]:
+    issues: list[str] = []
     for key in ("model_sha256", "natural_cohort_sha256", "challenge_cohort_sha256"):
         value = meta.get(key)
         if not isinstance(value, str) or not HEX_SHA.fullmatch(value):
-            reasons.append("invalid_digest_" + key)
-    if (meta.get("natural_cohort_sha256")
-            == meta.get("challenge_cohort_sha256")):
-        reasons.append("cohort_digests_not_distinct")
-    if type(meta.get("natural_cases")) is not int or meta["natural_cases"] != natural_n:
-        reasons.append("natural_cohort_size_mismatch")
-    if type(meta.get("challenge_cases")) is not int or meta["challenge_cases"] != challenge_n:
-        reasons.append("challenge_cohort_size_mismatch")
-    for assertion in REQUIRED_ASSERTIONS:
-        if meta.get(assertion) is not True:
-            reasons.append("unverified_" + assertion)
-    if not isinstance(meta.get("independent_audit_reference"), str) or not (
-        meta["independent_audit_reference"].strip()
-    ):
-        reasons.append("missing_independent_audit_reference")
-    return reasons
+            issues.append("invalid_digest_" + key)
+    if meta.get("natural_cohort_sha256") == meta.get("challenge_cohort_sha256"):
+        issues.append("cohort_digests_not_distinct")
+    return issues
 
+
+def _size_blockers(meta: dict[str, Any], natural_n: int, challenge_n: int) -> list[str]:
+    issues: list[str] = []
+    if type(meta.get("natural_cases")) is not int or meta["natural_cases"] != natural_n:
+        issues.append("natural_cohort_size_mismatch")
+    if type(meta.get("challenge_cases")) is not int or meta["challenge_cases"] != challenge_n:
+        issues.append("challenge_cohort_size_mismatch")
+    return issues
+
+
+def _assertion_blockers(meta: dict[str, Any]) -> list[str]:
+    issues = ["unverified_" + key for key in REQUIRED_ASSERTIONS if meta.get(key) is not True]
+    reference = meta.get("independent_audit_reference")
+    if not isinstance(reference, str) or not reference.strip():
+        issues.append("missing_independent_audit_reference")
+    return issues
+
+
+def _manifest_blockers(
+    meta: dict[str, Any], natural_n: int, challenge_n: int,
+) -> list[str]:
+    issues = ["invalid_attestation_schema"] if meta.get("schema_version") != SCHEMA else []
+    return (
+        issues + _digest_blockers(meta)
+        + _size_blockers(meta, natural_n, challenge_n)
+        + _assertion_blockers(meta)
+    )
 
 def _natural_blockers(report: dict[str, Any]) -> list[str]:
     failures: list[str] = []
@@ -94,6 +105,17 @@ def _natural_blockers(report: dict[str, Any]) -> list[str]:
     return failures
 
 
+def _critical_blockers(report: dict[str, Any]) -> list[str]:
+    failures: list[str] = []
+    for label in CRITICAL_LABELS:
+        rate = report["critical"][label]["required_block_recall"]
+        if rate["n"] < 80:
+            failures.append("critical_" + label + "_support_under_80")
+        if rate["ci95_low"] is None or rate["ci95_low"] < 0.95:
+            failures.append("critical_" + label + "_block_recall_lower95_below_95pct")
+    return failures
+
+
 def _challenge_blockers(report: dict[str, Any]) -> list[str]:
     failures: list[str] = []
     for metric in ("block_recall", "block_precision"):
@@ -103,14 +125,7 @@ def _challenge_blockers(report: dict[str, Any]) -> list[str]:
         failures.append("block_recall_lower95_below_95pct")
     if not _bound(report, "block_precision", "ci95_low", 0.99, at_least=True):
         failures.append("block_precision_lower95_below_99pct")
-    for label in CRITICAL_LABELS:
-        rate = report["critical"][label]["required_block_recall"]
-        if rate["n"] < 80:
-            failures.append("critical_" + label + "_support_under_80")
-        if rate["ci95_low"] is None or rate["ci95_low"] < 0.95:
-            failures.append("critical_" + label + "_block_recall_lower95_below_95pct")
-    return failures
-
+    return failures + _critical_blockers(report)
 
 def _punishment_blockers(report: dict[str, Any], cohort: str) -> list[str]:
     return [
