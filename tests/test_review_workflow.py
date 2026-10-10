@@ -57,6 +57,9 @@ def test_two_staff_confirm_correction_and_preserve_original(
         )
         event = client.get(f"/v1/events/{event_id}", headers=staff_headers)
         queue = client.get("/v1/review-items", headers=staff_headers)
+        corrected_history = client.get(
+            "/v1/decisions", headers=staff_headers, params={"filter": "corrected"}
+        )
 
     assert first.json()["status"] == "PENDING_CONFIRMATION"
     assert retry.json()["approvals"] == 1
@@ -65,6 +68,13 @@ def test_two_staff_confirm_correction_and_preserve_original(
     assert body["decision"]["semantic_label"] == "AMBIGUOUS_REVIEW"
     assert body["accepted_correction"]["corrected"]["semantic_label"] == "SAFE"
     assert queue.json()["items"] == []
+    assert corrected_history.status_code == 200
+    assert len(corrected_history.json()["items"]) == 1
+    entry = corrected_history.json()["items"][0]
+    assert entry["event_id"] == event_id
+    assert entry["corrected"] is True
+    assert entry["semantic_label"] == "AMBIGUOUS_REVIEW"
+    assert "text" not in entry and "sender_id" not in entry
     assert "input_fingerprint" not in body
 
 
