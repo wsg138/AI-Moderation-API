@@ -9,7 +9,14 @@ import pytest
 
 from workers.w12.dataset import ModerationExample
 from workers.w25.contract import HEAD_VALUES, PredictionBundle
-from workers.w25.decision_analytics import REPO, _secret, audit_coverage, capture, compare
+from workers.w25.decision_analytics import (
+    REPO,
+    _secret,
+    audit_coverage,
+    capture,
+    capture_if_required,
+    compare,
+)
 
 SHA_A = "a" * 64
 SHA_B = "b" * 64
@@ -205,6 +212,54 @@ def test_comparison_reports_harm_counts_and_channel_error_rates(tmp_path) -> Non
     assert report["per_run"]["worse"]["harmful_errors"]["false_strikes"] == 0
     assert report["per_run"]["worse"]["channel_issues"]["minecraft_public"]["wrong"] == 2
     assert report["per_run"]["baseline"]["harmful_errors"]["wrongful_blocks"] == 0
+
+
+def _required_environment(monkeypatch, private_dir) -> None:
+    values = {
+        "ENTHUSIA_ANALYTICS_MODE": "required",
+        "ENTHUSIA_ANALYTICS_PRIVATE_DIR": str(private_dir),
+        "ENTHUSIA_ANALYTICS_RUN_ID": "modelA-dev-42",
+        "ENTHUSIA_ANALYTICS_CANDIDATE": "modelA",
+        "ENTHUSIA_ANALYTICS_SEED": "42",
+        "ENTHUSIA_ANALYTICS_MODEL_SHA256": SHA_A,
+        "ENTHUSIA_ANALYTICS_CONFIG_SHA256": SHA_B,
+        "ENTHUSIA_ANALYTICS_POLICY": "v1",
+        "ENTHUSIA_ANALYTICS_SUITE": "development",
+        "ENTHUSIA_ANALYTICS_HMAC_KEY": "s" * 40,
+    }
+    for key, value in values.items():
+        monkeypatch.setenv(key, value)
+
+
+def test_required_shared_evaluator_archives_every_decision(tmp_path, monkeypatch) -> None:
+    from workers.w25.evaluation import evaluate_candidate
+
+    _required_environment(monkeypatch, tmp_path)
+    examples = [_example("1"), _example("2")]
+    report = evaluate_candidate(examples, _bundle())
+    assert report["suite"]["n"] == 2
+    path = tmp_path / "modelA-dev-42.jsonl"
+    assert path.exists()
+    assert len(path.read_text().splitlines()) == 3
+    with pytest.raises(ValueError, match="already exists"):
+        evaluate_candidate(examples, _bundle())
+
+
+def test_required_mode_fails_incomplete_config_and_rejects_acceptance(tmp_path, monkeypatch) -> None:
+    monkeypatch.setenv("ENTHUSIA_ANALYTICS_MODE", "required")
+    with pytest.raises(ValueError, match="incomplete"):
+        capture_if_required([_example("1"), _example("2")], _bundle())
+    _required_environment(monkeypatch, tmp_path)
+    monkeypatch.setenv("ENTHUSIA_ANALYTICS_SUITE", "w20-acceptance")
+    with pytest.raises(ValueError, match="declared"):
+        capture_if_required([_example("1"), _example("2")], _bundle())
+    assert list(tmp_path.glob("*.jsonl")) == []
+
+
+def test_disabled_mode_does_not_consume_private_sources(tmp_path, monkeypatch) -> None:
+    monkeypatch.delenv("ENTHUSIA_ANALYTICS_MODE", raising=False)
+    assert capture_if_required([_example("1"), _example("2")], _bundle()) is None
+    assert list(tmp_path.iterdir()) == []
 
 
 def test_incomplete_or_corrupted_ledgers_are_rejected(tmp_path) -> None:
