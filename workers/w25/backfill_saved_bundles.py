@@ -14,6 +14,7 @@ from typing import Any
 from workers.w25.artifacts import load_bundle
 from workers.w25.candidate_diagnostics import diagnose
 from workers.w25.config import MODEL_SPECS
+from workers.w25.contract import HEAD_VALUES
 from workers.w25.data import load_development_data, verify_all_admissions
 from workers.w25.decision_analytics import capture
 from workers.w25.development_smoke import _key, _private_paths, _write_json_once
@@ -45,27 +46,40 @@ def _configuration_hash(directory: Path, key: str | None, folder: str) -> str:
         "seed": 138,
         "model_spec": vars(spec) if spec is not None else "word-char-baseline",
         "calibration_sha256": _hash_file(calibration) if calibration.exists() else None,
-        "configuration_provenance": "existing_A100_bundle_not_retrained",
+        "thresholds_sha256": _hash_file(directory / "selective-thresholds.json"),
+        "configuration_provenance": "existing_A100_final_selective_bundle",
     }
     return hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()
 
 
-def _source_evidence(folder: Path, size: int, fingerprint: str) -> dict[str, Any]:
-    report = json.loads((folder / "dev-report.json").read_text(encoding="utf-8"))
-    suite = report["suite"]
-    if suite["n"] != size or suite["fingerprint"] != fingerprint:
-        raise ValueError("Saved W25 report does not match verified current development data")
-    bundle = load_bundle(folder / "dev-bundle.json")
-    if len(bundle.uncertainty) != size:
-        raise ValueError("Saved W25 bundle cardinality is different from development data")
-    artifact = folder / "model-state.pt"
-    source = artifact if artifact.exists() else folder / "dev-bundle.json"
+def _block_counts(examples, bundle) -> dict[str, int]:
+    block = HEAD_VALUES["action"].index("BLOCK")
+    truth = [row.action == "BLOCK" for row in examples]
+    predicted = [index == block for index in bundle.predictions["action"]]
     return {
-        "folder": folder,
-        "bundle": bundle,
-        "model_sha": _hash_file(source),
-        "artifact_kind": "model_checkpoint" if artifact.exists() else "saved_predictions_only",
-        "block": {k: report["consequences"]["block"][k] for k in ("tp", "fn", "fp")},
+        "tp": sum(gold and observed for gold, observed in zip(truth, predicted, strict=True)),
+        "fn": sum(gold and not observed for gold, observed in zip(truth, predicted, strict=True)),
+        "fp": sum(not gold and observed for gold, observed in zip(truth, predicted, strict=True)),
+    }
+
+
+def _source_evidence(folder: Path, examples, fingerprint: str) -> dict[str, Any]:
+    report = json.loads((folder / "dev-report.json").read_text(encoding="utf-8"))
+    if report["suite"] != {"n": len(examples), "fingerprint": fingerprint}:
+        raise ValueError("Saved W25 report differs from verified current development suite")
+    bundle_path = folder / "dev-selective-bundle.json"
+    bundle = load_bundle(bundle_path)
+    if len(bundle.uncertainty) != len(examples):
+        raise ValueError("Saved selective bundle cardinality differs from development data")
+    expected = {k: report["consequences"]["block"][k] for k in ("tp", "fn", "fp")}
+    if _block_counts(examples, bundle) != expected:
+        raise ValueError("Selective decision bundle does not reproduce its report")
+    checkpoint = folder / "model-state.pt"
+    source = checkpoint if checkpoint.exists() else bundle_path
+    return {
+        "folder": folder, "bundle": bundle, "model_sha": _hash_file(source),
+        "artifact_kind": "model_checkpoint" if checkpoint.exists() else "saved_predictions_only",
+        "block": expected,
     }
 
 
@@ -78,7 +92,7 @@ def _verified_inputs(artifact_root: Path):
     sources = {}
     for name, (folder_name, key) in MODELS.items():
         folder = artifact_root / folder_name
-        source = _source_evidence(folder, len(dev), fingerprint)
+        source = _source_evidence(folder, dev, fingerprint)
         source["config_sha"] = _configuration_hash(folder, key, folder_name)
         sources[name] = source
     return dev, sources
