@@ -882,7 +882,10 @@ def _history_filter_matches(
         case DecisionHistoryFilter.ALL:
             return True
         case DecisionHistoryFilter.ALLOWED:
-            return str(row["message_action"]) == "ALLOW" and str(row["ingestion_status"]) == "INGESTED"
+            return (
+                str(row["message_action"]) == "ALLOW"
+                and str(row["ingestion_status"]) == "INGESTED"
+            )
         case DecisionHistoryFilter.BLOCKED:
             return str(row["message_action"]) == "BLOCK"
         case DecisionHistoryFilter.REVIEW:
