@@ -219,11 +219,20 @@ availability.
 
 ## Every finalized decision — staff-only history
 
-`GET /v1/decisions?limit=100&cursor=<event_id>` requires `review:read`.
+`GET /v1/decisions?limit=100&cursor=<event_id>&filter=all` requires `review:read`.
 This is different from `GET /v1/review-items`, which lists only flagged
 events. Decision history includes every persisted **FINAL** event, including
 normal ALLOW, BLOCK, REVIEW-priority outcomes, and committed FAIL_OPEN
-outcomes. It provides at most 250 entries per page in descending
+outcomes. The optional `filter` parameter is a strict enum: `all` (default),
+`allowed` (INGESTED ALLOW, including review-priority ALLOW), `blocked`,
+`review` (review-priority not NONE), `fail_open`, or `corrected` (has an
+accepted staff correction). All filtering occurs in the central database,
+**before pagination**; client-side filtering a page would miss entries. Filter
+changes require restarting on page one, and cursor IDs from a different
+filter are rejected (404) rather than interpreted as valid offsets.
+An `allowed` classification is an AI decision, **not evidence that it was correct**.
+
+It provides at most 250 entries per page in descending
 `finalized_at,event_id` order; `next_cursor` is the last returned event's
 ID when another page exists. Use the cursor to avoid skipping events when
 new records arrive. An unknown or nonfinal cursor returns 404.
