@@ -6,7 +6,6 @@ Requires an existing owner-authorized private root; never prints the HMAC key.
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import os
 import secrets
@@ -31,7 +30,7 @@ def _private_paths(root: Path) -> tuple[Path, Path]:
     directory = root.resolve()
     if not root.is_absolute() or not directory.is_dir():
         raise ValueError("Existing absolute private root required")
-    if REPO == directory or REPO in directory.parents:
+    if directory == REPO or REPO in directory.parents:
         raise ValueError("Development evidence must not live in Git")
     output = directory / "w25-development-analytics"
     output.mkdir(mode=0o700, exist_ok=True)
@@ -80,17 +79,22 @@ def _write_json_once(path: Path, payload: dict[str, object]) -> None:
         file.write(data)
 
 
+def _development_examples(admitted: bool, limit: int):
+    if admitted:
+        verify_all_admissions()  # W27 verified but never selected as training.
+    train, dev = load_development_data(include_admitted=admitted)
+    examples = dev[:limit]
+    if not examples or len({item.example_id for item in examples}) != len(examples):
+        raise ValueError("Nonempty unique development examples required")
+    return train, examples
+
+
 def _run(
     root: Path, prefix: str, seed: int, limit: int, admitted: bool,
 ) -> dict[str, object]:
     output, secret_path = _private_paths(root)
     key = _key(secret_path)
-    if admitted:
-        verify_all_admissions()  # Includes read-only verification, not W27 training.
-    train, dev = load_development_data(include_admitted=admitted)
-    examples = dev[:limit]
-    if not examples or len({x.example_id for x in examples}) != len(examples):
-        raise ValueError("Nonempty unique development examples required")
+    train, examples = _development_examples(admitted, limit)
     paths: list[Path] = []
     for candidate, trainer in (("word", train_baseline), ("character", train_character_baseline)):
         identifier = prefix + "-" + candidate
@@ -109,7 +113,10 @@ def _run(
     _write_json_once(output / (prefix + "-comparison.json"), comparison)
     checked = audit_coverage(output, [path.stem for path in paths])
     return {
-        "source": "W11 plus admitted W26 train/development" if admitted else "W11 train/development",
+        "source": (
+            "W11 plus admitted W26 train/development"
+            if admitted else "W11 train/development"
+        ),
         "case_count": len(examples),
         "run_ids": [path.stem for path in paths],
         "private_evidence_written": True,
