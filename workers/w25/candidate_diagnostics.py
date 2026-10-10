@@ -16,6 +16,7 @@ from workers.w25.decision_analytics import (
     _read_ledger,
     _validate_compatible_ledgers,
 )
+from workers.w25.metrics import wilson_lower, wilson_upper
 
 REGISTRY = Path(__file__).with_name("candidate_exploration.json")
 SLICES = ("channel_profile", "domain", "difficulty")
@@ -78,6 +79,21 @@ def _slice(rows: dict[str, dict[str, Any]], field: str, support: int) -> dict[st
     return {name: _slice_result(items, support) for name, items in sorted(buckets.items())}
 
 
+def _visibility_rates(rows: list[dict[str, Any]]) -> dict[str, Any]:
+    correct = sum(row["gold"]["action"] == row["predicted"]["action"] for row in rows)
+    benign = [row for row in rows if row["gold"]["action"] == "ALLOW"]
+    false_blocks = sum(row["predicted"]["action"] == "BLOCK" for row in benign)
+    return {
+        "action_matches": correct,
+        "action_accuracy_wilson_lower95": wilson_lower(correct, len(rows)),
+        "gold_allow_support": len(benign),
+        "false_block_fpr_wilson_upper95_per_1000": (
+            round(wilson_upper(false_blocks, len(benign)) * 1000, 3)
+            if len(benign) >= 100 else None
+        ),
+    }
+
+
 def _slice_result(rows: list[dict[str, Any]], support: int) -> dict[str, Any]:
     if len(rows) < support:
         return {"n": len(rows), "status": "INSUFFICIENT_SUPPORT"}
@@ -87,7 +103,7 @@ def _slice_result(rows: list[dict[str, Any]], support: int) -> dict[str, Any]:
         "n": len(rows),
         "status": "DESCRIPTIVE_ONLY_UNVERIFIED_GOLD",
         "full_six_head_matches": sum(bool(row["all_supervised_heads_correct"]) for row in rows),
-        "action_matches": sum(row["gold"]["action"] == row["predicted"]["action"] for row in rows),
+        **_visibility_rates(rows),
         "head_errors": dict(errors),
         "risk_errors": dict(risk),
     }
