@@ -26,9 +26,15 @@ def _fixture(path: Path) -> None:
               message_action TEXT, semantic_label TEXT,
               ingestion_status TEXT, review_priority TEXT,
               strike_recommendation TEXT, containment TEXT,
+              containment_duration_seconds INTEGER, support_flow TEXT,
               latency_ms INTEGER
             );
-            CREATE TABLE accepted_corrections(event_id TEXT PRIMARY KEY);
+            CREATE TABLE accepted_corrections(
+              event_id TEXT PRIMARY KEY, proposal_id TEXT
+            );
+            CREATE TABLE correction_proposals(
+              proposal_id TEXT PRIMARY KEY, corrected_json TEXT
+            );
             """
         )
     with sqlite3.connect(path) as db:
@@ -47,7 +53,8 @@ def _seed_rows(db: sqlite3.Connection) -> None:
             )
             db.execute(
                 """INSERT INTO decision_evidence
-                   VALUES(?, 'model-v1', 'policy-v1', ?, 'SAFE', ?, ?, ?, ?, ?)""",
+                   VALUES(?, 'model-v1', 'policy-v1', ?, 'SAFE', ?, ?, ?, ?,
+                          NULL, 'NONE', ?)""",
                 (
                     ident,
                     "BLOCK" if index == 0 else "ALLOW",
@@ -58,8 +65,7 @@ def _seed_rows(db: sqlite3.Connection) -> None:
                     100 + index,
                 ),
             )
-        db.execute("INSERT INTO accepted_corrections VALUES(?)",
-                   ("PRIVATE-SYNTHETIC-MESSAGE-0",))
+        _seed_correction(db)
         db.execute(
             """INSERT INTO moderation_events
                VALUES('PENDING-SECRET', 'PENDING', '2026-10-10T12:00:00',
@@ -72,6 +78,22 @@ def _seed_rows(db: sqlite3.Connection) -> None:
         )
 
 
+def _seed_correction(db: sqlite3.Connection) -> None:
+    decision = {
+        "semantic_label": "SAFE",
+        "message_action": "ALLOW",
+        "review_priority": "NONE",
+        "strike_recommendation": "NONE",
+        "containment": "NONE",
+        "containment_duration_seconds": None,
+        "support_flow": "NONE",
+    }
+    db.execute("INSERT INTO correction_proposals VALUES(?, ?)",
+               ("proposal-1", json.dumps(decision)))
+    db.execute("INSERT INTO accepted_corrections VALUES(?, ?)",
+               ("PRIVATE-SYNTHETIC-MESSAGE-0", "proposal-1"))
+
+
 def test_private_read_only_aggregates_preserve_useful_diagnostics(tmp_path) -> None:
     path = tmp_path / "synthetic.sqlite"
     _fixture(path)
@@ -82,6 +104,10 @@ def test_private_read_only_aggregates_preserve_useful_diagnostics(tmp_path) -> N
     assert summary["total"]["degraded"] == 1
     assert summary["total"]["fail_open"] == 1
     assert summary["total"]["accepted_corrections"] == 1
+    assert summary["total"]["correction_changed_message_action"] == 1
+    assert summary["per_model_policy"]["model-v1/policy-v1"][
+        "correction_changed_message_action"
+    ] == 1
     assert summary["total"]["strike_proposals"] == 1
     assert summary["total"]["mute_proposals"] == 1
     assert summary["per_model_policy"]["model-v1/policy-v1"]["finalized"] == 12
