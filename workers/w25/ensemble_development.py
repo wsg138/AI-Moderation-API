@@ -73,6 +73,12 @@ def _review_disagreements(left: dict[str, Any], right: dict[str, Any]) -> str:
     return str(action_a) if action_a == action_b else "REVIEW"
 
 
+def _false_block_upper_bound(false_blocks: int, benign_count: int) -> float | None:
+    if benign_count < 100:
+        return None
+    return round(1000 * wilson_upper(false_blocks, benign_count), 3)
+
+
 def _summary(gold: list[str], predicted: list[str]) -> dict[str, Any]:
     correct = sum(a == b for a, b in zip(gold, predicted, strict=True))
     safe = [b for a, b in zip(gold, predicted, strict=True) if a == "ALLOW"]
@@ -89,9 +95,8 @@ def _summary(gold: list[str], predicted: list[str]) -> dict[str, Any]:
         "wrongful_blocks": false_blocks,
         "missed_blocks": misses,
         "sent_to_review": predicted.count("REVIEW"),
-        "false_block_upper95_per_1000_benign": (
-            round(1000 * wilson_upper(false_blocks, len(safe)), 3)
-            if len(safe) >= 100 else None
+        "false_block_upper95_per_1000_benign": _false_block_upper_bound(
+            false_blocks, len(safe)
         ),
         "confusion": dict(sorted(Counter(
             a + " -> " + b for a, b in zip(gold, predicted, strict=True)
