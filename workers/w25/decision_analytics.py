@@ -186,7 +186,7 @@ def _manifest(
     examples: list[ModerationExample], candidate: str, run_id: str,
     seed: int, model_sha: str, config_sha: str, policy: str,
     suite_name: str, secret: bytes, artifact_kind: str,
-    preprocessing_variant: str,
+    preprocessing_variant: str, decision_stage: str,
 ) -> dict[str, object]:
     return {
         "record_type": "manifest",
@@ -198,6 +198,7 @@ def _manifest(
         "policy_version": _validated_token(policy),
         "model_artifact_sha256": _validated_sha(model_sha),
         "model_artifact_kind": _validated_token(artifact_kind),
+        "decision_stage": _validated_token(decision_stage),
         "configuration_sha256": _validated_sha(config_sha),
         "suite_fingerprint": suite_fingerprint(examples),
         "input_hmac_fingerprint": _input_fingerprint(examples, secret),
@@ -237,6 +238,7 @@ def capture(
     suite_name: str = "unspecified",
     artifact_kind: str = "weight_fingerprint_or_artifact",
     preprocessing_variant: str = "raw",
+    decision_stage: str = "unspecified",
 ) -> Path:
     bundle.validate()
     if len(examples) != len(bundle.uncertainty) or not examples:
@@ -246,7 +248,7 @@ def capture(
     root = _private_root(folder)
     manifest = _manifest(examples, candidate, run_id, seed, model_sha,
                          config_sha, policy, suite_name, secret, artifact_kind,
-                         preprocessing_variant)
+                         preprocessing_variant, decision_stage)
     lines = [manifest] + [
         _case_record(example, bundle, index, secret)
         for index, example in enumerate(examples)
