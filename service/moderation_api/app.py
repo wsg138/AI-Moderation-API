@@ -22,6 +22,7 @@ from .models import (
     CorrectionRequest,
     CorrectionResponse,
     DecisionHistoryPage,
+    DecisionHistoryFilter,
     EventDetails,
     HealthResponse,
     ModerationRequest,
@@ -257,9 +258,10 @@ def _register_decision_history(
         _: Annotated[Principal, Depends(dependency)],
         limit: Annotated[int, Query(ge=1, le=250)] = 100,
         cursor: Annotated[str | None, Query(min_length=1, max_length=64)] = None,
+        filter: DecisionHistoryFilter = DecisionHistoryFilter.ALL,
     ) -> DecisionHistoryPage:
         try:
-            return await store.list_decisions(limit, cursor)
+            return await store.list_decisions(limit, cursor, filter)
         except EventNotFound as exc:
             raise HTTPException(
                 status.HTTP_404_NOT_FOUND, detail="decision cursor not found"
