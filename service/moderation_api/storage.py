@@ -144,9 +144,9 @@ class ModerationStore:
 
     async def list_decisions(
         self, limit: int, cursor: str | None = None,
-        filter: DecisionHistoryFilter = DecisionHistoryFilter.ALL,
+        history_filter: DecisionHistoryFilter = DecisionHistoryFilter.ALL,
     ) -> DecisionHistoryPage:
-        return await asyncio.to_thread(_list_decisions, self._path, limit, cursor, filter)
+        return await asyncio.to_thread(_list_decisions, self._path, limit, cursor, history_filter)
 
     async def list_support_context(
         self,
